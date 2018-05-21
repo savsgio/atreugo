@@ -1,0 +1,7 @@
+.vscode/
+
+pkg/
+build/
+bin/
+
+vendor/
