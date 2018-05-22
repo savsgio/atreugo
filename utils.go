@@ -3,6 +3,7 @@ package atreugo
 import (
 	"fmt"
 	"reflect"
+	"unsafe"
 )
 
 func panicOnError(err error) {
@@ -24,4 +25,9 @@ func callFuncByName(class interface{}, funcName string, params ...interface{}) [
 	}
 
 	return fn.Call(args)
+}
+
+// B2S convert bytes array to string without memory allocation
+func B2S(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
 }
