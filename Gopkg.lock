@@ -2,17 +2,23 @@
 
 
 [[projects]]
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+  version = "v3.2.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/erikdubbelboer/fasthttp"
   packages = [
     ".",
     "fasthttputil",
+    "reuseport",
     "stackless"
   ]
-  revision = "de7bb6820e39066002bbc5fe90d09ff408901a89"
+  revision = "5f3958b208cf1d269d3088763ccce89e97e4de14"
 
 [[projects]]
-  branch = "master"
   name = "github.com/klauspost/compress"
   packages = [
     "flate",
@@ -20,6 +26,7 @@
     "zlib"
   ]
   revision = "5fb1f31b0a61e9858f12f39266e059848a5f1cea"
+  version = "v1.3.0"
 
 [[projects]]
   branch = "master"
@@ -45,9 +52,15 @@
   packages = ["."]
   revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
 
+[[projects]]
+  branch = "master"
+  name = "github.com/valyala/tcplisten"
+  packages = ["."]
+  revision = "ceec8f93295a060cdb565ec25e4ccf17941dbd55"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3df7cb3fc329d6ce638bbaf820010cdb5e423b7caff22f0a3d0b55e0349461cb"
+  inputs-digest = "e6094ebe45942d858de0a338400808a342cd9bc2d9ce5b50f4ec31849a284afc"
   solver-name = "gps-cdcl"
   solver-version = 1

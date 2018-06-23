@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-
 	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/atreugo"
 )
@@ -15,8 +13,7 @@ func main() {
 	}
 
 	fnMiddlewareTwo := func(ctx *fasthttp.RequestCtx) (int, error) {
-		println("This middleware launch an error...")
-		return fasthttp.StatusBadRequest, errors.New("Fake error")
+		return fasthttp.StatusBadRequest, nil
 	}
 
 	server.UseMiddleware(fnMiddlewareOne, fnMiddlewareTwo)
