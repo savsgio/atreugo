@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+
 	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/atreugo"
 )
@@ -13,7 +15,7 @@ func main() {
 	}
 
 	fnMiddlewareTwo := func(ctx *fasthttp.RequestCtx) (int, error) {
-		return fasthttp.StatusBadRequest, nil
+		return fasthttp.StatusBadRequest, errors.New("Custom Error")
 	}
 
 	server.UseMiddleware(fnMiddlewareOne, fnMiddlewareTwo)

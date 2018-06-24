@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/erikdubbelboer/fasthttp"
 	"github.com/erikdubbelboer/fasthttp/reuseport"
@@ -30,11 +31,11 @@ func New() *Atreugo {
 	router := fasthttprouter.New()
 
 	server := &Atreugo{
-		router:      router,
-		middlewares: []middleware{},
+		router: router,
 		server: &fasthttp.Server{
-			Handler: router.Handler,
-			Name:    "AtreugoFastHTTPServer",
+			Handler:     router.Handler,
+			Name:        "AtreugoFastHTTPServer",
+			ReadTimeout: 5 * time.Second,
 		},
 		log: log,
 	}
@@ -42,13 +43,13 @@ func New() *Atreugo {
 	return server
 }
 
-func (server *Atreugo) viewHandler(viewFn view) fasthttp.RequestHandler {
+func (s *Atreugo) viewHandler(viewFn view) fasthttp.RequestHandler {
 	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
-		server.log.Debugf("%s %s", ctx.Method(), ctx.URI())
+		s.log.Debugf("%s %s", ctx.Method(), ctx.URI())
 
-		for _, middlewareFn := range server.middlewares {
+		for _, middlewareFn := range s.middlewares {
 			if statusCode, err := middlewareFn(ctx); err != nil {
-				server.log.Errorf("Msg: %v | RequestUri: %s", err, ctx.URI().String())
+				s.log.Errorf("Msg: %v | RequestUri: %s", err, ctx.URI().String())
 
 				JsonResponse(ctx, Json{"Error": err.Error()}, statusCode)
 				return
@@ -56,45 +57,45 @@ func (server *Atreugo) viewHandler(viewFn view) fasthttp.RequestHandler {
 		}
 
 		if err := viewFn(ctx); err != nil {
-			server.log.Error(err)
+			s.log.Error(err)
 		}
 	})
 }
 
 // Static add view for static files
-func (server *Atreugo) Static(rootStaticDirPath string) {
-	server.router.NotFound = fasthttp.FSHandler(rootStaticDirPath, 0)
+func (s *Atreugo) Static(rootStaticDirPath string) {
+	s.router.NotFound = fasthttp.FSHandler(rootStaticDirPath, 0)
 }
 
 // Path add the views to serve
-func (server *Atreugo) Path(httpMethod string, url string, viewFn view) {
-	callFuncByName(server.router, httpMethod, url, server.viewHandler(viewFn))
+func (s *Atreugo) Path(httpMethod string, url string, viewFn view) {
+	callFuncByName(s.router, httpMethod, url, s.viewHandler(viewFn))
 }
 
 // UseMiddleware register middleware functions that viewHandler will use
-func (server *Atreugo) UseMiddleware(fns ...middleware) {
-	server.middlewares = append(server.middlewares, fns...)
+func (s *Atreugo) UseMiddleware(fns ...middleware) {
+	s.middlewares = append(s.middlewares, fns...)
 }
 
 // ListenAndServe start Atreugo server
-func (server *Atreugo) ListenAndServe(host string, port int, logLevel ...string) {
+func (s *Atreugo) ListenAndServe(host string, port int, logLevel ...string) {
 	if len(logLevel) > 0 {
-		server.log.SetLevel(logLevel[0])
+		s.log.SetLevel(logLevel[0])
 	}
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 
 	ln, err := reuseport.Listen("tcp4", addr)
 	if err != nil {
-		server.log.Fatalf("Error in reuseport listener: %s", err)
+		s.log.Fatalf("Error in reuseport listener: %s", err)
 	}
 
 	// Error handling
 	listenErr := make(chan error, 1)
 
 	go func() {
-		server.log.Infof("Listening on: http://%s/", addr)
-		listenErr <- server.server.Serve(ln)
+		s.log.Infof("Listening on: http://%s/", addr)
+		listenErr <- s.server.Serve(ln)
 	}()
 
 	// SIGINT/SIGTERM handling
@@ -102,30 +103,22 @@ func (server *Atreugo) ListenAndServe(host string, port int, logLevel ...string)
 	signal.Notify(osSignals, syscall.SIGINT, syscall.SIGTERM)
 
 	// Handle channels/graceful shutdown
-	for {
-		select {
-		// If server.ListenAndServe() cannot start due to errors such
-		// as "port in use" it will return an error.
-		case err := <-listenErr:
-			if err != nil {
-				server.log.Fatalf("listener error: %s", err)
-			}
-			os.Exit(0)
-		// handle termination signal
-		case <-osSignals:
-			server.log.Infof("Shutdown signal received")
-
-			// Servers in the process of shutting down should disable KeepAlives
-			// FIXME: This causes a data race
-			server.server.DisableKeepalive = true
-
-			// Attempt the graceful shutdown by closing the listener
-			// and completing all inflight requests.
-			if err := server.server.Shutdown(); err != nil {
-				server.log.Fatalf("unexepcted error: %s", err)
-			}
-
-			server.log.Infof("Server gracefully stopped")
+	select {
+	// If s.Serve(ln) cannot start due to errors
+	case err := <-listenErr:
+		if err != nil {
+			s.log.Fatalf("listener error: %s", err)
 		}
+	// handle termination signal
+	case <-osSignals:
+		s.log.Infof("Shutdown signal received")
+
+		// Attempt the graceful shutdown by closing the listener
+		// and completing all inflight requests.
+		if err := s.server.Shutdown(); err != nil {
+			s.log.Fatalf("unexepcted error: %s", err)
+		}
+
+		s.log.Infof("Server gracefully stopped")
 	}
 }
