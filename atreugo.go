@@ -2,6 +2,7 @@ package atreugo
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,31 +14,53 @@ import (
 	"github.com/thehowl/fasthttprouter"
 )
 
-// Atreugo config for make up a server
+// Config config for Atreugo
+type Config struct {
+	Host           string
+	Port           int
+	LogLevel       string
+	Compress       bool
+	TLSEnable      bool
+	CertKey        string
+	CertFile       string
+	GracefulEnable bool
+}
+
+// Atreugo struct for make up a server
 type Atreugo struct {
 	server      *fasthttp.Server
 	router      *fasthttprouter.Router
 	middlewares []middleware
 	log         *logger.Logger
+	cfg         *Config
 }
 
 type view func(ctx *fasthttp.RequestCtx) error
 type middleware func(ctx *fasthttp.RequestCtx) (int, error)
 
 // New create a new instance of Atreugo Server
-func New() *Atreugo {
-	log := logger.New("atreugo", logger.INFO, os.Stdout)
+func New(cfg *Config) *Atreugo {
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = logger.INFO
+	}
+	log := logger.New("atreugo", cfg.LogLevel, os.Stdout)
 
 	router := fasthttprouter.New()
+
+	handler := router.Handler
+	if cfg.Compress {
+		handler = fasthttp.CompressHandler(handler)
+	}
 
 	server := &Atreugo{
 		router: router,
 		server: &fasthttp.Server{
-			Handler:     router.Handler,
+			Handler:     handler,
 			Name:        "AtreugoFastHTTPServer",
 			ReadTimeout: 5 * time.Second,
 		},
 		log: log,
+		cfg: cfg,
 	}
 
 	return server
@@ -62,6 +85,58 @@ func (s *Atreugo) viewHandler(viewFn view) fasthttp.RequestHandler {
 	})
 }
 
+func (s *Atreugo) getListener(addr string) net.Listener {
+	network := "tcp4"
+	ln, err := reuseport.Listen(network, addr)
+	if err == nil {
+		return ln
+	}
+	s.log.Errorf("Error in reuseport listener %s", err)
+
+	s.log.Infof("Trying with net listener")
+	ln, err = net.Listen(network, addr)
+	if err != nil {
+		s.log.Fatalf("Error in net listener %s", err)
+	}
+
+	return ln
+}
+
+func (s *Atreugo) serve(ln net.Listener, protocol, addr string) error {
+	s.log.Infof("Listening on: %s://%s/", protocol, addr)
+	if s.cfg.TLSEnable {
+		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey)
+	}
+
+	return s.server.Serve(ln)
+}
+
+func (s *Atreugo) serveGracefully(ln net.Listener, protocol, addr string) error {
+	listenErr := make(chan error, 1)
+
+	go func() {
+		listenErr <- s.serve(ln, protocol, addr)
+	}()
+
+	osSignals := make(chan os.Signal, 1)
+	signal.Notify(osSignals, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case err := <-listenErr:
+		return err
+	case <-osSignals:
+		s.log.Infof("Shutdown signal received")
+
+		if err := s.server.Shutdown(); err != nil {
+			return err
+		}
+
+		s.log.Infof("Server gracefully stopped")
+	}
+
+	return nil
+}
+
 // Static add view for static files
 func (s *Atreugo) Static(rootStaticDirPath string) {
 	s.router.NotFound = fasthttp.FSHandler(rootStaticDirPath, 0)
@@ -78,47 +153,18 @@ func (s *Atreugo) UseMiddleware(fns ...middleware) {
 }
 
 // ListenAndServe start Atreugo server
-func (s *Atreugo) ListenAndServe(host string, port int, logLevel ...string) {
-	if len(logLevel) > 0 {
-		s.log.SetLevel(logLevel[0])
+func (s *Atreugo) ListenAndServe() error {
+	protocol := "http"
+	if s.cfg.TLSEnable {
+		protocol = "https"
 	}
 
-	addr := fmt.Sprintf("%s:%d", host, port)
+	addr := fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
+	ln := s.getListener(addr)
 
-	ln, err := reuseport.Listen("tcp4", addr)
-	if err != nil {
-		s.log.Fatalf("Error in reuseport listener: %s", err)
+	if s.cfg.GracefulEnable {
+		return s.serveGracefully(ln, protocol, addr)
 	}
 
-	// Error handling
-	listenErr := make(chan error, 1)
-
-	go func() {
-		s.log.Infof("Listening on: http://%s/", addr)
-		listenErr <- s.server.Serve(ln)
-	}()
-
-	// SIGINT/SIGTERM handling
-	osSignals := make(chan os.Signal, 1)
-	signal.Notify(osSignals, syscall.SIGINT, syscall.SIGTERM)
-
-	// Handle channels/graceful shutdown
-	select {
-	// If s.Serve(ln) cannot start due to errors
-	case err := <-listenErr:
-		if err != nil {
-			s.log.Fatalf("listener error: %s", err)
-		}
-	// handle termination signal
-	case <-osSignals:
-		s.log.Infof("Shutdown signal received")
-
-		// Attempt the graceful shutdown by closing the listener
-		// and completing all inflight requests.
-		if err := s.server.Shutdown(); err != nil {
-			s.log.Fatalf("unexepcted error: %s", err)
-		}
-
-		s.log.Infof("Server gracefully stopped")
-	}
+	return s.serve(ln, protocol, addr)
 }

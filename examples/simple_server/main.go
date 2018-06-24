@@ -1,21 +1,23 @@
 package main
 
 import (
-	"errors"
-
 	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/atreugo"
 )
 
 func main() {
-	server := atreugo.New()
+	config := &atreugo.Config{
+		Host: "0.0.0.0",
+		Port: 8000,
+	}
+	server := atreugo.New(config)
 
 	fnMiddlewareOne := func(ctx *fasthttp.RequestCtx) (int, error) {
 		return fasthttp.StatusOK, nil
 	}
 
 	fnMiddlewareTwo := func(ctx *fasthttp.RequestCtx) (int, error) {
-		return fasthttp.StatusBadRequest, errors.New("Custom Error")
+		return fasthttp.StatusBadRequest, nil
 	}
 
 	server.UseMiddleware(fnMiddlewareOne, fnMiddlewareTwo)
@@ -28,5 +30,8 @@ func main() {
 		return atreugo.JsonResponse(ctx, atreugo.Json{"Atreugo": true})
 	})
 
-	server.ListenAndServe("0.0.0.0", 8000)
+	err := server.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
 }
