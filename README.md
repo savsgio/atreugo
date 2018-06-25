@@ -6,7 +6,7 @@ Fasthttp Micro-framework is based on [erikdubbelboer's fasthttp fork](https://gi
 This framework make simple to use the routing and middlewares.
 
 ```go
-package examples
+package main
 
 import (
 	"errors"
@@ -16,15 +16,18 @@ import (
 )
 
 func main() {
-	server := atreugo.New()
+	config := &atreugo.Config{
+		Host: "0.0.0.0",
+		Port: 8000,
+	}
+	server := atreugo.New(config)
 
 	fnMiddlewareOne := func(ctx *fasthttp.RequestCtx) (int, error) {
 		return fasthttp.StatusOK, nil
 	}
 
 	fnMiddlewareTwo := func(ctx *fasthttp.RequestCtx) (int, error) {
-		println("This middleware launch an error...")
-		return fasthttp.StatusBadRequest, errors.New("Fake error")
+		return fasthttp.StatusBadRequest, errors.New("Error message")
 	}
 
 	server.UseMiddleware(fnMiddlewareOne, fnMiddlewareTwo)
@@ -37,8 +40,12 @@ func main() {
 		return atreugo.JsonResponse(ctx, atreugo.Json{"Atreugo": true})
 	})
 
-	server.ListenAndServe("0.0.0.0", 8000)
+	err := server.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
 }
+
 ```
 
 Contributing
