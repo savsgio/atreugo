@@ -80,7 +80,11 @@ func checkTokenMiddleware(ctx *fasthttp.RequestCtx) (int, error) {
 }
 
 func main() {
-	server := atreugo.New()
+	config := &atreugo.Config{
+		Host: "0.0.0.0",
+		Port: 8000,
+	}
+	server := atreugo.New(config)
 
 	server.UseMiddleware(checkTokenMiddleware)
 
@@ -112,5 +116,8 @@ func main() {
 		return nil
 	})
 
-	server.ListenAndServe("0.0.0.0", 8000)
+	err := server.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
 }

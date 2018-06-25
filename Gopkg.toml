@@ -30,12 +30,12 @@
   branch = "master"
 
 [[constraint]]
-  name = "github.com/savsgio/go-logger"
-  version = "1.0.0"
-
-[[constraint]]
   name = "github.com/thehowl/fasthttprouter"
   branch = "master"
+
+[[constraint]]
+  name = "github.com/savsgio/go-logger"
+  version = "1.0.0"
 
 [[override]]
   name = "github.com/klauspost/compress"
