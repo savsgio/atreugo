@@ -1,7 +1,7 @@
 Atreugo
 =======
 
-Micro-framework to make simple the use of routing and middlewares in fasthttp.
+Micro-framework to make simple the use of routing and middlewares of fasthttp.
 
 Is based on [erikdubbelboer's fasthttp fork](https://github.com/erikdubbelboer/fasthttp) that it more active than [valyala's fasthttp](https://github.com/valyala/fasthttp)
 
@@ -78,6 +78,11 @@ func main() {
 }
 
 ```
+
+## Useful third-party libraries
+
+- [fasthttpsessions](https://github.com/themester/fasthttpsession)
+- [websocket](https://github.com/savsgio/websocket)
 
 Contributing
 ============
