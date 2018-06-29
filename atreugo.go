@@ -30,13 +30,16 @@ type Config struct {
 type Atreugo struct {
 	server      *fasthttp.Server
 	router      *fasthttprouter.Router
-	middlewares []middleware
+	middlewares []Middleware
 	log         *logger.Logger
 	cfg         *Config
 }
 
-type view func(ctx *fasthttp.RequestCtx) error
-type middleware func(ctx *fasthttp.RequestCtx) (int, error)
+// View must process incoming requests.
+type View func(ctx *fasthttp.RequestCtx) error
+
+// Middleware must process all incoming requests before defined views.
+type Middleware func(ctx *fasthttp.RequestCtx) (int, error)
 
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
@@ -66,7 +69,7 @@ func New(cfg *Config) *Atreugo {
 	return server
 }
 
-func (s *Atreugo) viewHandler(viewFn view) fasthttp.RequestHandler {
+func (s *Atreugo) viewHandler(viewFn View) fasthttp.RequestHandler {
 	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
 		s.log.Debugf("%s %s", ctx.Method(), ctx.URI())
 
@@ -143,16 +146,16 @@ func (s *Atreugo) Static(rootStaticDirPath string) {
 }
 
 // Path add the views to serve
-func (s *Atreugo) Path(httpMethod string, url string, viewFn view) {
+func (s *Atreugo) Path(httpMethod string, url string, viewFn View) {
 	callFuncByName(s.router, httpMethod, url, s.viewHandler(viewFn))
 }
 
 // UseMiddleware register middleware functions that viewHandler will use
-func (s *Atreugo) UseMiddleware(fns ...middleware) {
+func (s *Atreugo) UseMiddleware(fns ...Middleware) {
 	s.middlewares = append(s.middlewares, fns...)
 }
 
-// ListenAndServe start Atreugo server
+// ListenAndServe start Atreugo server according to the configuration
 func (s *Atreugo) ListenAndServe() error {
 	protocol := "http"
 	if s.cfg.TLSEnable {
