@@ -1,9 +1,13 @@
 Atreugo
 =======
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/savsgio/atreugo)](https://goreportcard.com/report/github.com/savsgio/atreugo)
+[![GoDoc](https://godoc.org/github.com/savsgio/atreugo?status.svg)](https://godoc.org/github.com/savsgio/atreugo)
+
 Micro-framework to make simple the use of routing and middlewares of fasthttp.
 
 Is based on [erikdubbelboer's fasthttp fork](https://github.com/erikdubbelboer/fasthttp) that it more active than [valyala's fasthttp](https://github.com/valyala/fasthttp)
+
 
 ***The project use [dep](https://golang.github.io/dep/) manager dependencies.***
 
