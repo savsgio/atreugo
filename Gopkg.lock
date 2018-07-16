@@ -16,7 +16,7 @@
     "reuseport",
     "stackless"
   ]
-  revision = "5f3958b208cf1d269d3088763ccce89e97e4de14"
+  revision = "2afed0033c15042efabece65087a0c5c6c40847f"
 
 [[projects]]
   name = "github.com/klauspost/compress"
@@ -25,8 +25,8 @@
     "gzip",
     "zlib"
   ]
-  revision = "5fb1f31b0a61e9858f12f39266e059848a5f1cea"
-  version = "v1.3.0"
+  revision = "b939724e787a27c0005cabe3f78e7ed7987ac74f"
+  version = "v1.4.0"
 
 [[projects]]
   branch = "master"

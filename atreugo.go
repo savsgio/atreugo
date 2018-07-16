@@ -60,7 +60,7 @@ func New(cfg *Config) *Atreugo {
 		server: &fasthttp.Server{
 			Handler:     handler,
 			Name:        "AtreugoFastHTTPServer",
-			ReadTimeout: 5 * time.Second,
+			ReadTimeout: 25 * time.Second,
 		},
 		log: log,
 		cfg: cfg,
