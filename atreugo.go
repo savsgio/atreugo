@@ -41,12 +41,14 @@ type View func(ctx *fasthttp.RequestCtx) error
 // Middleware must process all incoming requests before defined views.
 type Middleware func(ctx *fasthttp.RequestCtx) (int, error)
 
+// AllowedHTTPMethods all http methods that Atruego supports
+var AllowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
+
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = logger.INFO
 	}
-	log := logger.New("atreugo", cfg.LogLevel, os.Stdout)
 
 	router := fasthttprouter.New()
 
@@ -62,7 +64,7 @@ func New(cfg *Config) *Atreugo {
 			Name:        "AtreugoFastHTTPServer",
 			ReadTimeout: 25 * time.Second,
 		},
-		log: log,
+		log: logger.New("atreugo", cfg.LogLevel, os.Stdout),
 		cfg: cfg,
 	}
 
@@ -77,7 +79,7 @@ func (s *Atreugo) viewHandler(viewFn View) fasthttp.RequestHandler {
 			if statusCode, err := middlewareFn(ctx); err != nil {
 				s.log.Errorf("Msg: %v | RequestUri: %s", err, ctx.URI().String())
 
-				JsonResponse(ctx, Json{"Error": err.Error()}, statusCode)
+				JSONResponse(ctx, JSON{"Error": err.Error()}, statusCode)
 				return
 			}
 		}
@@ -147,7 +149,11 @@ func (s *Atreugo) Static(rootStaticDirPath string) {
 
 // Path add the views to serve
 func (s *Atreugo) Path(httpMethod string, url string, viewFn View) {
-	callFuncByName(s.router, httpMethod, url, s.viewHandler(viewFn))
+	if !include(AllowedHTTPMethods, httpMethod) {
+		panic("Invalid http method '" + httpMethod + "' for the url " + url)
+	}
+
+	s.router.Handle(httpMethod, url, s.viewHandler(viewFn))
 }
 
 // UseMiddleware register middleware functions that viewHandler will use

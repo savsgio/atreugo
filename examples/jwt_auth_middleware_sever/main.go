@@ -89,7 +89,7 @@ func main() {
 	server.UseMiddleware(checkTokenMiddleware)
 
 	server.Path("GET", "/", func(ctx *fasthttp.RequestCtx) error {
-		return atreugo.HttpResponse(ctx,
+		return atreugo.HTTPResponse(ctx,
 			[]byte(fmt.Sprintf(`<h1>You are login with JWT</h1>
 				JWT cookie value: %s`, ctx.Request.Header.Cookie("atreugo_jwt"))))
 	})
@@ -111,9 +111,7 @@ func main() {
 			ctx.Response.Header.SetCookie(cookie)
 		}
 
-		ctx.Redirect("/", ctx.Response.StatusCode())
-
-		return nil
+		return atreugo.RedirectResponse(ctx, "/", ctx.Response.StatusCode())
 	})
 
 	err := server.ListenAndServe()
