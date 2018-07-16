@@ -6,9 +6,11 @@ import (
 	"github.com/erikdubbelboer/fasthttp"
 )
 
-type Json map[string]interface{}
+// JSON is a map whose key is a string and whose value an interface
+type JSON map[string]interface{}
 
-func JsonResponse(ctx *fasthttp.RequestCtx, response interface{}, statusCode ...int) error {
+// JSONResponse return http response with content-type application/json
+func JSONResponse(ctx *fasthttp.RequestCtx, response interface{}, statusCode ...int) error {
 	ctx.SetContentType("application/json")
 
 	if len(statusCode) > 0 {
@@ -21,7 +23,8 @@ func JsonResponse(ctx *fasthttp.RequestCtx, response interface{}, statusCode ...
 	return json.NewEncoder(ctx).Encode(response)
 }
 
-func HttpResponse(ctx *fasthttp.RequestCtx, response []byte, statusCode ...int) error {
+// HTTPResponse return http response with content-type text/html; charset=utf-8
+func HTTPResponse(ctx *fasthttp.RequestCtx, response []byte, statusCode ...int) error {
 	ctx.SetContentType("text/html; charset=utf-8")
 
 	if len(statusCode) > 0 {
@@ -34,4 +37,12 @@ func HttpResponse(ctx *fasthttp.RequestCtx, response []byte, statusCode ...int) 
 
 	_, err := ctx.Write(response)
 	return err
+}
+
+// RedirectResponse redirect request to an especific url
+func RedirectResponse(ctx *fasthttp.RequestCtx, url string, statusCode int) error {
+	ctx.ResetBody()
+	ctx.Redirect(url, statusCode)
+
+	return nil
 }

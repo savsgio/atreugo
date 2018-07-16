@@ -1,8 +1,6 @@
 package atreugo
 
 import (
-	"fmt"
-	"reflect"
 	"unsafe"
 )
 
@@ -12,22 +10,24 @@ func panicOnError(err error) {
 	}
 }
 
-func callFuncByName(class interface{}, funcName string, params ...interface{}) []reflect.Value {
-	fn := reflect.ValueOf(class).MethodByName(funcName)
-
-	if !fn.IsValid() {
-		panic(fmt.Errorf("Method not found \"%s\"", funcName))
-	}
-
-	args := make([]reflect.Value, len(params))
-	for i, param := range params {
-		args[i] = reflect.ValueOf(param)
-	}
-
-	return fn.Call(args)
-}
-
-// B2S convert bytes array to string without memory allocation
+// B2S convert bytes array to string without memory allocation (non safe)
 func B2S(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
+}
+
+// index returns the first index of the target string `t`, or
+// -1 if no match is found.
+func indexOf(vs []string, t string) int {
+	for i, v := range vs {
+		if v == t {
+			return i
+		}
+	}
+	return -1
+}
+
+// include returns `true` if the target string t is in the
+// slice.
+func include(vs []string, t string) bool {
+	return indexOf(vs, t) >= 0
 }
