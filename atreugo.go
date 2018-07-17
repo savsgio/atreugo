@@ -79,13 +79,14 @@ func (s *Atreugo) viewHandler(viewFn View) fasthttp.RequestHandler {
 			if statusCode, err := middlewareFn(ctx); err != nil {
 				s.log.Errorf("Msg: %v | RequestUri: %s", err, ctx.URI().String())
 
-				JSONResponse(ctx, JSON{"Error": err.Error()}, statusCode)
+				ctx.Error(err.Error(), statusCode)
 				return
 			}
 		}
 
 		if err := viewFn(ctx); err != nil {
 			s.log.Error(err)
+			ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		}
 	})
 }
