@@ -67,11 +67,11 @@ func main() {
 
 	// Views
 	server.Path("GET", "/", func(ctx *fasthttp.RequestCtx) error {
-		return atreugo.HttpResponse(ctx, []byte("<h1>Atreugo Micro-Framework</h1>"))
+		return atreugo.HTTPResponse(ctx, []byte("<h1>Atreugo Micro-Framework</h1>"))
 	})
 
 	server.Path("GET", "/jsonPage", func(ctx *fasthttp.RequestCtx) error {
-		return atreugo.JsonResponse(ctx, atreugo.Json{"Atreugo": true})
+		return atreugo.JSONResponse(ctx, atreugo.JSON{"Atreugo": true})
 	})
 
 	// Start server
