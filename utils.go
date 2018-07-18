@@ -25,11 +25,11 @@ var atreugoPools = &pools{
 	},
 }
 
-func (p *pools) getFile() *os.File {
+func (p *pools) acquireFile() *os.File {
 	return p.filePool.Get().(*os.File)
 }
 
-func (p *pools) getBufioReader() *bufio.Reader {
+func (p *pools) acquireBufioReader() *bufio.Reader {
 	return p.readerPool.Get().(*bufio.Reader)
 }
 

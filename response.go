@@ -12,9 +12,8 @@ import (
 // JSON is a map whose key is a string and whose value an interface
 type JSON map[string]interface{}
 
-// JSONResponse return response with body in json format
-func JSONResponse(ctx *fasthttp.RequestCtx, response interface{}, statusCode ...int) error {
-	ctx.SetContentType("application/json")
+func newResponse(ctx *fasthttp.RequestCtx, contentType string, statusCode ...int) {
+	ctx.SetContentType(contentType)
 
 	if len(statusCode) > 0 {
 		ctx.SetStatusCode(statusCode[0])
@@ -23,59 +22,45 @@ func JSONResponse(ctx *fasthttp.RequestCtx, response interface{}, statusCode ...
 	}
 
 	ctx.ResetBody()
-	return json.NewEncoder(ctx).Encode(response)
+}
+
+// JSONResponse return response with body in json format
+func JSONResponse(ctx *fasthttp.RequestCtx, body interface{}, statusCode ...int) error {
+	newResponse(ctx, "application/json", statusCode...)
+
+	return json.NewEncoder(ctx).Encode(body)
 }
 
 // HTTPResponse return response with body in html format
-func HTTPResponse(ctx *fasthttp.RequestCtx, response []byte, statusCode ...int) error {
-	ctx.SetContentType("text/html; charset=utf-8")
+func HTTPResponse(ctx *fasthttp.RequestCtx, body []byte, statusCode ...int) error {
+	newResponse(ctx, "text/html; charset=utf-8", statusCode...)
 
-	if len(statusCode) > 0 {
-		ctx.SetStatusCode(statusCode[0])
-	} else {
-		ctx.SetStatusCode(fasthttp.StatusOK)
-	}
-
-	ctx.ResetBody()
-
-	_, err := ctx.Write(response)
+	_, err := ctx.Write(body)
 	return err
 }
 
 // TextResponse return response with body in text format
-func TextResponse(ctx *fasthttp.RequestCtx, response []byte, statusCode ...int) error {
-	ctx.SetContentType("text/plain; charset=utf-8")
+func TextResponse(ctx *fasthttp.RequestCtx, body []byte, statusCode ...int) error {
+	newResponse(ctx, "text/plain; charset=utf-8", statusCode...)
 
-	if len(statusCode) > 0 {
-		ctx.SetStatusCode(statusCode[0])
-	} else {
-		ctx.SetStatusCode(fasthttp.StatusOK)
-	}
-
-	_, err := ctx.Write(response)
+	_, err := ctx.Write(body)
 	return err
 }
 
 // RawResponse returns response without encoding the body.
-func RawResponse(ctx *fasthttp.RequestCtx, response []byte, statusCode ...int) error {
-	ctx.SetContentType("application/octet-stream")
+func RawResponse(ctx *fasthttp.RequestCtx, body []byte, statusCode ...int) error {
+	newResponse(ctx, "application/octet-stream", statusCode...)
 
-	if len(statusCode) > 0 {
-		ctx.SetStatusCode(statusCode[0])
-	} else {
-		ctx.SetStatusCode(fasthttp.StatusOK)
-	}
-
-	_, err := ctx.Write(response)
+	_, err := ctx.Write(body)
 	return err
 }
 
 // FileResponse return a streaming response with file data.
 func FileResponse(ctx *fasthttp.RequestCtx, fileName, filePath string, mimeType string) error {
-	f := atreugoPools.getFile()
+	f := atreugoPools.acquireFile()
 	defer atreugoPools.putFile(f)
 
-	reader := atreugoPools.getBufioReader()
+	reader := atreugoPools.acquireBufioReader()
 	defer atreugoPools.putBufioReader(reader)
 
 	var err error
