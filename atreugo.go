@@ -14,35 +14,7 @@ import (
 	"github.com/thehowl/fasthttprouter"
 )
 
-// Config config for Atreugo
-type Config struct {
-	Host           string
-	Port           int
-	LogLevel       string
-	Compress       bool
-	TLSEnable      bool
-	CertKey        string
-	CertFile       string
-	GracefulEnable bool
-}
-
-// Atreugo struct for make up a server
-type Atreugo struct {
-	server      *fasthttp.Server
-	router      *fasthttprouter.Router
-	middlewares []Middleware
-	log         *logger.Logger
-	cfg         *Config
-}
-
-// View must process incoming requests.
-type View func(ctx *fasthttp.RequestCtx) error
-
-// Middleware must process all incoming requests before defined views.
-type Middleware func(ctx *fasthttp.RequestCtx) (int, error)
-
-// AllowedHTTPMethods all http methods that Atruego supports
-var AllowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
+var allowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
 
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
@@ -71,7 +43,7 @@ func New(cfg *Config) *Atreugo {
 	return server
 }
 
-func (s *Atreugo) viewHandler(viewFn View) fasthttp.RequestHandler {
+func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
 		s.log.Debugf("%s %s", ctx.Method(), ctx.URI())
 
@@ -79,24 +51,24 @@ func (s *Atreugo) viewHandler(viewFn View) fasthttp.RequestHandler {
 			if statusCode, err := middlewareFn(ctx); err != nil {
 				s.log.Errorf("Msg: %v | RequestUri: %s", err, ctx.URI().String())
 
-				JSONResponse(ctx, JSON{"Error": err.Error()}, statusCode)
+				ctx.Error(err.Error(), statusCode)
 				return
 			}
 		}
 
 		if err := viewFn(ctx); err != nil {
 			s.log.Error(err)
+			ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		}
 	})
 }
 
 func (s *Atreugo) getListener(addr string) net.Listener {
-	network := "tcp4"
 	ln, err := reuseport.Listen(network, addr)
 	if err == nil {
 		return ln
 	}
-	s.log.Errorf("Error in reuseport listener %s", err)
+	s.log.Warningf("Error in reuseport listener %s", err)
 
 	s.log.Infof("Trying with net listener")
 	ln, err = net.Listen(network, addr)
@@ -149,11 +121,11 @@ func (s *Atreugo) Static(rootStaticDirPath string) {
 
 // Path add the views to serve
 func (s *Atreugo) Path(httpMethod string, url string, viewFn View) {
-	if !include(AllowedHTTPMethods, httpMethod) {
+	if !include(allowedHTTPMethods, httpMethod) {
 		panic("Invalid http method '" + httpMethod + "' for the url " + url)
 	}
 
-	s.router.Handle(httpMethod, url, s.viewHandler(viewFn))
+	s.router.Handle(httpMethod, url, s.handler(viewFn))
 }
 
 // UseMiddleware register middleware functions that viewHandler will use
