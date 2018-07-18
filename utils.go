@@ -7,11 +7,6 @@ import (
 	"unsafe"
 )
 
-type pools struct {
-	filePool   sync.Pool
-	readerPool sync.Pool
-}
-
 var atreugoPools = &pools{
 	filePool: sync.Pool{
 		New: func() interface{} {

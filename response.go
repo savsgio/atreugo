@@ -9,9 +9,6 @@ import (
 	"github.com/erikdubbelboer/fasthttp"
 )
 
-// JSON is a map whose key is a string and whose value an interface
-type JSON map[string]interface{}
-
 func newResponse(ctx *fasthttp.RequestCtx, contentType string, statusCode ...int) {
 	ctx.SetContentType(contentType)
 
