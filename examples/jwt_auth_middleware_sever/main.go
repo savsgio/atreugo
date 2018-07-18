@@ -60,7 +60,7 @@ func validateToken(requestToken string) (*jwt.Token, *userCredential, error) {
 // checkTokenMiddleware middleware to check jwt token authoritation
 func checkTokenMiddleware(ctx *fasthttp.RequestCtx) (int, error) {
 	// Avoid middleware when you are going to login view
-	if atreugo.B2S(ctx.Path()) == "/login" {
+	if string(ctx.Path()) == "/login" {
 		return fasthttp.StatusOK, nil
 	}
 
@@ -70,7 +70,7 @@ func checkTokenMiddleware(ctx *fasthttp.RequestCtx) (int, error) {
 		return fasthttp.StatusForbidden, errors.New("login required")
 	}
 
-	token, _, err := validateToken(atreugo.B2S(jwtCookie))
+	token, _, err := validateToken(string(jwtCookie))
 
 	if !token.Valid {
 		return fasthttp.StatusForbidden, errors.New("your session is expired, login again please")
