@@ -1,94 +1,46 @@
 package atreugo
 
 import (
-	"bufio"
-	"os"
-	"reflect"
+	"errors"
 	"testing"
 )
 
-func Test_pools_acquireFile(t *testing.T) {
-	tests := []struct {
-		name string
-		p    *pools
-		want *os.File
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.p.acquireFile(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("pools.acquireFile() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_pools_acquireBufioReader(t *testing.T) {
-	tests := []struct {
-		name string
-		p    *pools
-		want *bufio.Reader
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.p.acquireBufioReader(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("pools.acquireBufioReader() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_pools_putFile(t *testing.T) {
-	type args struct {
-		f *os.File
-	}
-	tests := []struct {
-		name string
-		p    *pools
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.p.putFile(tt.args.f)
-		})
-	}
-}
-
-func Test_pools_putBufioReader(t *testing.T) {
-	type args struct {
-		br *bufio.Reader
-	}
-	tests := []struct {
-		name string
-		p    *pools
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.p.putBufioReader(tt.args.br)
-		})
-	}
-}
-
 func Test_panicOnError(t *testing.T) {
 	type args struct {
-		err error
+		err  error
+		want bool
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Panic",
+			args: args{
+				err:  errors.New("TestPanic"),
+				want: true,
+			},
+		},
+		{
+			name: "NotPanic",
+			args: args{
+				err:  nil,
+				want: false,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				r := recover()
+
+				if tt.args.want && r == nil {
+					t.Errorf("panicOnError(): '%v', want '%v'", false, tt.args.want)
+				} else if !tt.args.want && r != nil {
+					t.Errorf("panicOnError(): '%v', want '%v'", true, tt.args.want)
+				}
+			}()
+
 			panicOnError(tt.args.err)
 		})
 	}
@@ -98,19 +50,18 @@ func Test_b2s(t *testing.T) {
 	type args struct {
 		b []byte
 	}
-	tests := []struct {
-		name string
+	tests := struct {
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
+		args: args{
+			b: []byte("Test"),
+		},
+		want: "Test",
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := b2s(tt.args.b); got != tt.want {
-				t.Errorf("b2s() = %v, want %v", got, tt.want)
-			}
-		})
+
+	if got := b2s(tests.args.b); got != tests.want {
+		t.Errorf("b2s(): '%v', want: '%v'", got, tests.want)
 	}
 }
 
@@ -118,19 +69,18 @@ func Test_int64ToInt(t *testing.T) {
 	type args struct {
 		i int64
 	}
-	tests := []struct {
-		name string
+	tests := struct {
 		args args
 		want int
 	}{
-		// TODO: Add test cases.
+		args: args{
+			i: int64(3),
+		},
+		want: 3,
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := int64ToInt(tt.args.i); got != tt.want {
-				t.Errorf("int64ToInt() = %v, want %v", got, tt.want)
-			}
-		})
+
+	if got := int64ToInt(tests.args.i); got != tests.want {
+		t.Errorf("int64ToInt: '%v', want: '%v'", got, tests.want)
 	}
 }
 
@@ -144,12 +94,27 @@ func Test_indexOf(t *testing.T) {
 		args args
 		want int
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Found",
+			args: args{
+				vs: []string{"savsgio", "development", "Atreugo"},
+				t:  "Atreugo",
+			},
+			want: 2,
+		},
+		{
+			name: "NotFound",
+			args: args{
+				vs: []string{"savsgio", "development", "Atreugo"},
+				t:  "Yeah",
+			},
+			want: -1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := indexOf(tt.args.vs, tt.args.t); got != tt.want {
-				t.Errorf("indexOf() = %v, want %v", got, tt.want)
+				t.Errorf("indexOf(): '%v', want: '%v'", got, tt.want)
 			}
 		})
 	}
@@ -165,7 +130,22 @@ func Test_include(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Found",
+			args: args{
+				vs: []string{"savsgio", "development", "Atreugo"},
+				t:  "Atreugo",
+			},
+			want: true,
+		},
+		{
+			name: "NotFound",
+			args: args{
+				vs: []string{"savsgio", "development", "Atreugo"},
+				t:  "Yeah",
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
