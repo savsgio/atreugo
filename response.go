@@ -53,7 +53,7 @@ func RawResponse(ctx *fasthttp.RequestCtx, body []byte, statusCode ...int) error
 }
 
 // FileResponse return a streaming response with file data.
-func FileResponse(ctx *fasthttp.RequestCtx, fileName, filePath string, mimeType string) error {
+func FileResponse(ctx *fasthttp.RequestCtx, fileName, filePath, mimeType string) error {
 	f := atreugoPools.acquireFile()
 	defer atreugoPools.putFile(f)
 
