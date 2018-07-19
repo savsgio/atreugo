@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/erikdubbelboer/fasthttp"
@@ -354,6 +355,8 @@ func TestFileResponse(t *testing.T) {
 			if responseContentDisposition != wantContentDisposition {
 				t.Errorf("Header content-disposition: '%v', want: '%v'", responseContentDisposition, wantContentDisposition)
 			}
+
+			os.Remove(tt.args.filePath)
 		})
 	}
 }
