@@ -1,6 +1,7 @@
 package atreugo
 
 import (
+	"errors"
 	"net"
 	"reflect"
 	"testing"
@@ -22,7 +23,7 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := New(tt.args.cfg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
+				t.Errorf("Atreugo.New() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -30,20 +31,114 @@ func TestNew(t *testing.T) {
 
 func TestAtreugo_handler(t *testing.T) {
 	type args struct {
-		viewFn View
+		viewFn        View
+		middlewareFns []Middleware
 	}
+	type want struct {
+		statusCode        int
+		viewCalled        bool
+		middleWareCounter int
+	}
+
+	viewCalled := false
+	middleWareCounter := 0
+
 	tests := []struct {
 		name string
-		s    *Atreugo
 		args args
-		want fasthttp.RequestHandler
+		want want
 	}{
-		// TODO: Add test cases.
+		{
+			name: "AllOk",
+			args: args{
+				viewFn: func(ctx *fasthttp.RequestCtx) error {
+					viewCalled = true
+					return nil
+				},
+				middlewareFns: []Middleware{
+					func(ctx *fasthttp.RequestCtx) (int, error) {
+						middleWareCounter++
+						return 0, nil
+					},
+				},
+			},
+			want: want{
+				statusCode:        200,
+				viewCalled:        true,
+				middleWareCounter: 1,
+			},
+		},
+		{
+			name: "FirstMiddlewareError",
+			args: args{
+				viewFn: func(ctx *fasthttp.RequestCtx) error {
+					viewCalled = true
+					return nil
+				},
+				middlewareFns: []Middleware{
+					func(ctx *fasthttp.RequestCtx) (int, error) {
+						return 403, errors.New("Bad request")
+					},
+					func(ctx *fasthttp.RequestCtx) (int, error) {
+						middleWareCounter++
+						return 0, nil
+					},
+				},
+			},
+			want: want{
+				statusCode:        403,
+				viewCalled:        false,
+				middleWareCounter: 0,
+			},
+		},
+		{
+			name: "SecondMiddlewareError",
+			args: args{
+				viewFn: func(ctx *fasthttp.RequestCtx) error {
+					viewCalled = true
+					return nil
+				},
+				middlewareFns: []Middleware{
+					func(ctx *fasthttp.RequestCtx) (int, error) {
+						middleWareCounter++
+						return 0, nil
+					},
+					func(ctx *fasthttp.RequestCtx) (int, error) {
+						return 403, errors.New("Bad request")
+					},
+				},
+			},
+			want: want{
+				statusCode:        403,
+				viewCalled:        false,
+				middleWareCounter: 1,
+			},
+		},
 	}
+
 	for _, tt := range tests {
+		viewCalled = false
+		middleWareCounter = 0
+
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.s.handler(tt.args.viewFn); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Atreugo.handler() = %v, want %v", got, tt.want)
+			ctx := new(fasthttp.RequestCtx)
+
+			s := New(&Config{})
+			s.UseMiddleware(tt.args.middlewareFns...)
+
+			s.handler(tt.args.viewFn)(ctx)
+
+			if viewCalled != tt.want.viewCalled {
+				t.Errorf("View called = %v, want %v", viewCalled, tt.want.viewCalled)
+			}
+
+			if middleWareCounter != tt.want.middleWareCounter {
+				t.Errorf("Middleware call counter = %v, want %v", middleWareCounter, tt.want.middleWareCounter)
+			}
+
+			responseStatusCode := ctx.Response.StatusCode()
+			if responseStatusCode != tt.want.statusCode {
+				t.Errorf("Status code = %v, want %v", responseStatusCode, tt.want.statusCode)
 			}
 		})
 	}
