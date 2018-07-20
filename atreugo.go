@@ -79,8 +79,13 @@ func (s *Atreugo) getListener(addr string) net.Listener {
 	return ln
 }
 
-func (s *Atreugo) serve(ln net.Listener, protocol, addr string) error {
-	s.log.Infof("Listening on: %s://%s/", protocol, addr)
+func (s *Atreugo) serve(ln net.Listener) error {
+	protocol := "http"
+	if s.cfg.TLSEnable {
+		protocol = "https"
+	}
+
+	s.log.Infof("Listening on: %s://%s/", protocol, ln.Addr().String())
 	if s.cfg.TLSEnable {
 		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey)
 	}
@@ -88,11 +93,11 @@ func (s *Atreugo) serve(ln net.Listener, protocol, addr string) error {
 	return s.server.Serve(ln)
 }
 
-func (s *Atreugo) serveGracefully(ln net.Listener, protocol, addr string) error {
+func (s *Atreugo) serveGracefully(ln net.Listener) error {
 	listenErr := make(chan error, 1)
 
 	go func() {
-		listenErr <- s.serve(ln, protocol, addr)
+		listenErr <- s.serve(ln)
 	}()
 
 	osSignals := make(chan os.Signal, 1)
@@ -135,17 +140,12 @@ func (s *Atreugo) UseMiddleware(fns ...Middleware) {
 
 // ListenAndServe start Atreugo server according to the configuration
 func (s *Atreugo) ListenAndServe() error {
-	protocol := "http"
-	if s.cfg.TLSEnable {
-		protocol = "https"
-	}
-
 	addr := fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
 	ln := s.getListener(addr)
 
 	if s.cfg.GracefulEnable {
-		return s.serveGracefully(ln, protocol, addr)
+		return s.serveGracefully(ln)
 	}
 
-	return s.serve(ln, protocol, addr)
+	return s.serve(ln)
 }
