@@ -9,27 +9,7 @@ import (
 	"github.com/erikdubbelboer/fasthttp"
 )
 
-func TestNew(t *testing.T) {
-	type args struct {
-		cfg *Config
-	}
-	tests := []struct {
-		name string
-		args args
-		want *Atreugo
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := New(tt.args.cfg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Atreugo.New() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestAtreugo_handler(t *testing.T) {
+func TestAtreugoServer(t *testing.T) {
 	type args struct {
 		viewFn        View
 		middlewareFns []Middleware
@@ -63,7 +43,7 @@ func TestAtreugo_handler(t *testing.T) {
 				},
 			},
 			want: want{
-				statusCode:        200,
+				statusCode:        fasthttp.StatusOK,
 				viewCalled:        true,
 				middleWareCounter: 1,
 			},
@@ -111,6 +91,26 @@ func TestAtreugo_handler(t *testing.T) {
 			want: want{
 				statusCode:        403,
 				viewCalled:        false,
+				middleWareCounter: 1,
+			},
+		},
+		{
+			name: "ViewError",
+			args: args{
+				viewFn: func(ctx *fasthttp.RequestCtx) error {
+					viewCalled = true
+					return errors.New("Fake error")
+				},
+				middlewareFns: []Middleware{
+					func(ctx *fasthttp.RequestCtx) (int, error) {
+						middleWareCounter++
+						return 0, nil
+					},
+				},
+			},
+			want: want{
+				statusCode:        fasthttp.StatusInternalServerError,
+				viewCalled:        true,
 				middleWareCounter: 1,
 			},
 		},
