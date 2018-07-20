@@ -44,7 +44,7 @@ func New(cfg *Config) *Atreugo {
 }
 
 func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
-	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
+	return func(ctx *fasthttp.RequestCtx) {
 		s.log.Debugf("%s %s", ctx.Method(), ctx.URI())
 
 		for _, middlewareFn := range s.middlewares {
@@ -60,7 +60,7 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 			s.log.Error(err)
 			ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		}
-	})
+	}
 }
 
 func (s *Atreugo) getListener(addr string) net.Listener {

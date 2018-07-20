@@ -330,6 +330,7 @@ func TestFileResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ioutil.WriteFile(tt.args.filePath, testFileContent, 0644)
+			defer os.Remove(tt.args.filePath)
 
 			if err := FileResponse(tt.args.ctx, tt.args.fileName, tt.args.filePath, tt.args.mimeType); err != nil {
 				t.Errorf("FileResponse() error: %v", err)
@@ -355,8 +356,6 @@ func TestFileResponse(t *testing.T) {
 			if responseContentDisposition != wantContentDisposition {
 				t.Errorf("Header content-disposition: '%v', want: '%v'", responseContentDisposition, wantContentDisposition)
 			}
-
-			os.Remove(tt.args.filePath)
 		})
 	}
 }
