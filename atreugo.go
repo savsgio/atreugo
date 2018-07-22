@@ -87,9 +87,7 @@ func (s *Atreugo) getListener(addr string) net.Listener {
 
 	s.log.Infof("Trying with net listener")
 	ln, err = net.Listen(network, addr)
-	if err != nil {
-		s.log.Fatalf("Error in net listener %s", err)
-	}
+	panicOnError(err)
 
 	return ln
 }

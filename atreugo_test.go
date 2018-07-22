@@ -10,6 +10,10 @@ import (
 	"github.com/erikdubbelboer/fasthttp/fasthttputil"
 )
 
+var testAtreugoConfig = &Config{
+	LogLevel: "error",
+}
+
 func TestAtreugoServer(t *testing.T) {
 	type args struct {
 		viewFn        View
@@ -122,7 +126,7 @@ func TestAtreugoServer(t *testing.T) {
 		middleWareCounter = 0
 
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(&Config{LogLevel: "error"})
+			s := New(testAtreugoConfig)
 			s.UseMiddleware(tt.args.middlewareFns...)
 			s.Path("GET", "/", tt.args.viewFn)
 
@@ -194,26 +198,45 @@ func TestAtreugo_getListener(t *testing.T) {
 	type want struct {
 		addr    string
 		network string
+		getErr  bool
 	}
 	tests := []struct {
 		name string
 		args args
 		want want
 	}{
+		// {
+		// 	name: "Ok",
+		// 	args: args{
+		// 		addr: "127.0.0.1:8000",
+		// 	},
+		// 	want: want{
+		// 		addr:    "127.0.0.1:8000",
+		// 		network: "tcp",
+		// 		getErr:  false,
+		// 	},
+		// },
 		{
-			name: "Test",
+			name: "Error",
 			args: args{
-				addr: "127.0.0.1:8000",
+				addr: "fake",
 			},
 			want: want{
-				addr:    "127.0.0.1:8000",
-				network: "tcp",
+				getErr: true,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(&Config{})
+			s := New(testAtreugoConfig)
+
+			defer func() {
+				r := recover()
+
+				if tt.want.getErr && r == nil {
+					t.Errorf("Error expected")
+				}
+			}()
 
 			ln := s.getListener(tt.args.addr)
 
