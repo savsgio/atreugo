@@ -205,17 +205,17 @@ func TestAtreugo_getListener(t *testing.T) {
 		args args
 		want want
 	}{
-		// {
-		// 	name: "Ok",
-		// 	args: args{
-		// 		addr: "127.0.0.1:8000",
-		// 	},
-		// 	want: want{
-		// 		addr:    "127.0.0.1:8000",
-		// 		network: "tcp",
-		// 		getErr:  false,
-		// 	},
-		// },
+		{
+			name: "Ok",
+			args: args{
+				addr: "127.0.0.1:8000",
+			},
+			want: want{
+				addr:    "127.0.0.1:8000",
+				network: "tcp",
+				getErr:  false,
+			},
+		},
 		{
 			name: "Error",
 			args: args{
