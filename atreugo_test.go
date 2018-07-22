@@ -1,12 +1,13 @@
 package atreugo
 
 import (
+	"bufio"
 	"errors"
-	"net"
-	"reflect"
 	"testing"
+	"time"
 
 	"github.com/erikdubbelboer/fasthttp"
+	"github.com/erikdubbelboer/fasthttp/fasthttputil"
 )
 
 func TestAtreugoServer(t *testing.T) {
@@ -121,24 +122,66 @@ func TestAtreugoServer(t *testing.T) {
 		middleWareCounter = 0
 
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := new(fasthttp.RequestCtx)
-
-			s := New(&Config{})
+			s := New(&Config{LogLevel: "error"})
 			s.UseMiddleware(tt.args.middlewareFns...)
+			s.Path("GET", "/", tt.args.viewFn)
 
-			s.handler(tt.args.viewFn)(ctx)
+			ln := fasthttputil.NewInmemoryListener()
 
-			if viewCalled != tt.want.viewCalled {
-				t.Errorf("View called = %v, want %v", viewCalled, tt.want.viewCalled)
+			serverCh := make(chan error, 1)
+			go func() {
+				err := s.serve(ln)
+				serverCh <- err
+			}()
+
+			clientCh := make(chan struct{})
+			go func() {
+				c, err := ln.Dial()
+				if err != nil {
+					t.Fatalf("unexpected error: %s", err)
+				}
+				if _, err = c.Write([]byte("GET / HTTP/1.1\r\nHost: TestServer\r\n\r\n")); err != nil {
+					t.Fatalf("unexpected error: %s", err)
+				}
+				br := bufio.NewReader(c)
+				var resp fasthttp.Response
+				if err = resp.Read(br); err != nil {
+					t.Fatalf("unexpected error: %s", err)
+				}
+
+				if resp.StatusCode() != tt.want.statusCode {
+					t.Fatalf("Unexpected status code: '%d', want '%d'", resp.StatusCode(), tt.want.statusCode)
+				}
+
+				if viewCalled != tt.want.viewCalled {
+					t.Errorf("View called = %v, want %v", viewCalled, tt.want.viewCalled)
+				}
+
+				if middleWareCounter != tt.want.middleWareCounter {
+					t.Errorf("Middleware call counter = %v, want %v", middleWareCounter, tt.want.middleWareCounter)
+				}
+
+				if err = c.Close(); err != nil {
+					t.Fatalf("unexpected error: %s", err)
+				}
+
+				close(clientCh)
+			}()
+
+			select {
+			case <-clientCh:
+			case <-time.After(time.Second):
+				t.Fatalf("timeout")
 			}
 
-			if middleWareCounter != tt.want.middleWareCounter {
-				t.Errorf("Middleware call counter = %v, want %v", middleWareCounter, tt.want.middleWareCounter)
+			if err := ln.Close(); err != nil {
+				t.Fatalf("unexpected error: %s", err)
 			}
 
-			responseStatusCode := ctx.Response.StatusCode()
-			if responseStatusCode != tt.want.statusCode {
-				t.Errorf("Status code = %v, want %v", responseStatusCode, tt.want.statusCode)
+			select {
+			case <-serverCh:
+			case <-time.After(time.Second):
+				t.Fatalf("timeout")
 			}
 		})
 	}
@@ -148,137 +191,40 @@ func TestAtreugo_getListener(t *testing.T) {
 	type args struct {
 		addr string
 	}
+	type want struct {
+		addr    string
+		network string
+	}
 	tests := []struct {
 		name string
-		s    *Atreugo
 		args args
-		want net.Listener
+		want want
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Test",
+			args: args{
+				addr: "127.0.0.1:8000",
+			},
+			want: want{
+				addr:    "127.0.0.1:8000",
+				network: "tcp",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.s.getListener(tt.args.addr); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Atreugo.getListener() = %v, want %v", got, tt.want)
+			s := New(&Config{})
+
+			ln := s.getListener(tt.args.addr)
+
+			lnAddress := ln.Addr().String()
+			if lnAddress != tt.want.addr {
+				t.Errorf("Listener address: '%s', want '%s'", lnAddress, tt.want.addr)
 			}
-		})
-	}
-}
 
-func TestAtreugo_serve(t *testing.T) {
-	type args struct {
-		ln       net.Listener
-		protocol string
-		addr     string
-	}
-	tests := []struct {
-		name    string
-		s       *Atreugo
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.s.serve(tt.args.ln); (err != nil) != tt.wantErr {
-				t.Errorf("Atreugo.serve() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestAtreugo_serveGracefully(t *testing.T) {
-	type args struct {
-		ln       net.Listener
-		protocol string
-		addr     string
-	}
-	tests := []struct {
-		name    string
-		s       *Atreugo
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.s.serveGracefully(tt.args.ln); (err != nil) != tt.wantErr {
-				t.Errorf("Atreugo.serveGracefully() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestAtreugo_Static(t *testing.T) {
-	type args struct {
-		rootStaticDirPath string
-	}
-	tests := []struct {
-		name string
-		s    *Atreugo
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.s.Static(tt.args.rootStaticDirPath)
-		})
-	}
-}
-
-func TestAtreugo_Path(t *testing.T) {
-	type args struct {
-		httpMethod string
-		url        string
-		viewFn     View
-	}
-	tests := []struct {
-		name string
-		s    *Atreugo
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.s.Path(tt.args.httpMethod, tt.args.url, tt.args.viewFn)
-		})
-	}
-}
-
-func TestAtreugo_UseMiddleware(t *testing.T) {
-	type args struct {
-		fns []Middleware
-	}
-	tests := []struct {
-		name string
-		s    *Atreugo
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.s.UseMiddleware(tt.args.fns...)
-		})
-	}
-}
-
-func TestAtreugo_ListenAndServe(t *testing.T) {
-	tests := []struct {
-		name    string
-		s       *Atreugo
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.s.ListenAndServe(); (err != nil) != tt.wantErr {
-				t.Errorf("Atreugo.ListenAndServe() error = %v, wantErr %v", err, tt.wantErr)
+			lnNetwork := ln.Addr().Network()
+			if lnNetwork != tt.want.network {
+				t.Errorf("Listener network: '%s', want '%s'", lnNetwork, tt.want.network)
 			}
 		})
 	}
