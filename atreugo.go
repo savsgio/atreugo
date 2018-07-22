@@ -1,10 +1,12 @@
 package atreugo
 
 import (
+	"bufio"
 	"fmt"
 	"net"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -13,6 +15,19 @@ import (
 	"github.com/savsgio/go-logger"
 	"github.com/thehowl/fasthttprouter"
 )
+
+var atreugoPools = &pools{
+	filePool: sync.Pool{
+		New: func() interface{} {
+			return new(os.File)
+		},
+	},
+	readerPool: sync.Pool{
+		New: func() interface{} {
+			return new(bufio.Reader)
+		},
+	},
+}
 
 var allowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
 

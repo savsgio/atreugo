@@ -181,7 +181,7 @@ func TestAtreugo_serve(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.s.serve(tt.args.ln, tt.args.protocol, tt.args.addr); (err != nil) != tt.wantErr {
+			if err := tt.s.serve(tt.args.ln); (err != nil) != tt.wantErr {
 				t.Errorf("Atreugo.serve() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -204,7 +204,7 @@ func TestAtreugo_serveGracefully(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.s.serveGracefully(tt.args.ln, tt.args.protocol, tt.args.addr); (err != nil) != tt.wantErr {
+			if err := tt.s.serveGracefully(tt.args.ln); (err != nil) != tt.wantErr {
 				t.Errorf("Atreugo.serveGracefully() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

@@ -3,22 +3,8 @@ package atreugo
 import (
 	"bufio"
 	"os"
-	"sync"
 	"unsafe"
 )
-
-var atreugoPools = &pools{
-	filePool: sync.Pool{
-		New: func() interface{} {
-			return new(os.File)
-		},
-	},
-	readerPool: sync.Pool{
-		New: func() interface{} {
-			return new(bufio.Reader)
-		},
-	},
-}
 
 func (p *pools) acquireFile() *os.File {
 	return p.filePool.Get().(*os.File)
