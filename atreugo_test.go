@@ -293,7 +293,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 			},
 		},
 		{
-			name: "Error",
+			name: "TLSError",
 			args: args{
 				host:      "localhost",
 				port:      8000,
@@ -331,7 +331,6 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 					t.Error("Error expected")
 				}
 			}
-
 		})
 	}
 }
