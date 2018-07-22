@@ -252,3 +252,86 @@ func TestAtreugo_getListener(t *testing.T) {
 		})
 	}
 }
+
+func TestAtreugo_ListenAndServe(t *testing.T) {
+	type args struct {
+		host      string
+		port      int
+		graceful  bool
+		tlsEnable bool
+	}
+	type want struct {
+		getErr bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "NormalOk",
+			args: args{
+				host:      "localhost",
+				port:      8000,
+				graceful:  false,
+				tlsEnable: false,
+			},
+			want: want{
+				getErr: false,
+			},
+		},
+		{
+			name: "GracefulOk",
+			args: args{
+				host:      "localhost",
+				port:      8000,
+				graceful:  true,
+				tlsEnable: false,
+			},
+			want: want{
+				getErr: false,
+			},
+		},
+		{
+			name: "Error",
+			args: args{
+				host:      "localhost",
+				port:      8000,
+				graceful:  true,
+				tlsEnable: true,
+			},
+			want: want{
+				getErr: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(&Config{
+				Host:           "localhost",
+				Port:           8000,
+				LogLevel:       "error",
+				TLSEnable:      tt.args.tlsEnable,
+				GracefulEnable: tt.args.graceful,
+			})
+
+			serverCh := make(chan error, 1)
+			go func() {
+				err := s.ListenAndServe()
+				serverCh <- err
+			}()
+
+			select {
+			case err := <-serverCh:
+				if !tt.want.getErr {
+					t.Errorf("Unexpected error: %v", err)
+				}
+			case <-time.After(100 * time.Millisecond):
+				if tt.want.getErr {
+					t.Error("Error expected")
+				}
+			}
+
+		})
+	}
+}
