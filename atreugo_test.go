@@ -196,9 +196,9 @@ func TestAtreugo_getListener(t *testing.T) {
 		addr string
 	}
 	type want struct {
-		addr    string
-		network string
-		getErr  bool
+		addr     string
+		network  string
+		getPanic bool
 	}
 	tests := []struct {
 		name string
@@ -211,9 +211,9 @@ func TestAtreugo_getListener(t *testing.T) {
 				addr: "127.0.0.1:8000",
 			},
 			want: want{
-				addr:    "127.0.0.1:8000",
-				network: "tcp",
-				getErr:  false,
+				addr:     "127.0.0.1:8000",
+				network:  "tcp",
+				getPanic: false,
 			},
 		},
 		{
@@ -222,7 +222,7 @@ func TestAtreugo_getListener(t *testing.T) {
 				addr: "fake",
 			},
 			want: want{
-				getErr: true,
+				getPanic: false,
 			},
 		},
 	}
@@ -233,8 +233,10 @@ func TestAtreugo_getListener(t *testing.T) {
 			defer func() {
 				r := recover()
 
-				if tt.want.getErr && r == nil {
-					t.Errorf("Error expected")
+				if tt.want.getPanic && r == nil {
+					t.Errorf("Panic expected")
+				} else if !tt.want.getPanic && r != nil {
+					t.Errorf("Unexpected panic")
 				}
 			}()
 
@@ -249,6 +251,130 @@ func TestAtreugo_getListener(t *testing.T) {
 			if lnNetwork != tt.want.network {
 				t.Errorf("Listener network: '%s', want '%s'", lnNetwork, tt.want.network)
 			}
+		})
+	}
+}
+
+func TestAtreugo_Path(t *testing.T) {
+	type args struct {
+		method string
+		url    string
+		viewFn View
+	}
+	type want struct {
+		getPanic bool
+	}
+	testViewFn := func(ctx *fasthttp.RequestCtx) error {
+		return nil
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "GET",
+			args: args{
+				method: "GET",
+				url:    "/",
+				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "HEAD",
+			args: args{
+				method: "HEAD",
+				url:    "/",
+				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "OPTIONS",
+			args: args{
+				method: "OPTIONS",
+				url:    "/",
+				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "POST",
+			args: args{
+				method: "POST",
+				url:    "/",
+				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "PUT",
+			args: args{
+				method: "PUT",
+				url:    "/",
+				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "PATCH",
+			args: args{
+				method: "PATCH",
+				url:    "/",
+				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "DELETE",
+			args: args{
+				method: "DELETE",
+				url:    "/",
+				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "InvalidMethod",
+			args: args{
+				method: "FAKE",
+				url:    "/",
+				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				r := recover()
+
+				if tt.want.getPanic && r == nil {
+					t.Errorf("Panic expected")
+				} else if !tt.want.getPanic && r != nil {
+					t.Errorf("Unexpected panic")
+				}
+			}()
+
+			s := New(testAtreugoConfig)
+			s.Path(tt.args.method, tt.args.url, tt.args.viewFn)
 		})
 	}
 }
