@@ -404,3 +404,13 @@ func TestRedirectResponse(t *testing.T) {
 		})
 	}
 }
+
+// Benchmarks
+func Benchmark_FileResponse(b *testing.B) {
+	path := "/home/sergio/Projects/Sergio/go/src/github.com/savsgio/atreugo/LICENSE"
+	ctx := new(fasthttp.RequestCtx)
+
+	for i := 0; i <= b.N; i++ {
+		FileResponse(ctx, "hola", path, "text/plain")
+	}
+}
