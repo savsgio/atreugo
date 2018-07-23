@@ -6,10 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/savsgio/go-logger"
-
 	"github.com/erikdubbelboer/fasthttp"
 	"github.com/erikdubbelboer/fasthttp/fasthttputil"
+	"github.com/savsgio/go-logger"
 )
 
 var testAtreugoConfig = &Config{

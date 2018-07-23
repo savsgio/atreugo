@@ -3,9 +3,8 @@ package atreugo
 import (
 	"encoding/json"
 
-	"github.com/valyala/bytebufferpool"
-
 	"github.com/erikdubbelboer/fasthttp"
+	"github.com/valyala/bytebufferpool"
 )
 
 func newResponse(ctx *fasthttp.RequestCtx, contentType string, statusCode ...int) {
