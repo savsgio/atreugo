@@ -303,6 +303,7 @@ func TestFileResponse(t *testing.T) {
 		body        string
 		statusCode  int
 		contentType string
+		getErr      bool
 	}
 
 	testFileContent := []byte("Test file content")
@@ -312,7 +313,7 @@ func TestFileResponse(t *testing.T) {
 		want want
 	}{
 		{
-			name: "Test",
+			name: "Ok",
 			args: args{
 				ctx:      new(fasthttp.RequestCtx),
 				fileName: "test.pdf",
@@ -323,6 +324,22 @@ func TestFileResponse(t *testing.T) {
 				body:        string(testFileContent),
 				statusCode:  200,
 				contentType: "application/pdf",
+				getErr:      false,
+			},
+		},
+		{
+			name: "ReadFileError",
+			args: args{
+				ctx:      new(fasthttp.RequestCtx),
+				fileName: "test.pdf",
+				filePath: "/blabla/testfile.pdf",
+				mimeType: "application/pdf",
+			},
+			want: want{
+				body:        string(testFileContent),
+				statusCode:  200,
+				contentType: "application/pdf",
+				getErr:      true,
 			},
 		},
 	}
@@ -332,8 +349,15 @@ func TestFileResponse(t *testing.T) {
 			ioutil.WriteFile(tt.args.filePath, testFileContent, 0644)
 			defer os.Remove(tt.args.filePath)
 
-			if err := FileResponse(tt.args.ctx, tt.args.fileName, tt.args.filePath, tt.args.mimeType); err != nil {
-				t.Errorf("FileResponse() error: %v", err)
+			err := FileResponse(tt.args.ctx, tt.args.fileName, tt.args.filePath, tt.args.mimeType)
+			if tt.want.getErr {
+				if err == nil {
+					t.Error("Error expected")
+				}
+				// Not check any more
+				return
+			} else if !tt.want.getErr && err != nil {
+				t.Errorf("Unexpected error: %v", err)
 			}
 
 			responseBody := string(bytes.TrimSpace(tt.args.ctx.Response.Body()))
