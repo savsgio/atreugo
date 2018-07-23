@@ -222,7 +222,7 @@ func TestAtreugo_getListener(t *testing.T) {
 				addr: "fake",
 			},
 			want: want{
-				getPanic: false,
+				getPanic: true,
 			},
 		},
 	}
