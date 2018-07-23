@@ -6,12 +6,55 @@ import (
 	"testing"
 	"time"
 
+	"github.com/savsgio/go-logger"
+
 	"github.com/erikdubbelboer/fasthttp"
 	"github.com/erikdubbelboer/fasthttp/fasthttputil"
 )
 
 var testAtreugoConfig = &Config{
 	LogLevel: "error",
+}
+
+func Test_New(t *testing.T) {
+	type args struct {
+		logLevel string
+	}
+	type want struct {
+		logLevel string
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "DefaultLogLevel",
+			args: args{
+				logLevel: "",
+			},
+			want: want{
+				logLevel: logger.INFO,
+			},
+		},
+		{
+			name: "CustomLogLevel",
+			args: args{
+				logLevel: logger.WARNING,
+			},
+			want: want{
+				logLevel: logger.WARNING,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{LogLevel: tt.args.logLevel}
+			if New(cfg); cfg.LogLevel != tt.want.logLevel {
+				t.Errorf("Log level = %v, want %v", cfg.LogLevel, tt.want.logLevel)
+			}
+		})
+	}
 }
 
 func TestAtreugoServer(t *testing.T) {
