@@ -2,7 +2,6 @@ package atreugo
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -294,16 +293,15 @@ func TestRawResponse(t *testing.T) {
 
 func TestFileResponse(t *testing.T) {
 	type args struct {
-		ctx      *fasthttp.RequestCtx
 		fileName string
 		filePath string
 		mimeType string
 	}
 	type want struct {
-		body        string
-		statusCode  int
-		contentType string
-		getErr      bool
+		body               string
+		statusCode         int
+		contentType        string
+		contentDisposition string
 	}
 
 	testFileContent := []byte("Test file content")
@@ -315,31 +313,15 @@ func TestFileResponse(t *testing.T) {
 		{
 			name: "Ok",
 			args: args{
-				ctx:      new(fasthttp.RequestCtx),
 				fileName: "test.pdf",
 				filePath: "/tmp/testfile.pdf",
 				mimeType: "application/pdf",
 			},
 			want: want{
-				body:        string(testFileContent),
-				statusCode:  200,
-				contentType: "application/pdf",
-				getErr:      false,
-			},
-		},
-		{
-			name: "ReadFileError",
-			args: args{
-				ctx:      new(fasthttp.RequestCtx),
-				fileName: "test.pdf",
-				filePath: "/blabla/testfile.pdf",
-				mimeType: "application/pdf",
-			},
-			want: want{
-				body:        string(testFileContent),
-				statusCode:  200,
-				contentType: "application/pdf",
-				getErr:      true,
+				body:               string(testFileContent),
+				statusCode:         200,
+				contentType:        "application/pdf",
+				contentDisposition: "attachment; filename=test.pdf",
 			},
 		},
 	}
@@ -349,36 +331,28 @@ func TestFileResponse(t *testing.T) {
 			ioutil.WriteFile(tt.args.filePath, testFileContent, 0644)
 			defer os.Remove(tt.args.filePath)
 
-			err := FileResponse(tt.args.ctx, tt.args.fileName, tt.args.filePath, tt.args.mimeType)
-			if tt.want.getErr {
-				if err == nil {
-					t.Error("Error expected")
-				}
-				// Not check any more
-				return
-			} else if !tt.want.getErr && err != nil {
-				t.Errorf("Unexpected error: %v", err)
-			}
+			ctx := new(fasthttp.RequestCtx)
 
-			responseBody := string(bytes.TrimSpace(tt.args.ctx.Response.Body()))
+			FileResponse(ctx, tt.args.fileName, tt.args.filePath, tt.args.mimeType)
+
+			responseBody := string(bytes.TrimSpace(ctx.Response.Body()))
 			if responseBody != tt.want.body {
 				t.Errorf("body: '%v', want: '%v'", responseBody, tt.want.body)
 			}
 
-			responseStatusCode := tt.args.ctx.Response.StatusCode()
+			responseStatusCode := ctx.Response.StatusCode()
 			if responseStatusCode != tt.want.statusCode {
 				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
 			}
 
-			responseContentType := string(tt.args.ctx.Response.Header.ContentType())
+			responseContentType := string(ctx.Response.Header.ContentType())
 			if responseContentType != tt.want.contentType {
 				t.Errorf("Header content-type: '%v', want: '%v'", responseContentType, tt.want.contentType)
 			}
 
-			wantContentDisposition := fmt.Sprintf("attachment; filename=%s", tt.args.fileName)
-			responseContentDisposition := string(tt.args.ctx.Response.Header.Peek("Content-Disposition"))
-			if responseContentDisposition != wantContentDisposition {
-				t.Errorf("Header content-disposition: '%v', want: '%v'", responseContentDisposition, wantContentDisposition)
+			responseContentDisposition := string(ctx.Response.Header.Peek("Content-Disposition"))
+			if responseContentDisposition != tt.want.contentDisposition {
+				t.Errorf("Header content-disposition: '%v', want: '%v'", responseContentDisposition, tt.want.contentDisposition)
 			}
 		})
 	}

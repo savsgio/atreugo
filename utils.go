@@ -1,28 +1,8 @@
 package atreugo
 
 import (
-	"bufio"
-	"os"
 	"unsafe"
 )
-
-func (p *pools) acquireFile() *os.File {
-	return p.filePool.Get().(*os.File)
-}
-
-func (p *pools) acquireBufioReader() *bufio.Reader {
-	return p.readerPool.Get().(*bufio.Reader)
-}
-
-func (p *pools) putFile(f *os.File) {
-	f = nil
-	p.filePool.Put(f)
-}
-
-func (p *pools) putBufioReader(br *bufio.Reader) {
-	br = nil
-	p.readerPool.Put(br)
-}
 
 func panicOnError(err error) {
 	if err != nil {

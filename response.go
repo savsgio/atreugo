@@ -1,10 +1,9 @@
 package atreugo
 
 import (
-	"bufio"
 	"encoding/json"
-	"fmt"
-	"os"
+
+	"github.com/valyala/bytebufferpool"
 
 	"github.com/erikdubbelboer/fasthttp"
 )
@@ -54,30 +53,17 @@ func RawResponse(ctx *fasthttp.RequestCtx, body []byte, statusCode ...int) error
 
 // FileResponse return a streaming response with file data.
 func FileResponse(ctx *fasthttp.RequestCtx, fileName, filePath, mimeType string) error {
-	f := atreugoPools.acquireFile()
-	defer atreugoPools.putFile(f)
+	buff := bytebufferpool.Get()
+	defer bytebufferpool.Put(buff)
 
-	reader := atreugoPools.acquireBufioReader()
-	defer atreugoPools.putBufioReader(reader)
+	fasthttp.ServeFile(ctx, filePath)
 
-	var err error
+	buff.SetString("attachment; filename=")
+	buff.WriteString(fileName)
 
-	ctx.Response.Header.Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+	ctx.Response.Header.Set("Content-Disposition", buff.String())
 	ctx.SetStatusCode(fasthttp.StatusOK)
 	ctx.SetContentType(mimeType)
-
-	f, err = os.Open(filePath)
-	if err != nil {
-		return err
-	}
-
-	info, err := f.Stat()
-	if err != nil {
-		return err
-	}
-
-	reader = bufio.NewReaderSize(f, int64ToInt(info.Size()))
-	ctx.SetBodyStream(reader, int64ToInt(info.Size()))
 
 	return nil
 }
