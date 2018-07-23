@@ -379,6 +379,38 @@ func TestAtreugo_Path(t *testing.T) {
 	}
 }
 
+func TestAtreugo_Static(t *testing.T) {
+	type args struct {
+		path string
+	}
+	type want struct {
+		getPanic bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Ok",
+			args: args{
+				path: "/tmp",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(testAtreugoConfig)
+			s.Static(tt.args.path)
+
+			if s.router.NotFound == nil {
+				t.Error("Static files not configure")
+			}
+		})
+	}
+}
+
 func TestAtreugo_ListenAndServe(t *testing.T) {
 	type args struct {
 		host      string
