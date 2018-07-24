@@ -1,7 +1,7 @@
 Atreugo
 =======
 
-[![Build Status](https://travis-ci.org/savsgio/atreugo.svg?branch=feature/Tests)](https://travis-ci.org/savsgio/atreugo)
+[![Build Status](https://travis-ci.org/savsgio/atreugo.svg?branch=develop)](https://travis-ci.org/savsgio/atreugo)
 [![Coverage Status](https://coveralls.io/repos/github/savsgio/atreugo/badge.svg?branch=develop)](https://coveralls.io/github/savsgio/atreugo?branch=develop)
 [![Go Report Card](https://goreportcard.com/badge/github.com/savsgio/atreugo)](https://goreportcard.com/report/github.com/savsgio/atreugo)
 [![GoDoc](https://godoc.org/github.com/savsgio/atreugo?status.svg)](https://godoc.org/github.com/savsgio/atreugo)
