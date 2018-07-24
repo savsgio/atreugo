@@ -1,19 +1,12 @@
 package atreugo
 
 import (
-	"sync"
-
 	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/go-logger"
 	"github.com/thehowl/fasthttprouter"
 )
 
 // private
-
-type pools struct {
-	filePool   sync.Pool
-	readerPool sync.Pool
-}
 
 // public
 
