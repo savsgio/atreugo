@@ -406,8 +406,9 @@ func TestRedirectResponse(t *testing.T) {
 }
 
 // Benchmarks
-func Benchmark_FileResponse(b *testing.B) {
-	path := "/home/sergio/Projects/Sergio/go/src/github.com/savsgio/atreugo/LICENSE"
+func  (b *testing.B) {
+	cwd, _ := os.Getwd()
+	path := cwd + "/LICENSE"
 	ctx := new(fasthttp.RequestCtx)
 
 	for i := 0; i <= b.N; i++ {
