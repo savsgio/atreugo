@@ -406,7 +406,7 @@ func TestRedirectResponse(t *testing.T) {
 }
 
 // Benchmarks
-func  (b *testing.B) {
+func Benchmark_FileResponse(b *testing.B) {
 	cwd, _ := os.Getwd()
 	path := cwd + "/LICENSE"
 	ctx := new(fasthttp.RequestCtx)
