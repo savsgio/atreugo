@@ -534,3 +534,17 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 		})
 	}
 }
+
+// Benchmarks
+func Benchmark_handler(b *testing.B) {
+	s := New(testAtreugoConfig)
+	viewFn := func(ctx *fasthttp.RequestCtx) error {
+		return TextResponse(ctx, nil)
+	}
+	ctx := new(fasthttp.RequestCtx)
+
+	b.ResetTimer()
+	for i := 0; i <= b.N; i++ {
+		s.handler(viewFn)(ctx)
+	}
+}
