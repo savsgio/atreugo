@@ -57,7 +57,7 @@ func validateToken(requestToken string) (*jwt.Token, *userCredential, error) {
 	return token, user, err
 }
 
-// checkTokenMiddleware middleware to check jwt token authoritation
+// checkTokenMiddleware middleware to check jwt token authorization
 func checkTokenMiddleware(ctx *fasthttp.RequestCtx) (int, error) {
 	// Avoid middleware when you are going to login view
 	if string(ctx.Path()) == "/login" {
