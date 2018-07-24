@@ -14,4 +14,4 @@ script:
   # - GOOS=windows go build
   - GOARCH=386 go build
 
-  - $GOPATH/bin/goveralls -v -service=travis-ci -ignore=./examples/**/*.go
+  - $GOPATH/bin/goveralls -v -service=travis-ci -package github.com/savsgio/atreugo
