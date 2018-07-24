@@ -1,8 +1,17 @@
 language: go
 sudo: false
 go:
-  - "1.10"
+  - 1.9.x
+  - 1.10.x
+
 before_install:
   - go get -u -v github.com/mattn/goveralls
 script:
+    # build test for supported platforms
+  - GOOS=linux go build
+  - GOOS=darwin go build
+  - GOOS=freebsd go build
+  - GOOS=windows go build
+  - GOARCH=386 go build
+
   - $GOPATH/bin/goveralls -v -service=travis-ci
