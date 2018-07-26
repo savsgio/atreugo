@@ -37,8 +37,8 @@
 [[projects]]
   name = "github.com/savsgio/go-logger"
   packages = ["."]
-  revision = "43e5a3b08b9f306e7d6a141724a6e6664447a232"
-  version = "v2.0.0"
+  revision = "764afe23ced5bf5ef3f462417a939974b6facae3"
+  version = "v2.0.1"
 
 [[projects]]
   name = "github.com/thehowl/fasthttprouter"
@@ -61,6 +61,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0f4487ced4cb47320dc1dfd378ce25ce394b1c7ffde2b83114294b86074974fe"
+  inputs-digest = "4d51514d15d4f8c4c732e381e449510eb46cb494b0b542e728288ed35d9208e3"
   solver-name = "gps-cdcl"
   solver-version = 1
