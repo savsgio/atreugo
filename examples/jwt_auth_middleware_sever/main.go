@@ -20,7 +20,7 @@ type userCredential struct {
 }
 
 func init() {
-	logger.Setup(logger.DEBUG)
+	logger.SetLevel(logger.DEBUG)
 }
 
 func generateToken(username []byte, password []byte) (string, time.Time) {

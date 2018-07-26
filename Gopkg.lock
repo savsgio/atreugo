@@ -16,7 +16,7 @@
     "reuseport",
     "stackless"
   ]
-  revision = "2afed0033c15042efabece65087a0c5c6c40847f"
+  revision = "9d45869b466e1c7413609aa82b268fe84d17f3f5"
 
 [[projects]]
   name = "github.com/klauspost/compress"
@@ -37,8 +37,8 @@
 [[projects]]
   name = "github.com/savsgio/go-logger"
   packages = ["."]
-  revision = "71007ae121f4f5588fc8e9e5ab5dbf25b1861ced"
-  version = "v1.0.0"
+  revision = "764afe23ced5bf5ef3f462417a939974b6facae3"
+  version = "v2.0.1"
 
 [[projects]]
   name = "github.com/thehowl/fasthttprouter"
@@ -61,6 +61,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e6094ebe45942d858de0a338400808a342cd9bc2d9ce5b50f4ec31849a284afc"
+  inputs-digest = "4d51514d15d4f8c4c732e381e449510eb46cb494b0b542e728288ed35d9208e3"
   solver-name = "gps-cdcl"
   solver-version = 1
