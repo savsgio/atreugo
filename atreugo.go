@@ -14,8 +14,6 @@ import (
 	"github.com/thehowl/fasthttprouter"
 )
 
-var allowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
-
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
 	if cfg.LogLevel == "" {
@@ -43,22 +41,36 @@ func New(cfg *Config) *Atreugo {
 	return server
 }
 
+func acquireRequestCtx(ctx *fasthttp.RequestCtx) *RequestCtx {
+	actx := requestCtxPool.Get().(*RequestCtx)
+	actx.RequestCtx = ctx
+	return actx
+}
+
+func releaseRequestCtx(actx *RequestCtx) {
+	actx.RequestCtx = nil
+	requestCtxPool.Put(actx)
+}
+
 func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
-		s.log.Debugf("%s %s", ctx.Method(), ctx.URI())
+		actx := acquireRequestCtx(ctx)
+		defer releaseRequestCtx(actx)
+
+		s.log.Debugf("%s %s", actx.Method(), actx.URI())
 
 		for _, middlewareFn := range s.middlewares {
-			if statusCode, err := middlewareFn(ctx); err != nil {
-				s.log.Errorf("Msg: %v | RequestUri: %s", err, ctx.URI().String())
+			if statusCode, err := middlewareFn(actx); err != nil {
+				s.log.Errorf("Msg: %v | RequestUri: %s", err, actx.URI().String())
 
-				ctx.Error(err.Error(), statusCode)
+				actx.Error(err.Error(), statusCode)
 				return
 			}
 		}
 
-		if err := viewFn(ctx); err != nil {
+		if err := viewFn(actx); err != nil {
 			s.log.Error(err)
-			ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+			actx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		}
 	}
 }

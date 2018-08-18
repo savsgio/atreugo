@@ -31,11 +31,16 @@ type Atreugo struct {
 	cfg         *Config
 }
 
+// RequestCtx context for atreugo
+type RequestCtx struct {
+	*fasthttp.RequestCtx
+}
+
 // View must process incoming requests.
-type View func(ctx *fasthttp.RequestCtx) error
+type View func(ctx *RequestCtx) error
 
 // Middleware must process all incoming requests before defined views.
-type Middleware func(ctx *fasthttp.RequestCtx) (int, error)
+type Middleware func(ctx *RequestCtx) (int, error)
 
 // JSON is a map whose key is a string and whose value an interface
 type JSON map[string]interface{}
