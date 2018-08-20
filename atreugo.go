@@ -2,6 +2,7 @@ package atreugo
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/signal"
@@ -45,20 +46,25 @@ func New(cfg *Config) *Atreugo {
 
 func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
-		s.log.Debugf("%s %s", ctx.Method(), ctx.URI())
+		actx := acquireRequestCtx(ctx)
+		defer releaseRequestCtx(actx)
+
+		if s.cfg.LogLevel == logger.DEBUG {
+			s.log.Debugf("%s %s", actx.Method(), actx.URI())
+		}
 
 		for _, middlewareFn := range s.middlewares {
-			if statusCode, err := middlewareFn(ctx); err != nil {
-				s.log.Errorf("Msg: %v | RequestUri: %s", err, ctx.URI().String())
+			if statusCode, err := middlewareFn(actx); err != nil {
+				s.log.Errorf("Msg: %v | RequestUri: %s", err, actx.URI().String())
 
-				ctx.Error(err.Error(), statusCode)
+				actx.Error(err.Error(), statusCode)
 				return
 			}
 		}
 
-		if err := viewFn(ctx); err != nil {
+		if err := viewFn(actx); err != nil {
 			s.log.Error(err)
-			ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+			actx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		}
 	}
 }
@@ -78,12 +84,12 @@ func (s *Atreugo) getListener(addr string) net.Listener {
 }
 
 func (s *Atreugo) serve(ln net.Listener) error {
-	protocol := "http"
+	schema := "http"
 	if s.cfg.TLSEnable {
-		protocol = "https"
+		schema = "https"
 	}
 
-	s.log.Infof("Listening on: %s://%s/", protocol, ln.Addr().String())
+	s.log.Infof("Listening on: %s://%s/", schema, ln.Addr().String())
 	if s.cfg.TLSEnable {
 		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey)
 	}
@@ -136,12 +142,17 @@ func (s *Atreugo) UseMiddleware(fns ...Middleware) {
 	s.middlewares = append(s.middlewares, fns...)
 }
 
+// SetLogOutput set log output of server
+func (s *Atreugo) SetLogOutput(output io.Writer) {
+	s.log.SetOutput(output)
+}
+
 // ListenAndServe start Atreugo server according to the configuration
 func (s *Atreugo) ListenAndServe() error {
 	addr := fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
 	ln := s.getListener(addr)
 
-	if s.cfg.GracefulEnable {
+	if s.cfg.GracefulShutdown {
 		return s.serveGracefully(ln)
 	}
 

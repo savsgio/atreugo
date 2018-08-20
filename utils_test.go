@@ -46,44 +46,6 @@ func Test_panicOnError(t *testing.T) {
 	}
 }
 
-func Test_b2s(t *testing.T) {
-	type args struct {
-		b []byte
-	}
-	tests := struct {
-		args args
-		want string
-	}{
-		args: args{
-			b: []byte("Test"),
-		},
-		want: "Test",
-	}
-
-	if got := b2s(tests.args.b); got != tests.want {
-		t.Errorf("b2s(): '%v', want: '%v'", got, tests.want)
-	}
-}
-
-func Test_int64ToInt(t *testing.T) {
-	type args struct {
-		i int64
-	}
-	tests := struct {
-		args args
-		want int
-	}{
-		args: args{
-			i: int64(3),
-		},
-		want: 3,
-	}
-
-	if got := int64ToInt(tests.args.i); got != tests.want {
-		t.Errorf("int64ToInt: '%v', want: '%v'", got, tests.want)
-	}
-}
-
 func Test_indexOf(t *testing.T) {
 	type args struct {
 		vs []string

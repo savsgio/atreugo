@@ -1,23 +1,9 @@
 package atreugo
 
-import (
-	"unsafe"
-)
-
 func panicOnError(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-// b2s convert bytes array to string without memory allocation (non safe)
-func b2s(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
-
-// int64ToInt convert int64 to int without memory allocation (non safe)
-func int64ToInt(i int64) int {
-	return *(*int)(unsafe.Pointer(&i))
 }
 
 // index returns the first index of the target string `t`, or

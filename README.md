@@ -29,8 +29,11 @@ Is based on [erikdubbelboer's fasthttp fork](https://github.com/erikdubbelboer/f
 - TLSEnable *(bool)*:  Enable HTTPS
 - CertKey *(string)*: Path of cert.key file
 - CertFile *(string)*: Path of cert.pem file
-- GracefulEnable *(bool)*: Start server with graceful shutdown
+- GracefulShutdown *(bool)*: Start server with graceful shutdown
 
+## Note:
+`*atreugo.RequestCtx` is equal than `*fasthttp.RequestCtx`, but adding extra funtionality, so you can use
+the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
 
 ## Example:
 
@@ -45,38 +48,31 @@ import (
 )
 
 func main() {
-	// Configuration for Atreugo server
 	config := &atreugo.Config{
 		Host: "0.0.0.0",
 		Port: 8000,
 	}
-
-	// New instance of atreugo server with your config
 	server := atreugo.New(config)
 
-	// Middlewares
-	fnMiddlewareOne := func(ctx *fasthttp.RequestCtx) (int, error) {
+	fnMiddlewareOne := func(ctx *atreugo.RequestCtx) (int, error) {
 		return fasthttp.StatusOK, nil
 	}
 
-	fnMiddlewareTwo := func(ctx *fasthttp.RequestCtx) (int, error) {
-		return fasthttp.StatusBadRequest, errors.New("Error message")
+	fnMiddlewareTwo := func(ctx *atreugo.RequestCtx) (int, error) {
+		// Disable this middleware if you don't want to see this error
+		return fasthttp.StatusBadRequest, errors.New("Error example")
 	}
 
-	// Register middlewares
 	server.UseMiddleware(fnMiddlewareOne, fnMiddlewareTwo)
 
-
-	// Views
-	server.Path("GET", "/", func(ctx *fasthttp.RequestCtx) error {
-		return atreugo.HTTPResponse(ctx, []byte("<h1>Atreugo Micro-Framework</h1>"))
+	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
+		return ctx.HTTPResponse([]byte("<h1>Atreugo Micro-Framework</h1>"))
 	})
 
-	server.Path("GET", "/jsonPage", func(ctx *fasthttp.RequestCtx) error {
-		return atreugo.JSONResponse(ctx, atreugo.JSON{"Atreugo": true})
+	server.Path("GET", "/jsonPage", func(ctx *atreugo.RequestCtx) error {
+		return ctx.JSONResponse(atreugo.JSON{"Atreugo": true})
 	})
 
-	// Start server
 	err := server.ListenAndServe()
 	if err != nil {
 		panic(err)

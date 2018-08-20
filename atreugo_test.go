@@ -2,6 +2,7 @@ package atreugo
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"testing"
 	"time"
@@ -78,12 +79,12 @@ func TestAtreugoServer(t *testing.T) {
 		{
 			name: "AllOk",
 			args: args{
-				viewFn: func(ctx *fasthttp.RequestCtx) error {
+				viewFn: func(ctx *RequestCtx) error {
 					viewCalled = true
 					return nil
 				},
 				middlewareFns: []Middleware{
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						middleWareCounter++
 						return 0, nil
 					},
@@ -98,15 +99,15 @@ func TestAtreugoServer(t *testing.T) {
 		{
 			name: "FirstMiddlewareError",
 			args: args{
-				viewFn: func(ctx *fasthttp.RequestCtx) error {
+				viewFn: func(ctx *RequestCtx) error {
 					viewCalled = true
 					return nil
 				},
 				middlewareFns: []Middleware{
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						return 403, errors.New("Bad request")
 					},
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						middleWareCounter++
 						return 0, nil
 					},
@@ -121,16 +122,16 @@ func TestAtreugoServer(t *testing.T) {
 		{
 			name: "SecondMiddlewareError",
 			args: args{
-				viewFn: func(ctx *fasthttp.RequestCtx) error {
+				viewFn: func(ctx *RequestCtx) error {
 					viewCalled = true
 					return nil
 				},
 				middlewareFns: []Middleware{
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						middleWareCounter++
 						return 0, nil
 					},
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						return 403, errors.New("Bad request")
 					},
 				},
@@ -144,12 +145,12 @@ func TestAtreugoServer(t *testing.T) {
 		{
 			name: "ViewError",
 			args: args{
-				viewFn: func(ctx *fasthttp.RequestCtx) error {
+				viewFn: func(ctx *RequestCtx) error {
 					viewCalled = true
 					return errors.New("Fake error")
 				},
 				middlewareFns: []Middleware{
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						middleWareCounter++
 						return 0, nil
 					},
@@ -297,6 +298,38 @@ func TestAtreugo_getListener(t *testing.T) {
 	}
 }
 
+func TestAtreugo_Static(t *testing.T) {
+	type args struct {
+		path string
+	}
+	type want struct {
+		getPanic bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Ok",
+			args: args{
+				path: "/tmp",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(testAtreugoConfig)
+			s.Static(tt.args.path)
+
+			if s.router.NotFound == nil {
+				t.Error("Static files not configure")
+			}
+		})
+	}
+}
+
 func TestAtreugo_Path(t *testing.T) {
 	type args struct {
 		method string
@@ -306,7 +339,7 @@ func TestAtreugo_Path(t *testing.T) {
 	type want struct {
 		getPanic bool
 	}
-	testViewFn := func(ctx *fasthttp.RequestCtx) error {
+	testViewFn := func(ctx *RequestCtx) error {
 		return nil
 	}
 	tests := []struct {
@@ -421,35 +454,34 @@ func TestAtreugo_Path(t *testing.T) {
 	}
 }
 
-func TestAtreugo_Static(t *testing.T) {
-	type args struct {
-		path string
-	}
-	type want struct {
-		getPanic bool
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "Ok",
-			args: args{
-				path: "/tmp",
-			},
+func TestAtreugo_UseMiddleware(t *testing.T) {
+	middlewareFns := []Middleware{
+		func(ctx *RequestCtx) (int, error) {
+			return 403, errors.New("Bad request")
+		},
+		func(ctx *RequestCtx) (int, error) {
+			return 0, nil
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(testAtreugoConfig)
-			s.Static(tt.args.path)
 
-			if s.router.NotFound == nil {
-				t.Error("Static files not configure")
-			}
-		})
+	s := New(testAtreugoConfig)
+	s.UseMiddleware(middlewareFns...)
+
+	if len(s.middlewares) != len(middlewareFns) {
+		t.Errorf("Middlewares are not registered")
+	}
+
+}
+
+func TestAtreugo_SetLogOutput(t *testing.T) {
+	s := New(&Config{LogLevel: "info"})
+	output := new(bytes.Buffer)
+
+	s.SetLogOutput(output)
+	s.log.Info("Test")
+
+	if len(output.Bytes()) <= 0 {
+		t.Error("SetLogOutput() log output was not changed")
 	}
 }
 
@@ -508,11 +540,11 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(&Config{
-				Host:           "localhost",
-				Port:           8000,
-				LogLevel:       "error",
-				TLSEnable:      tt.args.tlsEnable,
-				GracefulEnable: tt.args.graceful,
+				Host:             "localhost",
+				Port:             8000,
+				LogLevel:         "error",
+				TLSEnable:        tt.args.tlsEnable,
+				GracefulShutdown: tt.args.graceful,
 			})
 
 			serverCh := make(chan error, 1)
@@ -538,13 +570,14 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 // Benchmarks
 func Benchmark_handler(b *testing.B) {
 	s := New(testAtreugoConfig)
-	viewFn := func(ctx *fasthttp.RequestCtx) error {
-		return TextResponse(ctx, nil)
+	viewFn := func(ctx *RequestCtx) error {
+		return nil
 	}
 	ctx := new(fasthttp.RequestCtx)
+	h := s.handler(viewFn)
 
 	b.ResetTimer()
 	for i := 0; i <= b.N; i++ {
-		s.handler(viewFn)(ctx)
+		h(ctx)
 	}
 }
