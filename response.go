@@ -7,7 +7,7 @@ import (
 	"github.com/valyala/bytebufferpool"
 )
 
-func newResponse(ctx *fasthttp.RequestCtx, contentType string, statusCode ...int) {
+func (ctx *RequestCtx) newResponse(contentType string, statusCode ...int) {
 	ctx.SetContentType(contentType)
 
 	if len(statusCode) > 0 {
@@ -20,55 +20,54 @@ func newResponse(ctx *fasthttp.RequestCtx, contentType string, statusCode ...int
 }
 
 // JSONResponse return response with body in json format
-func JSONResponse(ctx *fasthttp.RequestCtx, body interface{}, statusCode ...int) error {
-	newResponse(ctx, "application/json", statusCode...)
+func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
+	ctx.newResponse("application/json", statusCode...)
 
 	return json.NewEncoder(ctx).Encode(body)
 }
 
 // HTTPResponse return response with body in html format
-func HTTPResponse(ctx *fasthttp.RequestCtx, body []byte, statusCode ...int) error {
-	newResponse(ctx, "text/html; charset=utf-8", statusCode...)
+func (ctx *RequestCtx) HTTPResponse(body []byte, statusCode ...int) error {
+	ctx.newResponse("text/html; charset=utf-8", statusCode...)
 
 	_, err := ctx.Write(body)
 	return err
 }
 
 // TextResponse return response with body in text format
-func TextResponse(ctx *fasthttp.RequestCtx, body []byte, statusCode ...int) error {
-	newResponse(ctx, "text/plain; charset=utf-8", statusCode...)
+func (ctx *RequestCtx) TextResponse(body []byte, statusCode ...int) error {
+	ctx.newResponse("text/plain; charset=utf-8", statusCode...)
 
 	_, err := ctx.Write(body)
 	return err
 }
 
 // RawResponse returns response without encoding the body.
-func RawResponse(ctx *fasthttp.RequestCtx, body []byte, statusCode ...int) error {
-	newResponse(ctx, "application/octet-stream", statusCode...)
+func (ctx *RequestCtx) RawResponse(body []byte, statusCode ...int) error {
+	ctx.newResponse("application/octet-stream", statusCode...)
 
 	_, err := ctx.Write(body)
 	return err
 }
 
 // FileResponse return a streaming response with file data.
-func FileResponse(ctx *fasthttp.RequestCtx, fileName, filePath, mimeType string) error {
+func (ctx *RequestCtx) FileResponse(fileName, filePath, mimeType string) error {
 	buff := bytebufferpool.Get()
 	defer bytebufferpool.Put(buff)
 
-	fasthttp.ServeFile(ctx, filePath)
+	fasthttp.ServeFile(ctx.RequestCtx, filePath)
 
 	buff.SetString("attachment; filename=")
 	buff.WriteString(fileName)
 
 	ctx.Response.Header.Set("Content-Disposition", buff.String())
-	ctx.SetStatusCode(fasthttp.StatusOK)
 	ctx.SetContentType(mimeType)
 
 	return nil
 }
 
 // RedirectResponse redirect request to an especific url
-func RedirectResponse(ctx *fasthttp.RequestCtx, url string, statusCode int) error {
+func (ctx *RequestCtx) RedirectResponse(url string, statusCode int) error {
 	ctx.ResetBody()
 	ctx.Redirect(url, statusCode)
 

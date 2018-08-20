@@ -78,12 +78,12 @@ func TestAtreugoServer(t *testing.T) {
 		{
 			name: "AllOk",
 			args: args{
-				viewFn: func(ctx *fasthttp.RequestCtx) error {
+				viewFn: func(ctx *RequestCtx) error {
 					viewCalled = true
 					return nil
 				},
 				middlewareFns: []Middleware{
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						middleWareCounter++
 						return 0, nil
 					},
@@ -98,15 +98,15 @@ func TestAtreugoServer(t *testing.T) {
 		{
 			name: "FirstMiddlewareError",
 			args: args{
-				viewFn: func(ctx *fasthttp.RequestCtx) error {
+				viewFn: func(ctx *RequestCtx) error {
 					viewCalled = true
 					return nil
 				},
 				middlewareFns: []Middleware{
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						return 403, errors.New("Bad request")
 					},
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						middleWareCounter++
 						return 0, nil
 					},
@@ -121,16 +121,16 @@ func TestAtreugoServer(t *testing.T) {
 		{
 			name: "SecondMiddlewareError",
 			args: args{
-				viewFn: func(ctx *fasthttp.RequestCtx) error {
+				viewFn: func(ctx *RequestCtx) error {
 					viewCalled = true
 					return nil
 				},
 				middlewareFns: []Middleware{
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						middleWareCounter++
 						return 0, nil
 					},
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						return 403, errors.New("Bad request")
 					},
 				},
@@ -144,12 +144,12 @@ func TestAtreugoServer(t *testing.T) {
 		{
 			name: "ViewError",
 			args: args{
-				viewFn: func(ctx *fasthttp.RequestCtx) error {
+				viewFn: func(ctx *RequestCtx) error {
 					viewCalled = true
 					return errors.New("Fake error")
 				},
 				middlewareFns: []Middleware{
-					func(ctx *fasthttp.RequestCtx) (int, error) {
+					func(ctx *RequestCtx) (int, error) {
 						middleWareCounter++
 						return 0, nil
 					},
@@ -306,7 +306,7 @@ func TestAtreugo_Path(t *testing.T) {
 	type want struct {
 		getPanic bool
 	}
-	testViewFn := func(ctx *fasthttp.RequestCtx) error {
+	testViewFn := func(ctx *RequestCtx) error {
 		return nil
 	}
 	tests := []struct {
@@ -538,13 +538,14 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 // Benchmarks
 func Benchmark_handler(b *testing.B) {
 	s := New(testAtreugoConfig)
-	viewFn := func(ctx *fasthttp.RequestCtx) error {
-		return TextResponse(ctx, nil)
+	viewFn := func(ctx *RequestCtx) error {
+		return nil
 	}
 	ctx := new(fasthttp.RequestCtx)
+	h := s.handler(viewFn)
 
 	b.ResetTimer()
 	for i := 0; i <= b.N; i++ {
-		s.handler(viewFn)(ctx)
+		h(ctx)
 	}
 }
