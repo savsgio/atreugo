@@ -61,7 +61,6 @@ func (ctx *RequestCtx) FileResponse(fileName, filePath, mimeType string) error {
 	buff.WriteString(fileName)
 
 	ctx.Response.Header.Set("Content-Disposition", buff.String())
-	ctx.SetStatusCode(fasthttp.StatusOK)
 	ctx.SetContentType(mimeType)
 
 	return nil
