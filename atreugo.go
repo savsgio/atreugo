@@ -2,6 +2,7 @@ package atreugo
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/signal"
@@ -139,6 +140,11 @@ func (s *Atreugo) Path(httpMethod string, url string, viewFn View) {
 // UseMiddleware register middleware functions that viewHandler will use
 func (s *Atreugo) UseMiddleware(fns ...Middleware) {
 	s.middlewares = append(s.middlewares, fns...)
+}
+
+// SetLogOutput set log output of server
+func (s *Atreugo) SetLogOutput(output io.Writer) {
+	s.log.SetOutput(output)
 }
 
 // ListenAndServe start Atreugo server according to the configuration

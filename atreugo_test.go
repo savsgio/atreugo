@@ -2,6 +2,7 @@ package atreugo
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"testing"
 	"time"
@@ -297,6 +298,38 @@ func TestAtreugo_getListener(t *testing.T) {
 	}
 }
 
+func TestAtreugo_Static(t *testing.T) {
+	type args struct {
+		path string
+	}
+	type want struct {
+		getPanic bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Ok",
+			args: args{
+				path: "/tmp",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(testAtreugoConfig)
+			s.Static(tt.args.path)
+
+			if s.router.NotFound == nil {
+				t.Error("Static files not configure")
+			}
+		})
+	}
+}
+
 func TestAtreugo_Path(t *testing.T) {
 	type args struct {
 		method string
@@ -421,35 +454,34 @@ func TestAtreugo_Path(t *testing.T) {
 	}
 }
 
-func TestAtreugo_Static(t *testing.T) {
-	type args struct {
-		path string
-	}
-	type want struct {
-		getPanic bool
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "Ok",
-			args: args{
-				path: "/tmp",
-			},
+func TestAtreugo_UseMiddleware(t *testing.T) {
+	middlewareFns := []Middleware{
+		func(ctx *RequestCtx) (int, error) {
+			return 403, errors.New("Bad request")
+		},
+		func(ctx *RequestCtx) (int, error) {
+			return 0, nil
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(testAtreugoConfig)
-			s.Static(tt.args.path)
 
-			if s.router.NotFound == nil {
-				t.Error("Static files not configure")
-			}
-		})
+	s := New(testAtreugoConfig)
+	s.UseMiddleware(middlewareFns...)
+
+	if len(s.middlewares) != len(middlewareFns) {
+		t.Errorf("Middlewares are not registered")
+	}
+
+}
+
+func TestAtreugo_SetLogOutput(t *testing.T) {
+	s := New(&Config{LogLevel: "info"})
+	output := new(bytes.Buffer)
+
+	s.SetLogOutput(output)
+	s.log.Info("Test")
+
+	if len(output.Bytes()) <= 0 {
+		t.Error("SetLogOutput() log output was not changed")
 	}
 }
 
