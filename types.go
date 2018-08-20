@@ -12,14 +12,14 @@ import (
 
 // Config config for Atreugo
 type Config struct {
-	Host           string
-	Port           int
-	LogLevel       string
-	Compress       bool
-	TLSEnable      bool
-	CertKey        string
-	CertFile       string
-	GracefulEnable bool
+	Host             string
+	Port             int
+	LogLevel         string
+	Compress         bool
+	TLSEnable        bool
+	CertKey          string
+	CertFile         string
+	GracefulShutdown bool
 }
 
 // Atreugo struct for make up a server

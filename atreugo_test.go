@@ -540,11 +540,11 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(&Config{
-				Host:           "localhost",
-				Port:           8000,
-				LogLevel:       "error",
-				TLSEnable:      tt.args.tlsEnable,
-				GracefulEnable: tt.args.graceful,
+				Host:             "localhost",
+				Port:             8000,
+				LogLevel:         "error",
+				TLSEnable:        tt.args.tlsEnable,
+				GracefulShutdown: tt.args.graceful,
 			})
 
 			serverCh := make(chan error, 1)

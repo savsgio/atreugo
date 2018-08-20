@@ -152,7 +152,7 @@ func (s *Atreugo) ListenAndServe() error {
 	addr := fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
 	ln := s.getListener(addr)
 
-	if s.cfg.GracefulEnable {
+	if s.cfg.GracefulShutdown {
 		return s.serveGracefully(ln)
 	}
 
