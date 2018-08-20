@@ -31,7 +31,7 @@ type Atreugo struct {
 	cfg         *Config
 }
 
-// RequestCtx context for atreugo
+// RequestCtx context wrapper for fasthttp.RequestCtx to adds extra funtionality
 type RequestCtx struct {
 	*fasthttp.RequestCtx
 }

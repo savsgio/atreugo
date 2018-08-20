@@ -14,6 +14,8 @@ import (
 	"github.com/thehowl/fasthttprouter"
 )
 
+var allowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
+
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
 	if cfg.LogLevel == "" {
@@ -41,23 +43,14 @@ func New(cfg *Config) *Atreugo {
 	return server
 }
 
-func acquireRequestCtx(ctx *fasthttp.RequestCtx) *RequestCtx {
-	actx := requestCtxPool.Get().(*RequestCtx)
-	actx.RequestCtx = ctx
-	return actx
-}
-
-func releaseRequestCtx(actx *RequestCtx) {
-	actx.RequestCtx = nil
-	requestCtxPool.Put(actx)
-}
-
 func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := acquireRequestCtx(ctx)
 		defer releaseRequestCtx(actx)
 
-		s.log.Debugf("%s %s", actx.Method(), actx.URI())
+		if s.cfg.LogLevel == logger.DEBUG {
+			s.log.Debugf("%s %s", actx.Method(), actx.URI())
+		}
 
 		for _, middlewareFn := range s.middlewares {
 			if statusCode, err := middlewareFn(actx); err != nil {
@@ -90,12 +83,12 @@ func (s *Atreugo) getListener(addr string) net.Listener {
 }
 
 func (s *Atreugo) serve(ln net.Listener) error {
-	protocol := "http"
+	schema := "http"
 	if s.cfg.TLSEnable {
-		protocol = "https"
+		schema = "https"
 	}
 
-	s.log.Infof("Listening on: %s://%s/", protocol, ln.Addr().String())
+	s.log.Infof("Listening on: %s://%s/", schema, ln.Addr().String())
 	if s.cfg.TLSEnable {
 		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey)
 	}
