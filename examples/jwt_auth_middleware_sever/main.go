@@ -58,7 +58,7 @@ func validateToken(requestToken string) (*jwt.Token, *userCredential, error) {
 }
 
 // checkTokenMiddleware middleware to check jwt token authorization
-func checkTokenMiddleware(ctx *fasthttp.RequestCtx) (int, error) {
+func checkTokenMiddleware(ctx *atreugo.RequestCtx) (int, error) {
 	// Avoid middleware when you are going to login view
 	if string(ctx.Path()) == "/login" {
 		return fasthttp.StatusOK, nil
@@ -88,13 +88,12 @@ func main() {
 
 	server.UseMiddleware(checkTokenMiddleware)
 
-	server.Path("GET", "/", func(ctx *fasthttp.RequestCtx) error {
-		return atreugo.HTTPResponse(ctx,
-			[]byte(fmt.Sprintf(`<h1>You are login with JWT</h1>
+	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
+		return ctx.HTTPResponse([]byte(fmt.Sprintf(`<h1>You are login with JWT</h1>
 				JWT cookie value: %s`, ctx.Request.Header.Cookie("atreugo_jwt"))))
 	})
 
-	server.Path("GET", "/login", func(ctx *fasthttp.RequestCtx) error {
+	server.Path("GET", "/login", func(ctx *atreugo.RequestCtx) error {
 		qUser := []byte("savsgio")
 		qPasswd := []byte("mypasswd")
 
@@ -105,13 +104,15 @@ func main() {
 
 			// Set cookie for domain
 			cookie := fasthttp.AcquireCookie()
+			defer fasthttp.ReleaseCookie(cookie)
+
 			cookie.SetKey("atreugo_jwt")
 			cookie.SetValue(tokenString)
 			cookie.SetExpire(expireAt)
 			ctx.Response.Header.SetCookie(cookie)
 		}
 
-		return atreugo.RedirectResponse(ctx, "/", ctx.Response.StatusCode())
+		return ctx.RedirectResponse("/", ctx.Response.StatusCode())
 	})
 
 	err := server.ListenAndServe()

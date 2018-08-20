@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+
 	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/atreugo"
 )
@@ -17,7 +19,8 @@ func main() {
 	}
 
 	fnMiddlewareTwo := func(ctx *atreugo.RequestCtx) (int, error) {
-		return fasthttp.StatusBadRequest, nil
+		// Disable this middleware if you don't want to see this error
+		return fasthttp.StatusBadRequest, errors.New("Error example")
 	}
 
 	server.UseMiddleware(fnMiddlewareOne, fnMiddlewareTwo)
