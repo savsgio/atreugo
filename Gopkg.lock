@@ -2,65 +2,89 @@
 
 
 [[projects]]
+  digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
+  pruneopts = "UT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:977911e40ac577da6af9b6b8c301f17b2406293a5dabf7907cc8fcd3b2d755ce"
   name = "github.com/erikdubbelboer/fasthttp"
   packages = [
     ".",
     "fasthttputil",
     "reuseport",
-    "stackless"
+    "stackless",
   ]
-  revision = "9d45869b466e1c7413609aa82b268fe84d17f3f5"
+  pruneopts = "UT"
+  revision = "16e0bf24d475f8dcd37b7241cf08b5a839d69c71"
 
 [[projects]]
+  branch = "master"
+  digest = "1:cdbed6a7b574b13bbabcd8c36c5be56d6444789bab21fcd37d39655eab0b2141"
   name = "github.com/klauspost/compress"
   packages = [
     "flate",
     "gzip",
-    "zlib"
+    "zlib",
   ]
-  revision = "b939724e787a27c0005cabe3f78e7ed7987ac74f"
-  version = "v1.4.0"
+  pruneopts = "UT"
+  revision = "b50017755d442260d792c34c7c43216d9ba7ffc7"
 
 [[projects]]
   branch = "master"
+  digest = "1:2d643962fac133904694fffa959bc3c5dcfdcee38c6f5ffdd99a3c93eb9c835c"
   name = "github.com/klauspost/cpuid"
   packages = ["."]
+  pruneopts = "UT"
   revision = "e7e905edc00ea8827e58662220139109efea09db"
 
 [[projects]]
+  digest = "1:0dbfe9f0e50a4c923870a165a770a3bb6843c745d8e81ee702ef2a8c8ebc8282"
   name = "github.com/savsgio/go-logger"
   packages = ["."]
+  pruneopts = "UT"
   revision = "764afe23ced5bf5ef3f462417a939974b6facae3"
   version = "v2.0.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:1c7ddcb896dfc7b1124dc0c5a93135832f7991626c470a9d797fc3799422f40c"
   name = "github.com/thehowl/fasthttprouter"
   packages = ["."]
+  pruneopts = "UT"
   revision = "0e77ecfde28ad422d670671c17415e1d15f0f5be"
-  version = "v0.2.1"
 
 [[projects]]
   branch = "master"
+  digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
   name = "github.com/valyala/bytebufferpool"
   packages = ["."]
+  pruneopts = "UT"
   revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
 
 [[projects]]
   branch = "master"
+  digest = "1:8507835fade46d48a94828b351e1f8fb83df1aa65ba1e67c9493b0a1b47abc73"
   name = "github.com/valyala/tcplisten"
   packages = ["."]
+  pruneopts = "UT"
   revision = "ceec8f93295a060cdb565ec25e4ccf17941dbd55"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4d51514d15d4f8c4c732e381e449510eb46cb494b0b542e728288ed35d9208e3"
+  input-imports = [
+    "github.com/dgrijalva/jwt-go",
+    "github.com/erikdubbelboer/fasthttp",
+    "github.com/erikdubbelboer/fasthttp/fasthttputil",
+    "github.com/erikdubbelboer/fasthttp/reuseport",
+    "github.com/savsgio/go-logger",
+    "github.com/thehowl/fasthttprouter",
+    "github.com/valyala/bytebufferpool",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
