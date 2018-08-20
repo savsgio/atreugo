@@ -31,6 +31,9 @@ Is based on [erikdubbelboer's fasthttp fork](https://github.com/erikdubbelboer/f
 - CertFile *(string)*: Path of cert.pem file
 - GracefulEnable *(bool)*: Start server with graceful shutdown
 
+## Note:
+`*atreugo.RequestCtx` is equal than `*fasthttp.RequestCtx`, but adding extra funtionality, so you can use
+the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
 
 ## Example:
 
