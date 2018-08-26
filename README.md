@@ -74,7 +74,7 @@ func main() {
 ## Useful third-party libraries
 
 - [fasthttpsessions](https://github.com/phachon/fasthttpsession)
-- [websocket](https://github.com/savsgio/websocket)
+- [websocket](https://github.com/fasthttp/websocket)
 
 Contributing
 ============
