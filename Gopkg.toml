@@ -1,9 +1,9 @@
 [[constraint]]
-  name = "github.com/erikdubbelboer/fasthttp"
+  name = "github.com/valyala/fasthttp"
   branch = "master"
 
 [[constraint]]
-  name = "github.com/thehowl/fasthttprouter"
+  name = "github.com/buaazp/fasthttprouter"
   branch = "master"
 
 [[constraint]]

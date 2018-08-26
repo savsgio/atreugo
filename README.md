@@ -6,19 +6,9 @@ Atreugo
 [![Go Report Card](https://goreportcard.com/badge/github.com/savsgio/atreugo)](https://goreportcard.com/report/github.com/savsgio/atreugo)
 [![GoDoc](https://godoc.org/github.com/savsgio/atreugo?status.svg)](https://godoc.org/github.com/savsgio/atreugo)
 
-Micro-framework to make simple the use of routing and middlewares in fasthttp.
-
-Is based on [erikdubbelboer's fasthttp fork](https://github.com/erikdubbelboer/fasthttp) that it more active than [valyala's fasthttp](https://github.com/valyala/fasthttp)
-
+Micro-framework to make simple the use of routing and middlewares in [fasthttp](https://github.com/valyala/fasthttp).
 
 ***The project use [dep](https://golang.github.io/dep/) manager dependencies.***
-
-## Go dependencies:
-
-- [fasthttp](https://github.com/erikdubbelboer/fasthttp)
-- [fasthttprouter](https://github.com/thehowl/fasthttprouter)
-- [go-logger](https://github.com/savsgio/go-logger)
-
 
 ## Atreugo configuration:
 
@@ -43,7 +33,7 @@ package main
 import (
 	"errors"
 
-	"github.com/erikdubbelboer/fasthttp"
+	"github.com/valyala/fasthttp"
 	"github.com/savsgio/atreugo"
 )
 
@@ -83,8 +73,8 @@ func main() {
 
 ## Useful third-party libraries
 
-- [fasthttpsessions](https://github.com/themester/fasthttpsession)
-- [websocket](https://github.com/savsgio/websocket)
+- [session](https://github.com/fasthttp/session)
+- [websocket](https://github.com/fasthttp/websocket)
 
 Contributing
 ============

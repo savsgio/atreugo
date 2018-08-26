@@ -1,9 +1,9 @@
 package atreugo
 
 import (
-	"github.com/erikdubbelboer/fasthttp"
+	"github.com/buaazp/fasthttprouter"
 	"github.com/savsgio/go-logger"
-	"github.com/thehowl/fasthttprouter"
+	"github.com/valyala/fasthttp"
 )
 
 // private
