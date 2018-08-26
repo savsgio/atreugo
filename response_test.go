@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/erikdubbelboer/fasthttp"
+	"github.com/valyala/fasthttp"
 )
 
 func Test_newResponse(t *testing.T) {

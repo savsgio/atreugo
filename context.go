@@ -3,7 +3,7 @@ package atreugo
 import (
 	"sync"
 
-	"github.com/erikdubbelboer/fasthttp"
+	"github.com/valyala/fasthttp"
 )
 
 var requestCtxPool = sync.Pool{

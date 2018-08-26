@@ -3,8 +3,8 @@ package main
 import (
 	"errors"
 
-	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/atreugo"
+	"github.com/valyala/fasthttp"
 )
 
 func main() {

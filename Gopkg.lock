@@ -2,25 +2,20 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:c2070df25eadf11d68bd76e4cc5252c578b9738798dadfd97b8e3dca6a64a548"
+  name = "github.com/buaazp/fasthttprouter"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "28db72dff5a1512dab256b4b7f85c5aa8c36cf73"
+
+[[projects]]
   digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   pruneopts = "UT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:977911e40ac577da6af9b6b8c301f17b2406293a5dabf7907cc8fcd3b2d755ce"
-  name = "github.com/erikdubbelboer/fasthttp"
-  packages = [
-    ".",
-    "fasthttputil",
-    "reuseport",
-    "stackless",
-  ]
-  pruneopts = "UT"
-  revision = "16e0bf24d475f8dcd37b7241cf08b5a839d69c71"
 
 [[projects]]
   branch = "master"
@@ -52,19 +47,24 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1c7ddcb896dfc7b1124dc0c5a93135832f7991626c470a9d797fc3799422f40c"
-  name = "github.com/thehowl/fasthttprouter"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "0e77ecfde28ad422d670671c17415e1d15f0f5be"
-
-[[projects]]
-  branch = "master"
   digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
   name = "github.com/valyala/bytebufferpool"
   packages = ["."]
   pruneopts = "UT"
   revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
+
+[[projects]]
+  branch = "master"
+  digest = "1:7c5bd2510e166e8f8d66ad3e308c173da4803c2c5fb0039a22c6edcf992ffa99"
+  name = "github.com/valyala/fasthttp"
+  packages = [
+    ".",
+    "fasthttputil",
+    "reuseport",
+    "stackless",
+  ]
+  pruneopts = "UT"
+  revision = "5b46f8ddc5a49a313318191fc4a6a7ea3f603ab1"
 
 [[projects]]
   branch = "master"
@@ -78,13 +78,13 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/buaazp/fasthttprouter",
     "github.com/dgrijalva/jwt-go",
-    "github.com/erikdubbelboer/fasthttp",
-    "github.com/erikdubbelboer/fasthttp/fasthttputil",
-    "github.com/erikdubbelboer/fasthttp/reuseport",
     "github.com/savsgio/go-logger",
-    "github.com/thehowl/fasthttprouter",
     "github.com/valyala/bytebufferpool",
+    "github.com/valyala/fasthttp",
+    "github.com/valyala/fasthttp/fasthttputil",
+    "github.com/valyala/fasthttp/reuseport",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

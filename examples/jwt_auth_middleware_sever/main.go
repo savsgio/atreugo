@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/erikdubbelboer/fasthttp"
 	"github.com/savsgio/atreugo"
 	"github.com/savsgio/go-logger"
+	"github.com/valyala/fasthttp"
 )
 
 var jwtSignKey = []byte("TestForFasthttpWithJWT")

@@ -9,10 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/erikdubbelboer/fasthttp"
-	"github.com/erikdubbelboer/fasthttp/reuseport"
+	"github.com/buaazp/fasthttprouter"
 	"github.com/savsgio/go-logger"
-	"github.com/thehowl/fasthttprouter"
+	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/reuseport"
 )
 
 var allowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}

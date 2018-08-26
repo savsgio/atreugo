@@ -3,7 +3,7 @@ package atreugo
 import (
 	"testing"
 
-	"github.com/erikdubbelboer/fasthttp"
+	"github.com/valyala/fasthttp"
 )
 
 func TestRequestCtx_reset(t *testing.T) {
