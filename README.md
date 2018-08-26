@@ -73,7 +73,7 @@ func main() {
 
 ## Useful third-party libraries
 
-- [fasthttpsessions](https://github.com/phachon/fasthttpsession)
+- [session](https://github.com/fasthttp/session)
 - [websocket](https://github.com/fasthttp/websocket)
 
 Contributing
