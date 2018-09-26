@@ -89,8 +89,8 @@ func main() {
 	server.UseMiddleware(checkTokenMiddleware)
 
 	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
-		return ctx.HTTPResponse([]byte(fmt.Sprintf(`<h1>You are login with JWT</h1>
-				JWT cookie value: %s`, ctx.Request.Header.Cookie("atreugo_jwt"))))
+		return ctx.HTTPResponse(fmt.Sprintf(`<h1>You are login with JWT</h1>
+				JWT cookie value: %s`, ctx.Request.Header.Cookie("atreugo_jwt")))
 	})
 
 	server.Path("GET", "/login", func(ctx *atreugo.RequestCtx) error {

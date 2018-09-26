@@ -26,7 +26,7 @@ func main() {
 	server.UseMiddleware(fnMiddlewareOne, fnMiddlewareTwo)
 
 	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
-		return ctx.HTTPResponse([]byte("<h1>Atreugo Micro-Framework</h1>"))
+		return ctx.HTTPResponse("<h1>Atreugo Micro-Framework</h1>")
 	})
 
 	server.Path("GET", "/jsonPage", func(ctx *atreugo.RequestCtx) error {
