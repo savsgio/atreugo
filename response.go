@@ -27,7 +27,15 @@ func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
 }
 
 // HTTPResponse return response with body in html format
-func (ctx *RequestCtx) HTTPResponse(body []byte, statusCode ...int) error {
+func (ctx *RequestCtx) HTTPResponse(body string, statusCode ...int) error {
+	ctx.newResponse("text/html; charset=utf-8", statusCode...)
+
+	_, err := ctx.WriteString(body)
+	return err
+}
+
+// HTTPResponseBytes return response with body in html format
+func (ctx *RequestCtx) HTTPResponseBytes(body []byte, statusCode ...int) error {
 	ctx.newResponse("text/html; charset=utf-8", statusCode...)
 
 	_, err := ctx.Write(body)
@@ -35,7 +43,15 @@ func (ctx *RequestCtx) HTTPResponse(body []byte, statusCode ...int) error {
 }
 
 // TextResponse return response with body in text format
-func (ctx *RequestCtx) TextResponse(body []byte, statusCode ...int) error {
+func (ctx *RequestCtx) TextResponse(body string, statusCode ...int) error {
+	ctx.newResponse("text/plain; charset=utf-8", statusCode...)
+
+	_, err := ctx.WriteString(body)
+	return err
+}
+
+// TextResponseBytes return response with body in text format
+func (ctx *RequestCtx) TextResponseBytes(body []byte, statusCode ...int) error {
 	ctx.newResponse("text/plain; charset=utf-8", statusCode...)
 
 	_, err := ctx.Write(body)
@@ -43,7 +59,15 @@ func (ctx *RequestCtx) TextResponse(body []byte, statusCode ...int) error {
 }
 
 // RawResponse returns response without encoding the body.
-func (ctx *RequestCtx) RawResponse(body []byte, statusCode ...int) error {
+func (ctx *RequestCtx) RawResponse(body string, statusCode ...int) error {
+	ctx.newResponse("application/octet-stream", statusCode...)
+
+	_, err := ctx.WriteString(body)
+	return err
+}
+
+// RawResponseBytes returns response without encoding the body.
+func (ctx *RequestCtx) RawResponseBytes(body []byte, statusCode ...int) error {
 	ctx.newResponse("application/octet-stream", statusCode...)
 
 	_, err := ctx.Write(body)
