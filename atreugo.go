@@ -12,7 +12,6 @@ import (
 	"github.com/buaazp/fasthttprouter"
 	"github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
-	"github.com/valyala/fasthttp/reuseport"
 )
 
 var allowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
@@ -67,20 +66,6 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 			actx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		}
 	}
-}
-
-func (s *Atreugo) getListener(addr string) net.Listener {
-	ln, err := reuseport.Listen(network, addr)
-	if err == nil {
-		return ln
-	}
-	s.log.Warningf("Error in reuseport listener %s", err)
-
-	s.log.Infof("Trying with net listener")
-	ln, err = net.Listen(network, addr)
-	panicOnError(err)
-
-	return ln
 }
 
 func (s *Atreugo) serve(ln net.Listener) error {
