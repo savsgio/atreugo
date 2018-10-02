@@ -48,7 +48,7 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 		actx := acquireRequestCtx(ctx)
 		defer releaseRequestCtx(actx)
 
-		if logger.DebugEnabled() {
+		if s.log.DebugEnabled() {
 			s.log.Debugf("%s %s", actx.Method(), actx.URI())
 		}
 
