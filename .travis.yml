@@ -4,9 +4,15 @@ go:
   - 1.9.x
   - 1.10.x
   - 1.11.x
+  - tip
+
+os:
+  - linux
+  - osx
 
 before_install:
   - go get -u -v github.com/mattn/goveralls
+
 script:
     # build test for supported platforms
   - GOOS=linux go build
