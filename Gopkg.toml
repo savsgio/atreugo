@@ -3,7 +3,7 @@
   branch = "master"
 
 [[constraint]]
-  name = "github.com/buaazp/fasthttprouter"
+  name = "github.com/fasthttp/router"
   branch = "master"
 
 [[constraint]]

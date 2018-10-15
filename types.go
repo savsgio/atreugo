@@ -1,7 +1,7 @@
 package atreugo
 
 import (
-	"github.com/buaazp/fasthttprouter"
+	"github.com/fasthttp/router"
 	"github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
 )
@@ -25,7 +25,7 @@ type Config struct {
 // Atreugo struct for make up a server
 type Atreugo struct {
 	server      *fasthttp.Server
-	router      *fasthttprouter.Router
+	router      *router.Router
 	middlewares []Middleware
 	log         *logger.Logger
 	cfg         *Config

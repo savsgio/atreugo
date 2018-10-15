@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/buaazp/fasthttprouter"
+	"github.com/fasthttp/router"
 	"github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
 )
@@ -22,15 +22,15 @@ func New(cfg *Config) *Atreugo {
 		cfg.LogLevel = logger.INFO
 	}
 
-	router := fasthttprouter.New()
+	r := router.New()
 
-	handler := router.Handler
+	handler := r.Handler
 	if cfg.Compress {
 		handler = fasthttp.CompressHandler(handler)
 	}
 
 	server := &Atreugo{
-		router: router,
+		router: r,
 		server: &fasthttp.Server{
 			Handler:     handler,
 			Name:        "AtreugoFastHTTPServer",

@@ -2,20 +2,20 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:c2070df25eadf11d68bd76e4cc5252c578b9738798dadfd97b8e3dca6a64a548"
-  name = "github.com/buaazp/fasthttprouter"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "28db72dff5a1512dab256b4b7f85c5aa8c36cf73"
-
-[[projects]]
   digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   pruneopts = "UT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:fb3c75e64d77a8292ee7c984420bcd8c23b8933d5013a43bc9abacc3148b5a03"
+  name = "github.com/fasthttp/router"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9d27f9ad21125232953cccec963a6be73d7cc437"
 
 [[projects]]
   branch = "master"
@@ -55,7 +55,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6e56e85d0ada02305f14e3d278c8f3e5e971c73d88b654c2b8b6244160311bc7"
+  digest = "1:9680845f9637af319f0d90a80c5ac4c6639ed2bbae15f9611c6efa032cd15159"
   name = "github.com/valyala/fasthttp"
   packages = [
     ".",
@@ -64,7 +64,7 @@
     "stackless",
   ]
   pruneopts = "UT"
-  revision = "4087354082e1ab9a610705ec9f7949603d3c46ab"
+  revision = "996610f021ff45fdc98c2ce7884d5fa4e7f9199b"
 
 [[projects]]
   branch = "master"
@@ -78,8 +78,8 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/buaazp/fasthttprouter",
     "github.com/dgrijalva/jwt-go",
+    "github.com/fasthttp/router",
     "github.com/savsgio/go-logger",
     "github.com/valyala/bytebufferpool",
     "github.com/valyala/fasthttp",
