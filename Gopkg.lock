@@ -10,12 +10,12 @@
   version = "v3.2.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:fb3c75e64d77a8292ee7c984420bcd8c23b8933d5013a43bc9abacc3148b5a03"
+  digest = "1:683fecd68efcf2fb7507f0cec0feb9d910e8e68634548143d4bb73a8009003e4"
   name = "github.com/fasthttp/router"
   packages = ["."]
   pruneopts = "UT"
-  revision = "9d27f9ad21125232953cccec963a6be73d7cc437"
+  revision = "3ce280e73139a37a6693625fb7f0b50352c14fd6"
+  version = "v0.1.1"
 
 [[projects]]
   branch = "master"

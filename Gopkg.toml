@@ -4,7 +4,7 @@
 
 [[constraint]]
   name = "github.com/fasthttp/router"
-  branch = "master"
+  version = "0.1.1"
 
 [[constraint]]
   name = "github.com/savsgio/go-logger"
@@ -20,6 +20,14 @@
 
 [[override]]
   name = "github.com/klauspost/crc32"
+  branch = "master"
+
+[[override]]
+  name = "github.com/valyala/tcplisten"
+  branch = "master"
+
+[[override]]
+  name = "github.com/valyala/bytebufferpool"
   branch = "master"
 
 [prune]
