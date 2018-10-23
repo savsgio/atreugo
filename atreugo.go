@@ -18,8 +18,14 @@ var allowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATC
 
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
+	if cfg.Name == "" {
+		cfg.Name = "AtreugoServer"
+	}
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = logger.INFO
+	}
+	if cfg.GracefulShutdown && cfg.ReadTimeout <= 0 {
+		cfg.ReadTimeout = 20 * time.Second
 	}
 
 	r := router.New()
@@ -33,8 +39,8 @@ func New(cfg *Config) *Atreugo {
 		router: r,
 		server: &fasthttp.Server{
 			Handler:     handler,
-			Name:        "AtreugoFastHTTPServer",
-			ReadTimeout: 25 * time.Second,
+			Name:        cfg.Name,
+			ReadTimeout: cfg.ReadTimeout,
 		},
 		log: logger.New("atreugo", cfg.LogLevel, os.Stdout),
 		cfg: cfg,
