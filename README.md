@@ -13,14 +13,7 @@ Micro-framework to make simple the use of routing and middlewares in [fasthttp](
 
 ## Atreugo configuration:
 
-- Host *(string)*
-- Port *(int)*
-- LogLevel *(string)*: [See levels](https://github.com/savsgio/go-logger/blob/master/README.md)
-- Compress *(bool)*:  Compress response body
-- TLSEnable *(bool)*:  Enable HTTPS
-- CertKey *(string)*: Path of cert.key file
-- CertFile *(string)*: Path of cert.pem file
-- GracefulShutdown *(bool)*: Start server with graceful shutdown
+See: https://godoc.org/github.com/savsgio/atreugo#Config
 
 ## Note:
 `*atreugo.RequestCtx` is equal than `*fasthttp.RequestCtx`, but adding extra funtionality, so you can use
