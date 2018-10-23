@@ -11,9 +11,6 @@ Micro-framework to make simple the use of routing and middlewares in [fasthttp](
 
 ***The project use [dep](https://golang.github.io/dep/) manager dependencies.***
 
-## Atreugo configuration:
-
-See: https://godoc.org/github.com/savsgio/atreugo#Config
 
 ## Note:
 `*atreugo.RequestCtx` is equal than `*fasthttp.RequestCtx`, but adding extra funtionality, so you can use
