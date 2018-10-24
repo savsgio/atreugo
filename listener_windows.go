@@ -6,6 +6,6 @@ import (
 	"net"
 )
 
-func (s *Atreugo) getListener() (net.Listener, err) {
+func (s *Atreugo) getListener() (net.Listener, error) {
 	return net.Listen(network, s.lnAddr)
 }
