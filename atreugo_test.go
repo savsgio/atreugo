@@ -177,7 +177,7 @@ func TestAtreugoServer(t *testing.T) {
 
 			serverCh := make(chan error, 1)
 			go func() {
-				err := s.serve(ln)
+				err := s.Serve(ln)
 				serverCh <- err
 			}()
 

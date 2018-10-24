@@ -38,12 +38,12 @@
   revision = "e7e905edc00ea8827e58662220139109efea09db"
 
 [[projects]]
-  digest = "1:90bd4bcf8928e69f2d02c15044ed413939c454be8fe215616d216a1a9f68ffe2"
+  digest = "1:2dd07416292e901c9a7a47133fa730d6291277d3fdcb8fca7f37c27d80434677"
   name = "github.com/savsgio/go-logger"
   packages = ["."]
   pruneopts = "UT"
-  revision = "960ba99cb6e8388b24992b3a92ea445a8ef2bb60"
-  version = "v2.1.0"
+  revision = "505684d232ffd30031ab04e9444ad47f1751bb55"
+  version = "v2.1.1"
 
 [[projects]]
   branch = "master"

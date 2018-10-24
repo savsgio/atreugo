@@ -40,6 +40,7 @@ func TestAtreugo_getListener(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(testAtreugoConfig)
+			s.lnAddr = tt.args.addr
 
 			defer func() {
 				r := recover()
@@ -51,7 +52,10 @@ func TestAtreugo_getListener(t *testing.T) {
 				}
 			}()
 
-			ln := s.getListener(tt.args.addr)
+			ln, err := s.getListener()
+			if err != nil {
+				panic(err)
+			}
 
 			lnAddress := ln.Addr().String()
 			if lnAddress != tt.want.addr {

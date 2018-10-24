@@ -6,6 +6,8 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -60,7 +62,7 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 
 		for _, middlewareFn := range s.middlewares {
 			if statusCode, err := middlewareFn(actx); err != nil {
-				s.log.Errorf("Msg: %v | RequestUri: %s", err, actx.URI().String())
+				s.log.Errorf("%s %s - %s", actx.Method(), actx.URI(), err)
 
 				actx.Error(err.Error(), statusCode)
 				return
@@ -74,13 +76,29 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 	}
 }
 
-func (s *Atreugo) serve(ln net.Listener) error {
+// Serve serves incoming connections from the given listener.
+//
+// Serve blocks until the given listener returns permanent error.
+func (s *Atreugo) Serve(ln net.Listener) error {
 	schema := "http"
 	if s.cfg.TLSEnable {
 		schema = "https"
 	}
 
-	s.log.Infof("Listening on: %s://%s/", schema, ln.Addr().String())
+	addr := ln.Addr().String()
+	if addr != s.lnAddr {
+		s.log.Info("Updating config with new listener address")
+		sAddr := strings.Split(addr, ":")
+		s.cfg.Host = sAddr[0]
+		if len(sAddr) > 1 {
+			s.cfg.Port, _ = strconv.Atoi(sAddr[1])
+		} else {
+			s.cfg.Port = 0
+		}
+		s.lnAddr = addr
+	}
+
+	s.log.Infof("Listening on: %s://%s/", schema, addr)
 	if s.cfg.TLSEnable {
 		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey)
 	}
@@ -92,7 +110,7 @@ func (s *Atreugo) serveGracefully(ln net.Listener) error {
 	listenErr := make(chan error, 1)
 
 	go func() {
-		listenErr <- s.serve(ln)
+		listenErr <- s.Serve(ln)
 	}()
 
 	osSignals := make(chan os.Signal, 1)
@@ -138,14 +156,20 @@ func (s *Atreugo) SetLogOutput(output io.Writer) {
 	s.log.SetOutput(output)
 }
 
-// ListenAndServe start Atreugo server according to the configuration
+// ListenAndServe serves HTTP/HTTPS requests from the given TCP4 addr.
+//
+// Pass custom listener to Serve if you need listening on non-TCP4 media
+// such as IPv6.
 func (s *Atreugo) ListenAndServe() error {
-	addr := fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
-	ln := s.getListener(addr)
+	s.lnAddr = fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
+	ln, err := s.getListener()
+	if err != nil {
+		return err
+	}
 
 	if s.cfg.GracefulShutdown {
 		return s.serveGracefully(ln)
 	}
 
-	return s.serve(ln)
+	return s.Serve(ln)
 }

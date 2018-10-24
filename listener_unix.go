@@ -4,20 +4,19 @@ package atreugo
 
 import (
 	"net"
+	"runtime"
 
 	"github.com/valyala/fasthttp/reuseport"
 )
 
-func (s *Atreugo) getListener(addr string) net.Listener {
-	ln, err := reuseport.Listen(network, addr)
-	if err == nil {
-		return ln
+func (s *Atreugo) getListener() (net.Listener, error) {
+	if runtime.NumCPU() > 1 {
+		ln, err := reuseport.Listen(network, s.lnAddr)
+		if err == nil {
+			return ln, nil
+		}
+		s.log.Warning("Can not use reuseport, using default Listener")
 	}
-	s.log.Warningf("Can not use reuseport listener %s", err)
 
-	s.log.Infof("Trying with net listener")
-	ln, err = net.Listen(network, addr)
-	panicOnError(err)
-
-	return ln
+	return net.Listen(network, s.lnAddr)
 }

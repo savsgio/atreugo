@@ -46,6 +46,8 @@ type Config struct {
 
 // Atreugo struct for make up a server
 type Atreugo struct {
+	lnAddr string
+
 	server      *fasthttp.Server
 	router      *router.Router
 	middlewares []Middleware
