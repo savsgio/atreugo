@@ -42,7 +42,7 @@ func New(cfg *Config) *Atreugo {
 			Name:        cfg.Name,
 			ReadTimeout: cfg.ReadTimeout,
 		},
-		log: logger.New("atreugo", cfg.LogLevel, os.Stdout),
+		log: logger.New("atreugo", cfg.LogLevel, os.Stderr),
 		cfg: cfg,
 	}
 
