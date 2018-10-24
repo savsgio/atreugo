@@ -13,7 +13,7 @@ import (
 )
 
 var testAtreugoConfig = &Config{
-	LogLevel: "error",
+	LogLevel: "fatal",
 }
 
 func Test_New(t *testing.T) {
