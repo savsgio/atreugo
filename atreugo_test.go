@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -422,6 +423,11 @@ func TestAtreugo_SetLogOutput(t *testing.T) {
 }
 
 func TestAtreugo_ListenAndServe(t *testing.T) {
+	var random = func(min, max int) int {
+		rand.Seed(time.Now().Unix())
+		return rand.Intn(max-min) + min
+	}
+
 	type args struct {
 		host      string
 		port      int
@@ -440,7 +446,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 			name: "NormalOk",
 			args: args{
 				host:      "localhost",
-				port:      8000,
+				port:      random(8000, 9000),
 				graceful:  false,
 				tlsEnable: false,
 			},
@@ -452,7 +458,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 			name: "GracefulOk",
 			args: args{
 				host:      "localhost",
-				port:      8000,
+				port:      random(8000, 9000),
 				graceful:  true,
 				tlsEnable: false,
 			},
@@ -464,9 +470,18 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 			name: "TLSError",
 			args: args{
 				host:      "localhost",
-				port:      8000,
-				graceful:  true,
+				port:      random(8000, 9000),
 				tlsEnable: true,
+			},
+			want: want{
+				getErr: true,
+			},
+		},
+		{
+			name: "InvalidAddr",
+			args: args{
+				host: "aaaa",
+				port: 0,
 			},
 			want: want{
 				getErr: true,
@@ -476,25 +491,25 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(&Config{
-				Host:             "localhost",
-				Port:             8000,
+				Host:             tt.args.host,
+				Port:             tt.args.port,
 				LogLevel:         "error",
 				TLSEnable:        tt.args.tlsEnable,
 				GracefulShutdown: tt.args.graceful,
 			})
 
-			serverCh := make(chan error, 1)
+			errCh := make(chan error, 1)
 			go func() {
-				err := s.ListenAndServe()
-				serverCh <- err
+				errCh <- s.ListenAndServe()
 			}()
 
 			select {
-			case err := <-serverCh:
-				if !tt.want.getErr {
+			case err := <-errCh:
+				if !tt.want.getErr && err != nil {
 					t.Errorf("Unexpected error: %v", err)
 				}
-			case <-time.After(100 * time.Millisecond):
+			case <-time.After(200 * time.Millisecond):
+				s.server.Shutdown()
 				if tt.want.getErr {
 					t.Error("Error expected")
 				}
