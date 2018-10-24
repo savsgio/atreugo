@@ -37,14 +37,17 @@ func New(cfg *Config) *Atreugo {
 		handler = fasthttp.CompressHandler(handler)
 	}
 
+	log := logger.New("atreugo", cfg.LogLevel, os.Stderr)
+
 	server := &Atreugo{
 		router: r,
 		server: &fasthttp.Server{
 			Handler:     handler,
 			Name:        cfg.Name,
 			ReadTimeout: cfg.ReadTimeout,
+			Logger:      log,
 		},
-		log: logger.New("atreugo", cfg.LogLevel, os.Stderr),
+		log: log,
 		cfg: cfg,
 	}
 
