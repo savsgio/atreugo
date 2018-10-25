@@ -102,6 +102,9 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 // Serve serves incoming connections from the given listener.
 //
 // Serve blocks until the given listener returns permanent error.
+//
+// If use a custom Listener, will be updated your atreugo configuration
+// with the Listener address automatically
 func (s *Atreugo) Serve(ln net.Listener) error {
 	schema := "http"
 	if s.cfg.TLSEnable {
