@@ -480,8 +480,8 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 		{
 			name: "InvalidAddr",
 			args: args{
-				host: "aaaa",
-				port: 0,
+				host: "0101",
+				port: 999999999999999999,
 			},
 			want: want{
 				getErr: true,
