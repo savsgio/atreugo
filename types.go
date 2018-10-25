@@ -191,7 +191,7 @@ type Config struct {
 	// Shutdown works by first closing all open listeners and then waiting indefinitely for all connections to return to idle and then shut down.
 	GracefulShutdown bool
 
-	// Fasthttp server configuration
+	// fasthttp server configuration
 	Fasthttp *FasthttpConfig
 }
 
