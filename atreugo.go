@@ -59,6 +59,7 @@ func New(cfg *Config) *Atreugo {
 			MaxKeepaliveDuration:          cfg.Fasthttp.MaxKeepaliveDuration,
 			MaxRequestBodySize:            cfg.Fasthttp.MaxRequestBodySize,
 			ReduceMemoryUsage:             cfg.Fasthttp.ReduceMemoryUsage,
+			GetOnly:                       cfg.Fasthttp.GetOnly,
 			LogAllErrors:                  cfg.Fasthttp.LogAllErrors,
 			DisableHeaderNamesNormalizing: cfg.Fasthttp.DisableHeaderNamesNormalizing,
 			NoDefaultServerHeader:         cfg.Fasthttp.NoDefaultServerHeader,
