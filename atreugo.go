@@ -20,14 +20,18 @@ var allowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATC
 
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
-	if cfg.Name == "" {
-		cfg.Name = "AtreugoServer"
+	if cfg.Fasthttp == nil {
+		cfg.Fasthttp = new(FasthttpConfig)
+	}
+
+	if cfg.Fasthttp.Name == "" {
+		cfg.Fasthttp.Name = "AtreugoServer"
 	}
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = logger.INFO
 	}
-	if cfg.GracefulShutdown && cfg.ReadTimeout <= 0 {
-		cfg.ReadTimeout = 20 * time.Second
+	if cfg.GracefulShutdown && cfg.Fasthttp.ReadTimeout <= 0 {
+		cfg.Fasthttp.ReadTimeout = 20 * time.Second
 	}
 
 	r := router.New()
@@ -42,10 +46,25 @@ func New(cfg *Config) *Atreugo {
 	server := &Atreugo{
 		router: r,
 		server: &fasthttp.Server{
-			Handler:     handler,
-			Name:        cfg.Name,
-			ReadTimeout: cfg.ReadTimeout,
-			Logger:      log,
+			Handler:                       handler,
+			Name:                          cfg.Fasthttp.Name,
+			Concurrency:                   cfg.Fasthttp.Concurrency,
+			DisableKeepalive:              cfg.Fasthttp.DisableKeepalive,
+			ReadBufferSize:                cfg.Fasthttp.ReadBufferSize,
+			WriteBufferSize:               cfg.Fasthttp.WriteBufferSize,
+			ReadTimeout:                   cfg.Fasthttp.ReadTimeout,
+			WriteTimeout:                  cfg.Fasthttp.WriteTimeout,
+			MaxConnsPerIP:                 cfg.Fasthttp.MaxConnsPerIP,
+			MaxRequestsPerConn:            cfg.Fasthttp.MaxRequestsPerConn,
+			MaxKeepaliveDuration:          cfg.Fasthttp.MaxKeepaliveDuration,
+			MaxRequestBodySize:            cfg.Fasthttp.MaxRequestBodySize,
+			ReduceMemoryUsage:             cfg.Fasthttp.ReduceMemoryUsage,
+			LogAllErrors:                  cfg.Fasthttp.LogAllErrors,
+			DisableHeaderNamesNormalizing: cfg.Fasthttp.DisableHeaderNamesNormalizing,
+			NoDefaultServerHeader:         cfg.Fasthttp.NoDefaultServerHeader,
+			NoDefaultContentType:          cfg.Fasthttp.NoDefaultContentType,
+			ConnState:                     cfg.Fasthttp.ConnState,
+			Logger:                        log,
 		},
 		log: log,
 		cfg: cfg,
