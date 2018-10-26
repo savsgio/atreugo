@@ -137,7 +137,7 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 // ServeGracefully blocks until the given listener returns permanent error.
 //
 // If use a custom Listener, will be updated your atreugo configuration
-// with the Listener address automatically and setting GracefulShutdown to true
+// with the Listener address and setting GracefulShutdown to true automatically.
 func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	if !s.cfg.GracefulShutdown {
 		s.log.Info("Setting GracefulShutdown config to true")
