@@ -15,7 +15,7 @@ func (s *Atreugo) getListener() (net.Listener, error) {
 		if err == nil {
 			return ln, nil
 		}
-		s.log.Warning("Can not use reuseport, using default Listener")
+		s.log.Warningf("Can not use reuseport (%v), using default Listener", err)
 	}
 
 	return net.Listen(network, s.lnAddr)
