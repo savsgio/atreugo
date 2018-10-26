@@ -124,7 +124,7 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 		s.lnAddr = addr
 	}
 
-	s.log.Infof("Listening on: %s://%s/", schema, addr)
+	s.log.Infof("Listening on: %s://%s/", schema, s.lnAddr)
 	if s.cfg.TLSEnable {
 		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey)
 	}
@@ -132,7 +132,18 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 	return s.server.Serve(ln)
 }
 
-func (s *Atreugo) serveGracefully(ln net.Listener) error {
+// ServeGracefully serves incoming connections from the given listener with graceful shutdown
+//
+// ServeGracefully blocks until the given listener returns permanent error.
+//
+// If use a custom Listener, will be updated your atreugo configuration
+// with the Listener address automatically and setting GracefulShutdown to true
+func (s *Atreugo) ServeGracefully(ln net.Listener) error {
+	if !s.cfg.GracefulShutdown {
+		s.log.Info("Setting GracefulShutdown to true")
+		s.cfg.GracefulShutdown = true
+	}
+
 	listenErr := make(chan error, 1)
 
 	go func() {
@@ -194,7 +205,7 @@ func (s *Atreugo) ListenAndServe() error {
 	}
 
 	if s.cfg.GracefulShutdown {
-		return s.serveGracefully(ln)
+		return s.ServeGracefully(ln)
 	}
 
 	return s.Serve(ln)

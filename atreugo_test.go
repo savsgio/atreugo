@@ -17,6 +17,11 @@ var testAtreugoConfig = &Config{
 	LogLevel: "fatal",
 }
 
+var random = func(min, max int) int {
+	rand.Seed(time.Now().Unix())
+	return rand.Intn(max-min) + min
+}
+
 func Test_New(t *testing.T) {
 	type args struct {
 		logLevel string
@@ -176,13 +181,12 @@ func TestAtreugoServer(t *testing.T) {
 
 			ln := fasthttputil.NewInmemoryListener()
 
-			serverCh := make(chan error, 1)
+			serveCh := make(chan error, 1)
 			go func() {
-				err := s.Serve(ln)
-				serverCh <- err
+				serveCh <- s.Serve(ln)
 			}()
 
-			clientCh := make(chan struct{})
+			clientCh := make(chan error)
 			go func() {
 				c, err := ln.Dial()
 				if err != nil {
@@ -209,29 +213,94 @@ func TestAtreugoServer(t *testing.T) {
 					t.Errorf("Middleware call counter = %v, want %v", middleWareCounter, tt.want.middleWareCounter)
 				}
 
-				if err = c.Close(); err != nil {
-					t.Fatalf("unexpected error: %s", err)
-				}
-
-				close(clientCh)
+				clientCh <- c.Close()
 			}()
 
 			select {
-			case <-clientCh:
-			case <-time.After(time.Second):
-				t.Fatalf("timeout")
-			}
-
-			if err := ln.Close(); err != nil {
-				t.Fatalf("unexpected error: %s", err)
-			}
-
-			select {
-			case <-serverCh:
+			case err := <-serveCh:
+				if err != nil {
+					t.Fatalf("Unexpected error: %v", err)
+				}
+			case err := <-clientCh:
+				if err != nil {
+					t.Fatalf("Unexpected error: %v", err)
+				}
 			case <-time.After(time.Second):
 				t.Fatalf("timeout")
 			}
 		})
+	}
+}
+
+func TestAtreugo_Serve(t *testing.T) {
+	cfg := &Config{LogLevel: "fatal"}
+	s := New(cfg)
+
+	host := "InmemoryListener"
+	port := 0
+	lnAddr := "InmemoryListener"
+
+	ln := fasthttputil.NewInmemoryListener()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- s.Serve(ln)
+	}()
+
+	select {
+	case err := <-errCh:
+		if err != nil {
+			t.Fatalf("Unexpected error: %v", err)
+		}
+	case <-time.After(100 * time.Millisecond):
+		if cfg.Host != host {
+			t.Errorf("Config.Host = %s, want %s", cfg.Host, host)
+		}
+
+		if cfg.Port != port {
+			t.Errorf("Config.Port = %d, want %d", cfg.Port, port)
+		}
+
+		if s.lnAddr != lnAddr {
+			t.Errorf("Atreugo.lnAddr = %s, want %s", s.lnAddr, lnAddr)
+		}
+	}
+}
+
+func TestAtreugo_ServeGracefully(t *testing.T) {
+	cfg := &Config{LogLevel: "fatal"}
+	s := New(cfg)
+
+	host := "InmemoryListener"
+	port := 0
+	lnAddr := "InmemoryListener"
+
+	ln := fasthttputil.NewInmemoryListener()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- s.ServeGracefully(ln)
+	}()
+
+	select {
+	case err := <-errCh:
+		t.Fatalf("Unexpected error: %v", err)
+	case <-time.After(100 * time.Millisecond):
+		if !cfg.GracefulShutdown {
+			t.Errorf("Config.GracefulShutdown = %v, want %v", cfg.GracefulShutdown, true)
+		}
+
+		if cfg.Host != host {
+			t.Errorf("Config.Host = %s, want %s", cfg.Host, host)
+		}
+
+		if cfg.Port != port {
+			t.Errorf("Config.Port = %d, want %d", cfg.Port, port)
+		}
+
+		if s.lnAddr != lnAddr {
+			t.Errorf("Atreugo.lnAddr = %s, want %s", s.lnAddr, lnAddr)
+		}
 	}
 }
 
@@ -423,11 +492,6 @@ func TestAtreugo_SetLogOutput(t *testing.T) {
 }
 
 func TestAtreugo_ListenAndServe(t *testing.T) {
-	var random = func(min, max int) int {
-		rand.Seed(time.Now().Unix())
-		return rand.Intn(max-min) + min
-	}
-
 	type args struct {
 		host      string
 		port      int
