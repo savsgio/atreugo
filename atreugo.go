@@ -140,7 +140,7 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 // with the Listener address automatically and setting GracefulShutdown to true
 func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	if !s.cfg.GracefulShutdown {
-		s.log.Info("Setting GracefulShutdown to true")
+		s.log.Info("Setting GracefulShutdown config to true")
 		s.cfg.GracefulShutdown = true
 	}
 
@@ -193,9 +193,9 @@ func (s *Atreugo) SetLogOutput(output io.Writer) {
 	s.log.SetOutput(output)
 }
 
-// ListenAndServe serves HTTP/HTTPS requests from the given TCP4 addr.
+// ListenAndServe serves HTTP/HTTPS requests from the given TCP4 addr in the atreugo configuration.
 //
-// Pass custom listener to Serve if you need listening on non-TCP4 media
+// Pass custom listener to Serve/ServeGracefully if you need listening on non-TCP4 media
 // such as IPv6.
 func (s *Atreugo) ListenAndServe() error {
 	s.lnAddr = fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
