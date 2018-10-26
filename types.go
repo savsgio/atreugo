@@ -19,6 +19,7 @@ import (
 // - Handler: It's created internaly by atreugo
 // - TCPKeepalive: Not supported yet (You can implemented with a custom Listener and pass it directly to Serve)
 // - TCPKeepalivePeriod: Not supported yet (You can implemented with a custom Listener and pass it directly to Serve)
+// - Logger: It's created internaly by atreugo
 type FasthttpConfig struct {
 	// Server name for sending in response headers.
 	//
@@ -165,11 +166,6 @@ type FasthttpConfig struct {
 	// called when a client connection changes state. See the
 	// ConnState type and associated constants for details.
 	ConnState func(net.Conn, fasthttp.ConnState)
-
-	// Logger, which is used by RequestCtx.Logger().
-	//
-	// By default standard logger from log package is used.
-	Logger fasthttp.Logger
 }
 
 // Config config for Atreugo
