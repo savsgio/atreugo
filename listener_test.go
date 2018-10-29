@@ -7,9 +7,9 @@ func TestAtreugo_getListener(t *testing.T) {
 		addr string
 	}
 	type want struct {
-		addr     string
-		network  string
-		getPanic bool
+		addr    string
+		network string
+		err     bool
 	}
 	tests := []struct {
 		name string
@@ -22,9 +22,9 @@ func TestAtreugo_getListener(t *testing.T) {
 				addr: "127.0.0.1:8000",
 			},
 			want: want{
-				addr:     "127.0.0.1:8000",
-				network:  "tcp",
-				getPanic: false,
+				addr:    "127.0.0.1:8000",
+				network: "tcp",
+				err:     false,
 			},
 		},
 		{
@@ -33,25 +33,29 @@ func TestAtreugo_getListener(t *testing.T) {
 				addr: "fake",
 			},
 			want: want{
-				getPanic: true,
+				err: true,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(testAtreugoConfig)
+			s.lnAddr = tt.args.addr
 
 			defer func() {
 				r := recover()
 
-				if tt.want.getPanic && r == nil {
+				if tt.want.err && r == nil {
 					t.Errorf("Panic expected")
-				} else if !tt.want.getPanic && r != nil {
+				} else if !tt.want.err && r != nil {
 					t.Errorf("Unexpected panic")
 				}
 			}()
 
-			ln := s.getListener(tt.args.addr)
+			ln, err := s.getListener()
+			if err != nil {
+				panic(err)
+			}
 
 			lnAddress := ln.Addr().String()
 			if lnAddress != tt.want.addr {

@@ -6,8 +6,9 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
-	"time"
 
 	"github.com/fasthttp/router"
 	"github.com/savsgio/go-logger"
@@ -18,14 +19,18 @@ var allowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATC
 
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
-	if cfg.Name == "" {
-		cfg.Name = "AtreugoServer"
+	if cfg.Fasthttp == nil {
+		cfg.Fasthttp = new(FasthttpConfig)
+	}
+
+	if cfg.Fasthttp.Name == "" {
+		cfg.Fasthttp.Name = "AtreugoServer"
 	}
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = logger.INFO
 	}
-	if cfg.GracefulShutdown && cfg.ReadTimeout <= 0 {
-		cfg.ReadTimeout = 20 * time.Second
+	if cfg.GracefulShutdown && cfg.Fasthttp.ReadTimeout <= 0 {
+		cfg.Fasthttp.ReadTimeout = defaultReadTimeout
 	}
 
 	r := router.New()
@@ -35,14 +40,33 @@ func New(cfg *Config) *Atreugo {
 		handler = fasthttp.CompressHandler(handler)
 	}
 
+	log := logger.New("atreugo", cfg.LogLevel, os.Stderr)
+
 	server := &Atreugo{
 		router: r,
 		server: &fasthttp.Server{
-			Handler:     handler,
-			Name:        cfg.Name,
-			ReadTimeout: cfg.ReadTimeout,
+			Handler:                       handler,
+			Name:                          cfg.Fasthttp.Name,
+			Concurrency:                   cfg.Fasthttp.Concurrency,
+			DisableKeepalive:              cfg.Fasthttp.DisableKeepalive,
+			ReadBufferSize:                cfg.Fasthttp.ReadBufferSize,
+			WriteBufferSize:               cfg.Fasthttp.WriteBufferSize,
+			ReadTimeout:                   cfg.Fasthttp.ReadTimeout,
+			WriteTimeout:                  cfg.Fasthttp.WriteTimeout,
+			MaxConnsPerIP:                 cfg.Fasthttp.MaxConnsPerIP,
+			MaxRequestsPerConn:            cfg.Fasthttp.MaxRequestsPerConn,
+			MaxKeepaliveDuration:          cfg.Fasthttp.MaxKeepaliveDuration,
+			MaxRequestBodySize:            cfg.Fasthttp.MaxRequestBodySize,
+			ReduceMemoryUsage:             cfg.Fasthttp.ReduceMemoryUsage,
+			GetOnly:                       cfg.Fasthttp.GetOnly,
+			LogAllErrors:                  cfg.Fasthttp.LogAllErrors,
+			DisableHeaderNamesNormalizing: cfg.Fasthttp.DisableHeaderNamesNormalizing,
+			NoDefaultServerHeader:         cfg.Fasthttp.NoDefaultServerHeader,
+			NoDefaultContentType:          cfg.Fasthttp.NoDefaultContentType,
+			ConnState:                     cfg.Fasthttp.ConnState,
+			Logger:                        log,
 		},
-		log: logger.New("atreugo", cfg.LogLevel, os.Stderr),
+		log: log,
 		cfg: cfg,
 	}
 
@@ -60,7 +84,7 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 
 		for _, middlewareFn := range s.middlewares {
 			if statusCode, err := middlewareFn(actx); err != nil {
-				s.log.Errorf("Msg: %v | RequestUri: %s", err, actx.URI().String())
+				s.log.Errorf("%s %s - %s", actx.Method(), actx.URI(), err)
 
 				actx.Error(err.Error(), statusCode)
 				return
@@ -74,13 +98,32 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 	}
 }
 
-func (s *Atreugo) serve(ln net.Listener) error {
+// Serve serves incoming connections from the given listener.
+//
+// Serve blocks until the given listener returns permanent error.
+//
+// If use a custom Listener, will be updated your atreugo configuration
+// with the Listener address automatically
+func (s *Atreugo) Serve(ln net.Listener) error {
 	schema := "http"
 	if s.cfg.TLSEnable {
 		schema = "https"
 	}
 
-	s.log.Infof("Listening on: %s://%s/", schema, ln.Addr().String())
+	addr := ln.Addr().String()
+	if addr != s.lnAddr {
+		s.log.Info("Updating config with new listener address")
+		sAddr := strings.Split(addr, ":")
+		s.cfg.Host = sAddr[0]
+		if len(sAddr) > 1 {
+			s.cfg.Port, _ = strconv.Atoi(sAddr[1])
+		} else {
+			s.cfg.Port = 0
+		}
+		s.lnAddr = addr
+	}
+
+	s.log.Infof("Listening on: %s://%s/", schema, s.lnAddr)
 	if s.cfg.TLSEnable {
 		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey)
 	}
@@ -88,11 +131,27 @@ func (s *Atreugo) serve(ln net.Listener) error {
 	return s.server.Serve(ln)
 }
 
-func (s *Atreugo) serveGracefully(ln net.Listener) error {
+// ServeGracefully serves incoming connections from the given listener with graceful shutdown
+//
+// ServeGracefully blocks until the given listener returns permanent error.
+//
+// If use a custom Listener, will be updated your atreugo configuration
+// with the Listener address and setting GracefulShutdown to true automatically.
+func (s *Atreugo) ServeGracefully(ln net.Listener) error {
+	if !s.cfg.GracefulShutdown {
+		s.log.Info("Setting GracefulShutdown config to true")
+		s.cfg.GracefulShutdown = true
+
+		if s.server.ReadTimeout <= 0 {
+			s.server.ReadTimeout = defaultReadTimeout
+			s.cfg.Fasthttp.ReadTimeout = defaultReadTimeout
+		}
+	}
+
 	listenErr := make(chan error, 1)
 
 	go func() {
-		listenErr <- s.serve(ln)
+		listenErr <- s.Serve(ln)
 	}()
 
 	osSignals := make(chan os.Signal, 1)
@@ -138,14 +197,20 @@ func (s *Atreugo) SetLogOutput(output io.Writer) {
 	s.log.SetOutput(output)
 }
 
-// ListenAndServe start Atreugo server according to the configuration
+// ListenAndServe serves HTTP/HTTPS requests from the given TCP4 addr in the atreugo configuration.
+//
+// Pass custom listener to Serve/ServeGracefully if you need listening on non-TCP4 media
+// such as IPv6.
 func (s *Atreugo) ListenAndServe() error {
-	addr := fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
-	ln := s.getListener(addr)
-
-	if s.cfg.GracefulShutdown {
-		return s.serveGracefully(ln)
+	s.lnAddr = fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
+	ln, err := s.getListener()
+	if err != nil {
+		return err
 	}
 
-	return s.serve(ln)
+	if s.cfg.GracefulShutdown {
+		return s.ServeGracefully(ln)
+	}
+
+	return s.Serve(ln)
 }
