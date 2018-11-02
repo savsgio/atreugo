@@ -112,7 +112,7 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 
 	addr := ln.Addr().String()
 	if addr != s.lnAddr {
-		s.log.Info("Updating config with new listener address")
+		s.log.Info("Updating address config with the new listener address")
 		sAddr := strings.Split(addr, ":")
 		s.cfg.Host = sAddr[0]
 		if len(sAddr) > 1 {
@@ -139,10 +139,11 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 // with the Listener address and setting GracefulShutdown to true automatically.
 func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	if !s.cfg.GracefulShutdown {
-		s.log.Info("Setting GracefulShutdown config to true")
+		s.log.Info("Updating GracefulShutdown config to 'true'")
 		s.cfg.GracefulShutdown = true
 
 		if s.server.ReadTimeout <= 0 {
+			s.log.Infof("Updating ReadTimeout config to '%v'", defaultReadTimeout)
 			s.server.ReadTimeout = defaultReadTimeout
 			s.cfg.Fasthttp.ReadTimeout = defaultReadTimeout
 		}
