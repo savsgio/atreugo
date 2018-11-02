@@ -38,12 +38,12 @@
   revision = "e7e905edc00ea8827e58662220139109efea09db"
 
 [[projects]]
-  digest = "1:2dd07416292e901c9a7a47133fa730d6291277d3fdcb8fca7f37c27d80434677"
+  digest = "1:7dab2ac544518bc0bfa3d03c388158ef1c33dd98f615544c88c97310c3f58f47"
   name = "github.com/savsgio/go-logger"
   packages = ["."]
   pruneopts = "UT"
-  revision = "505684d232ffd30031ab04e9444ad47f1751bb55"
-  version = "v2.1.1"
+  revision = "3fd87aaf49505d949aebf687a2c6c308003eae16"
+  version = "v2.1.2"
 
 [[projects]]
   branch = "master"
@@ -55,7 +55,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9680845f9637af319f0d90a80c5ac4c6639ed2bbae15f9611c6efa032cd15159"
+  digest = "1:36799a05fab19a720d9c1b76ac040540e78633f70b7fcfc9a2d50a7bbb42dc87"
   name = "github.com/valyala/fasthttp"
   packages = [
     ".",
@@ -64,7 +64,7 @@
     "stackless",
   ]
   pruneopts = "UT"
-  revision = "996610f021ff45fdc98c2ce7884d5fa4e7f9199b"
+  revision = "192515395f6fe387bdbdc8105358f4d890413951"
 
 [[projects]]
   branch = "master"
