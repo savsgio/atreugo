@@ -1,5 +1,3 @@
-github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
-github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/fasthttp/router v0.2.0 h1:0EXdP2XpmxWEIdFDkyyIdQ0pDkEt5B5dnezDE7jHtw4=
 github.com/fasthttp/router v0.2.0/go.mod h1:vgWu9Rb5tBJdw/1xy3J7oC+Yl5GJMn4DMKEaqXom8Lg=
 github.com/klauspost/compress v1.4.0 h1:8nsMz3tWa9SWWPL60G1V6CUsf4lLjWLTNEtibhe8gh8=
