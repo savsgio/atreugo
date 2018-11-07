@@ -602,7 +602,7 @@ func BenchmarkJsoniter_JSONResponse(b *testing.B) {
 
 	body := JSON{
 		"hello":  11,
-		"friend": "ascas6d34534rtf3q·$·$%&·$%&$&&$/%&(XCCVasdfasgfds",
+		"friend": "ascas6d34534rtf3q·$·$&·$&$&&$/%&(XCCVasdfasgfds",
 		"jsonData": JSON{
 			"111": 24.3,
 			"asdasdasd23423end3in32im13dfc23fc2 fcec2c": ctx,
