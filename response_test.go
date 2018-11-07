@@ -596,13 +596,13 @@ func Benchmark_FileResponse(b *testing.B) {
 	}
 }
 
-func BenchmarkJsoniter_JSONResponse(b *testing.B) {
+func Benchmark_JSONResponse(b *testing.B) {
 	ctx := new(fasthttp.RequestCtx)
 	actx := acquireRequestCtx(ctx)
 
 	body := JSON{
 		"hello":  11,
-		"friend": "ascas6d34534rtf3q·$·$&·$&$&&$/%&(XCCVasdfasgfds",
+		"friend": "ascas6d34534rtf3q·$·$&·$&$&&$/&(XCCVasdfasgfds",
 		"jsonData": JSON{
 			"111": 24.3,
 			"asdasdasd23423end3in32im13dfc23fc2 fcec2c": ctx,
