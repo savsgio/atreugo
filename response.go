@@ -1,8 +1,7 @@
 package atreugo
 
 import (
-	"encoding/json"
-
+	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/bytebufferpool"
 	"github.com/valyala/fasthttp"
 )
@@ -23,7 +22,13 @@ func (ctx *RequestCtx) newResponse(contentType string, statusCode ...int) {
 func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
 	ctx.newResponse("application/json", statusCode...)
 
-	return json.NewEncoder(ctx).Encode(body)
+	data, err := jsoniter.Marshal(body)
+	if err != nil {
+		return err
+	}
+	ctx.Write(data)
+
+	return nil
 }
 
 // HTTPResponse return response with body in html format
