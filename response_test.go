@@ -77,6 +77,7 @@ func TestJSONResponse(t *testing.T) {
 		body        string
 		statusCode  int
 		contentType string
+		err         bool
 	}
 	tests := []struct {
 		name string
@@ -84,7 +85,7 @@ func TestJSONResponse(t *testing.T) {
 		want want
 	}{
 		{
-			name: "Test",
+			name: "ValidBody",
 			args: args{
 				body:       JSON{"test": true},
 				statusCode: 200,
@@ -93,6 +94,20 @@ func TestJSONResponse(t *testing.T) {
 				body:        "{\"test\":true}",
 				statusCode:  200,
 				contentType: "application/json",
+				err:         false,
+			},
+		},
+		{
+			name: "InvalidBody",
+			args: args{
+				body:       make(chan int),
+				statusCode: 200,
+			},
+			want: want{
+				body:        "",
+				statusCode:  200,
+				contentType: "application/json",
+				err:         true,
 			},
 		},
 	}
@@ -102,8 +117,9 @@ func TestJSONResponse(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
 			actx := acquireRequestCtx(ctx)
 
-			if err := actx.JSONResponse(tt.args.body, tt.args.statusCode); err != nil {
-				t.Errorf("JSONResponse() error: %v", err)
+			err := actx.JSONResponse(tt.args.body, tt.args.statusCode)
+			if tt.want.err && (err == nil) {
+				t.Errorf("JSONResponse() Expected error")
 			}
 
 			responseBody := string(bytes.TrimSpace(actx.Response.Body()))
