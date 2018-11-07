@@ -595,3 +595,22 @@ func Benchmark_FileResponse(b *testing.B) {
 		actx.FileResponse("hola", path, "text/plain")
 	}
 }
+
+func BenchmarkJsoniter_JSONResponse(b *testing.B) {
+	ctx := new(fasthttp.RequestCtx)
+	actx := acquireRequestCtx(ctx)
+
+	body := JSON{
+		"hello":  11,
+		"friend": "ascas6d34534rtf3q·$·$%&·$%&$&&$/%&(XCCVasdfasgfds",
+		"jsonData": JSON{
+			"111": 24.3,
+			"asdasdasd23423end3in32im13dfc23fc2 fcec2c": ctx,
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i <= b.N; i++ {
+		actx.JSONResponse(body)
+	}
+}
