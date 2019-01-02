@@ -1,5 +1,5 @@
-github.com/fasthttp/router v0.2.0 h1:1k4jLGRwDTPq1QbIYVa5+zJxWixWCWYxgOG5mwbpRvA=
-github.com/fasthttp/router v0.2.0/go.mod h1:ENXeGFIg8mQS+sUPNQ/DboXat7SpQMKlDKMpKgE39pc=
+github.com/fasthttp/router v0.3.0 h1:aYUnG+Nl6Yq9GhA5YapibwK6uODeVSZ0ZJw2+yxhjMA=
+github.com/fasthttp/router v0.3.0/go.mod h1:C1OkehIG26rJvWVmXXPKPy6cuXe0r07rE0cBk6mUGrM=
 github.com/json-iterator/go v1.1.5 h1:gL2yXlmiIo4+t+y32d4WGwOjKGYcGOuyrg46vadswDE=
 github.com/json-iterator/go v1.1.5/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/klauspost/compress v1.4.0 h1:8nsMz3tWa9SWWPL60G1V6CUsf4lLjWLTNEtibhe8gh8=
@@ -12,6 +12,8 @@ github.com/modern-go/reflect2 v1.0.1 h1:9f412s+6RmYXLWZSEzVVgPGK7C2PphHj5RJrvfx9
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/savsgio/go-logger v0.0.0-20181102112400-e6a7c74978c0 h1:BnYHq7EjtqUp3Z0utOF526x/b+FZErMzgH9FIB0BbGk=
 github.com/savsgio/go-logger v0.0.0-20181102112400-e6a7c74978c0/go.mod h1:/ZzTTmB3JJqjZQcLlxTGbwy3fIsLUoYyldsSEL5rU2g=
+github.com/savsgio/gotils v0.0.0-20181102112957-636156ff2e0e h1:OaPrIuz2RcPhWlSWeV8mYrUzU3SNTIZAzkjhGfCU7bw=
+github.com/savsgio/gotils v0.0.0-20181102112957-636156ff2e0e/go.mod h1:w803/Fg1m0hrp1ZT9KNfQe4E4+WOMMFLcgzPvOcye10=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasthttp v1.0.0 h1:BwIoZQbBsTo3v2F5lz5Oy3TlTq4wLKTLV260EVTEWco=
