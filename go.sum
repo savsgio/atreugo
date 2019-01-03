@@ -1,5 +1,5 @@
-github.com/fasthttp/router v0.3.0 h1:aYUnG+Nl6Yq9GhA5YapibwK6uODeVSZ0ZJw2+yxhjMA=
-github.com/fasthttp/router v0.3.0/go.mod h1:C1OkehIG26rJvWVmXXPKPy6cuXe0r07rE0cBk6mUGrM=
+github.com/fasthttp/router v0.3.1 h1:yloY0seJJYcpTllXb+nTS+Emou3XelZIdw3IAxMxMZA=
+github.com/fasthttp/router v0.3.1/go.mod h1:C1OkehIG26rJvWVmXXPKPy6cuXe0r07rE0cBk6mUGrM=
 github.com/json-iterator/go v1.1.5 h1:gL2yXlmiIo4+t+y32d4WGwOjKGYcGOuyrg46vadswDE=
 github.com/json-iterator/go v1.1.5/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/klauspost/compress v1.4.0 h1:8nsMz3tWa9SWWPL60G1V6CUsf4lLjWLTNEtibhe8gh8=
