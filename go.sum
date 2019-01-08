@@ -10,10 +10,8 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v1.0.1 h1:9f412s+6RmYXLWZSEzVVgPGK7C2PphHj5RJrvfx9AWI=
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
-github.com/savsgio/go-logger v0.0.0-20181102112400-e6a7c74978c0 h1:BnYHq7EjtqUp3Z0utOF526x/b+FZErMzgH9FIB0BbGk=
-github.com/savsgio/go-logger v0.0.0-20181102112400-e6a7c74978c0/go.mod h1:/ZzTTmB3JJqjZQcLlxTGbwy3fIsLUoYyldsSEL5rU2g=
-github.com/savsgio/go-logger v0.0.0-20190108124320-26d7cb543837 h1:aotk88+MuG8mxSLVteSF8GSk+esGN+OJTCUntDpn6Aw=
-github.com/savsgio/go-logger v0.0.0-20190108124320-26d7cb543837/go.mod h1:/ZzTTmB3JJqjZQcLlxTGbwy3fIsLUoYyldsSEL5rU2g=
+github.com/savsgio/go-logger v1.0.0 h1:jiaRvohRr8RwtcK/WDcA/Yp4eaPaarAko3JNPzt1xoQ=
+github.com/savsgio/go-logger v1.0.0/go.mod h1:/ZzTTmB3JJqjZQcLlxTGbwy3fIsLUoYyldsSEL5rU2g=
 github.com/savsgio/gotils v0.0.0-20181102112957-636156ff2e0e h1:OaPrIuz2RcPhWlSWeV8mYrUzU3SNTIZAzkjhGfCU7bw=
 github.com/savsgio/gotils v0.0.0-20181102112957-636156ff2e0e/go.mod h1:w803/Fg1m0hrp1ZT9KNfQe4E4+WOMMFLcgzPvOcye10=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
