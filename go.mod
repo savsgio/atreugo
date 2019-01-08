@@ -7,5 +7,5 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/savsgio/go-logger v0.0.0-20181102112400-e6a7c74978c0
 	github.com/valyala/bytebufferpool v1.0.0
-	github.com/valyala/fasthttp v1.0.0
+	github.com/valyala/fasthttp v1.1.0
 )
