@@ -11,7 +11,7 @@ import (
 	"syscall"
 
 	"github.com/fasthttp/router"
-	"github.com/savsgio/go-logger"
+	logger "github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
 )
 
@@ -45,26 +45,27 @@ func New(cfg *Config) *Atreugo {
 	server := &Atreugo{
 		router: r,
 		server: &fasthttp.Server{
-			Handler:                       handler,
-			Name:                          cfg.Fasthttp.Name,
-			Concurrency:                   cfg.Fasthttp.Concurrency,
-			DisableKeepalive:              cfg.Fasthttp.DisableKeepalive,
-			ReadBufferSize:                cfg.Fasthttp.ReadBufferSize,
-			WriteBufferSize:               cfg.Fasthttp.WriteBufferSize,
-			ReadTimeout:                   cfg.Fasthttp.ReadTimeout,
-			WriteTimeout:                  cfg.Fasthttp.WriteTimeout,
-			MaxConnsPerIP:                 cfg.Fasthttp.MaxConnsPerIP,
-			MaxRequestsPerConn:            cfg.Fasthttp.MaxRequestsPerConn,
-			MaxKeepaliveDuration:          cfg.Fasthttp.MaxKeepaliveDuration,
-			MaxRequestBodySize:            cfg.Fasthttp.MaxRequestBodySize,
-			ReduceMemoryUsage:             cfg.Fasthttp.ReduceMemoryUsage,
-			GetOnly:                       cfg.Fasthttp.GetOnly,
-			LogAllErrors:                  cfg.Fasthttp.LogAllErrors,
-			DisableHeaderNamesNormalizing: cfg.Fasthttp.DisableHeaderNamesNormalizing,
-			NoDefaultServerHeader:         cfg.Fasthttp.NoDefaultServerHeader,
-			NoDefaultContentType:          cfg.Fasthttp.NoDefaultContentType,
-			ConnState:                     cfg.Fasthttp.ConnState,
-			Logger:                        log,
+			Handler:                            handler,
+			Name:                               cfg.Fasthttp.Name,
+			Concurrency:                        cfg.Fasthttp.Concurrency,
+			DisableKeepalive:                   cfg.Fasthttp.DisableKeepalive,
+			ReadBufferSize:                     cfg.Fasthttp.ReadBufferSize,
+			WriteBufferSize:                    cfg.Fasthttp.WriteBufferSize,
+			ReadTimeout:                        cfg.Fasthttp.ReadTimeout,
+			WriteTimeout:                       cfg.Fasthttp.WriteTimeout,
+			MaxConnsPerIP:                      cfg.Fasthttp.MaxConnsPerIP,
+			MaxRequestsPerConn:                 cfg.Fasthttp.MaxRequestsPerConn,
+			MaxKeepaliveDuration:               cfg.Fasthttp.MaxKeepaliveDuration,
+			MaxRequestBodySize:                 cfg.Fasthttp.MaxRequestBodySize,
+			ReduceMemoryUsage:                  cfg.Fasthttp.ReduceMemoryUsage,
+			GetOnly:                            cfg.Fasthttp.GetOnly,
+			LogAllErrors:                       cfg.Fasthttp.LogAllErrors,
+			DisableHeaderNamesNormalizing:      cfg.Fasthttp.DisableHeaderNamesNormalizing,
+			SleepWhenConcurrencyLimitsExceeded: cfg.Fasthttp.SleepWhenConcurrencyLimitsExceeded,
+			NoDefaultServerHeader:              cfg.Fasthttp.NoDefaultServerHeader,
+			NoDefaultContentType:               cfg.Fasthttp.NoDefaultContentType,
+			ConnState:                          cfg.Fasthttp.ConnState,
+			Logger:                             log,
 		},
 		log: log,
 		cfg: cfg,
