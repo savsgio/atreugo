@@ -1,4 +1,4 @@
-module github.com/savsgio/atreugo/v5
+module github.com/savsgio/atreugo/v6
 
 require (
 	github.com/fasthttp/router v0.3.1

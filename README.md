@@ -12,7 +12,7 @@ Micro-framework to make simple the use of routing and middlewares in [fasthttp](
 ## Install
 
 ```bash
-go get github.com/savsgio/atreugo/v5
+go get github.com/savsgio/atreugo/v6
 ```
 
 ## Note:
@@ -27,7 +27,7 @@ package main
 import (
 	"errors"
 
-	"github.com/savsgio/atreugo/v5"
+	"github.com/savsgio/atreugo/v6"
 	"github.com/valyala/fasthttp"
 )
 
