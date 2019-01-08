@@ -9,6 +9,11 @@ Atreugo
 
 Micro-framework to make simple the use of routing and middlewares in [fasthttp](https://github.com/valyala/fasthttp).
 
+## Install
+
+```bash
+go get github.com/savsgio/atreugo@<version>
+```
 
 ## Note:
 `*atreugo.RequestCtx` is equal than `*fasthttp.RequestCtx`, but adding extra funtionality, so you can use
