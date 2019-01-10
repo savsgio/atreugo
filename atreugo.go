@@ -77,7 +77,6 @@ func New(cfg *Config) *Atreugo {
 func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := acquireRequestCtx(ctx)
-		defer releaseRequestCtx(actx)
 
 		if s.log.DebugEnabled() {
 			s.log.Debugf("%s %s", actx.Method(), actx.URI())
@@ -86,8 +85,10 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 		for _, middlewareFn := range s.middlewares {
 			if statusCode, err := middlewareFn(actx); err != nil {
 				s.log.Errorf("%s %s - %s", actx.Method(), actx.URI(), err)
-
 				actx.Error(err.Error(), statusCode)
+
+				releaseRequestCtx(actx)
+
 				return
 			}
 		}
@@ -96,6 +97,8 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 			s.log.Error(err)
 			actx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		}
+
+		releaseRequestCtx(actx)
 	}
 }
 
