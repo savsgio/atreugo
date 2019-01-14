@@ -15,6 +15,20 @@ Micro-framework to make simple the use of routing and middlewares in [fasthttp](
 go get github.com/savsgio/atreugo/v6
 ```
 
+## Benchmark
+
+**Best Performance:** Atreugo is **one of the fastest** go web frameworks in the [go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark).
+
+- Basic Test: The first test case is to mock 0 ms, 10 ms, 100 ms, 500 ms processing time in handlers.
+
+![](https://raw.githubusercontent.com/smallnest/go-web-framework-benchmark/master/benchmark.png)
+
+- Concurrency Test (allocations): In 30 ms processing time, the tets result for 100, 1000, 5000 clients is:
+
+\* *Smaller is better*
+
+![](https://raw.githubusercontent.com/smallnest/go-web-framework-benchmark/master/concurrency_alloc.png)
+
 ## Note:
 `*atreugo.RequestCtx` is equal than `*fasthttp.RequestCtx`, but adding extra funtionality, so you can use
 the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
