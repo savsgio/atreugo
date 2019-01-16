@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"io/ioutil"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -383,21 +384,33 @@ func TestAtreugo_ServeFile(t *testing.T) {
 		filePath string
 	}
 
+	filePath := "./README.md"
+	body, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		panic(err)
+	}
+
 	test := struct {
 		args args
 	}{
 		args: args{
-			url:      "/tmp",
-			filePath: "/var/www",
+			url:      "/readme",
+			filePath: filePath,
 		},
 	}
 
 	s := New(testAtreugoConfig)
 	s.ServeFile(test.args.url, test.args.filePath)
+	ctx := new(fasthttp.RequestCtx)
 
-	handler, _ := s.router.Lookup("GET", test.args.url, &fasthttp.RequestCtx{})
+	handler, _ := s.router.Lookup("GET", test.args.url, ctx)
 	if handler == nil {
 		t.Error("ServeFile() is not configured")
+	}
+
+	handler(ctx)
+	if string(ctx.Response.Body()) != string(body) {
+		t.Fatal("Invalid response")
 	}
 
 }
