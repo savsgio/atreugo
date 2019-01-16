@@ -34,6 +34,9 @@ func New(cfg *Config) *Atreugo {
 	}
 
 	r := router.New()
+	if cfg.NotFoundHandler != nil {
+		r.NotFound = cfg.NotFoundHandler
+	}
 
 	handler := r.Handler
 	if cfg.Compress {
@@ -178,12 +181,24 @@ func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	return nil
 }
 
-// Static add view for static files
-func (s *Atreugo) Static(rootStaticDirPath string) {
-	s.router.NotFound = fasthttp.FSHandler(rootStaticDirPath, 0)
+// Static serves static files from the given file system root.
+func (s *Atreugo) Static(url, rootPath string) {
+	if strings.HasSuffix(url, "/") {
+		url = url[:len(url)-1]
+	}
+
+	s.router.ServeFiles(url+"/*filepath", rootPath)
 }
 
-// Path add the views to serve
+// ServeFile serves a file from the given system path
+func (s *Atreugo) ServeFile(url, filePath string) {
+	s.Path("GET", url, func(ctx *RequestCtx) error {
+		fasthttp.ServeFile(ctx.RequestCtx, filePath)
+		return nil
+	})
+}
+
+// Path add the view to serve from the given path and method
 func (s *Atreugo) Path(httpMethod string, url string, viewFn View) {
 	if !include(allowedHTTPMethods, httpMethod) {
 		panic("Invalid http method '" + httpMethod + "' for the url " + url)
@@ -192,7 +207,7 @@ func (s *Atreugo) Path(httpMethod string, url string, viewFn View) {
 	s.router.Handle(httpMethod, url, s.handler(viewFn))
 }
 
-// UseMiddleware register middleware functions that viewHandler will use
+// UseMiddleware register middleware functions in the order you want to execute them
 func (s *Atreugo) UseMiddleware(fns ...Middleware) {
 	s.middlewares = append(s.middlewares, fns...)
 }

@@ -5,10 +5,11 @@ import (
 	"bytes"
 	"errors"
 	"math/rand"
+	"reflect"
 	"testing"
 	"time"
 
-	"github.com/savsgio/go-logger"
+	logger "github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttputil"
 )
@@ -24,40 +25,55 @@ var random = func(min, max int) int {
 
 func Test_New(t *testing.T) {
 	type args struct {
-		logLevel string
+		logLevel        string
+		notFoundHandler fasthttp.RequestHandler
 	}
 	type want struct {
-		logLevel string
+		logLevel        string
+		notFoundHandler fasthttp.RequestHandler
 	}
+
+	notFoundHandler := func(ctx *fasthttp.RequestCtx) {}
+
 	tests := []struct {
 		name string
 		args args
 		want want
 	}{
 		{
-			name: "DefaultLogLevel",
+			name: "Default",
 			args: args{
-				logLevel: "",
+				logLevel:        "",
+				notFoundHandler: notFoundHandler,
 			},
 			want: want{
-				logLevel: logger.INFO,
+				logLevel:        logger.INFO,
+				notFoundHandler: notFoundHandler,
 			},
 		},
 		{
-			name: "CustomLogLevel",
+			name: "Custom",
 			args: args{
-				logLevel: logger.WARNING,
+				logLevel:        logger.WARNING,
+				notFoundHandler: nil,
 			},
 			want: want{
-				logLevel: logger.WARNING,
+				logLevel:        logger.WARNING,
+				notFoundHandler: nil,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := &Config{LogLevel: tt.args.logLevel}
-			if New(cfg); cfg.LogLevel != tt.want.logLevel {
+			cfg := &Config{LogLevel: tt.args.logLevel, NotFoundHandler: tt.args.notFoundHandler}
+			s := New(cfg)
+
+			if cfg.LogLevel != tt.want.logLevel {
 				t.Errorf("Log level = %v, want %v", cfg.LogLevel, tt.want.logLevel)
+			}
+
+			if reflect.ValueOf(s.router.NotFound).Pointer() != reflect.ValueOf(tt.want.notFoundHandler).Pointer() {
+				t.Errorf("Invalid NotFoundHandler = %p, want %p", s.router.NotFound, tt.want.notFoundHandler)
 			}
 		})
 	}
@@ -314,34 +330,76 @@ func TestAtreugo_ServeGracefully(t *testing.T) {
 
 func TestAtreugo_Static(t *testing.T) {
 	type args struct {
-		path string
+		url      string
+		rootPath string
 	}
 	type want struct {
-		getPanic bool
+		routerPath string
 	}
 
 	tests := []struct {
 		name string
 		args args
-		want want
+		want
 	}{
 		{
-			name: "Ok",
+			name: "WithoutTrailingSlash",
 			args: args{
-				path: "/tmp",
+				url:      "/tmp",
+				rootPath: "/var/www",
+			},
+			want: want{
+				routerPath: "/tmp/*filepath",
+			},
+		},
+		{
+			name: "WithTrailingSlash",
+			args: args{
+				url:      "/tmp/",
+				rootPath: "/var/www",
+			},
+			want: want{
+				routerPath: "/tmp/*filepath",
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(testAtreugoConfig)
-			s.Static(tt.args.path)
+			s.Static(tt.args.url, tt.args.rootPath)
 
-			if s.router.NotFound == nil {
-				t.Error("Static files not configure")
+			handler, _ := s.router.Lookup("GET", tt.want.routerPath, &fasthttp.RequestCtx{})
+			if handler == nil {
+				t.Error("Static files is not configured")
 			}
 		})
 	}
+}
+
+func TestAtreugo_ServeFile(t *testing.T) {
+	type args struct {
+		url      string
+		filePath string
+	}
+
+	test := struct {
+		args args
+	}{
+		args: args{
+			url:      "/tmp",
+			filePath: "/var/www",
+		},
+	}
+
+	s := New(testAtreugoConfig)
+	s.ServeFile(test.args.url, test.args.filePath)
+
+	handler, _ := s.router.Lookup("GET", test.args.url, &fasthttp.RequestCtx{})
+	if handler == nil {
+		t.Error("ServeFile() is not configured")
+	}
+
 }
 
 func TestAtreugo_Path(t *testing.T) {

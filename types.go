@@ -192,6 +192,9 @@ type Config struct {
 	// Shutdown works by first closing all open listeners and then waiting indefinitely for all connections to return to idle and then shut down.
 	GracefulShutdown bool
 
+	// Custom handler to process when not matching route is found
+	NotFoundHandler fasthttp.RequestHandler
+
 	// fasthttp server configuration
 	Fasthttp *FasthttpConfig
 }
