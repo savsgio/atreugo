@@ -24,13 +24,17 @@ func New(cfg *Config) *Atreugo {
 	}
 
 	if cfg.Fasthttp.Name == "" {
-		cfg.Fasthttp.Name = "AtreugoServer"
+		cfg.Fasthttp.Name = defaultServerName
 	}
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = logger.INFO
 	}
 	if cfg.GracefulShutdown && cfg.Fasthttp.ReadTimeout <= 0 {
 		cfg.Fasthttp.ReadTimeout = defaultReadTimeout
+	}
+
+	if cfg.LogName == "" {
+		cfg.LogName = defaultLogName
 	}
 
 	r := router.New()
@@ -43,7 +47,7 @@ func New(cfg *Config) *Atreugo {
 		handler = fasthttp.CompressHandler(handler)
 	}
 
-	log := logger.New("atreugo", cfg.LogLevel, os.Stderr)
+	log := logger.New(cfg.LogName, cfg.LogLevel, os.Stderr)
 
 	server := &Atreugo{
 		router: r,

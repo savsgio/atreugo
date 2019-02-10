@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/fasthttp/router"
-	"github.com/savsgio/go-logger"
+	logger "github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
 )
 
@@ -180,6 +180,9 @@ type Config struct {
 	TLSEnable bool
 	CertKey   string
 	CertFile  string
+
+	// Default: atreugo
+	LogName string
 
 	// See levels in https://github.com/savsgio/go-logger#levels
 	LogLevel string
