@@ -79,16 +79,16 @@ func (ctx *RequestCtx) RawResponseBytes(body []byte, statusCode ...int) error {
 
 // FileResponse return a streaming response with file data.
 func (ctx *RequestCtx) FileResponse(fileName, filePath, mimeType string) error {
-	buff := bytebufferpool.Get()
-	defer bytebufferpool.Put(buff)
-
 	fasthttp.ServeFile(ctx.RequestCtx, filePath)
 
+	buff := bytebufferpool.Get()
 	buff.SetString("attachment; filename=")
 	buff.WriteString(fileName)
 
 	ctx.Response.Header.Set("Content-Disposition", buff.String())
 	ctx.SetContentType(mimeType)
+
+	bytebufferpool.Put(buff)
 
 	return nil
 }
