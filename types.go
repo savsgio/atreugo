@@ -67,6 +67,11 @@ type FasthttpConfig struct {
 	// By default response write timeout is unlimited.
 	WriteTimeout time.Duration
 
+	// IdleTimeout is the maximum amount of time to wait for the
+	// next request when keep-alive is enabled. If IdleTimeout
+	// is zero, the value of ReadTimeout is used.
+	IdleTimeout time.Duration
+
 	// Maximum number of concurrent client connections allowed per IP.
 	//
 	// By default unlimited number of concurrent connections
@@ -171,6 +176,13 @@ type FasthttpConfig struct {
 	// called when a client connection changes state. See the
 	// ConnState type and associated constants for details.
 	ConnState func(net.Conn, fasthttp.ConnState)
+
+	// KeepHijackedConns is an opt-in disable of connection
+	// close by fasthttp after connections' HijackHandler returns.
+	// This allows to save goroutines, e.g. when fasthttp used to upgrade
+	// http connections to WS and connection goes to another handler,
+	// which will close it when needed.
+	KeepHijackedConns bool
 }
 
 // Config config for Atreugo
