@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger"
@@ -207,7 +208,20 @@ func (s *Atreugo) Path(httpMethod string, url string, viewFn View) {
 	if httpMethod != strings.ToUpper(httpMethod) {
 		panic("The http method '" + httpMethod + "' must be in uppercase")
 	}
+
 	s.router.Handle(httpMethod, url, s.handler(viewFn))
+}
+
+// TimeoutPath add the view to serve from the given path and method.
+// If timeout is reached, returns a 408 status code
+// with the given msg to the client if handler didn't return a response
+func (s *Atreugo) TimeoutPath(httpMethod string, url string, viewFn View, timeout time.Duration, msg string) {
+	if httpMethod != strings.ToUpper(httpMethod) {
+		panic("The http method '" + httpMethod + "' must be in uppercase")
+	}
+
+	handler := s.handler(viewFn)
+	s.router.Handle(httpMethod, url, fasthttp.TimeoutHandler(handler, timeout, msg))
 }
 
 // UseMiddleware register middleware functions in the order you want to execute them

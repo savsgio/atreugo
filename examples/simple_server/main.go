@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"time"
 
 	"github.com/savsgio/atreugo/v7"
 	"github.com/valyala/fasthttp"
@@ -29,9 +30,9 @@ func main() {
 		return ctx.HTTPResponse("<h1>Atreugo Micro-Framework</h1>")
 	})
 
-	server.Path("GET", "/jsonPage", func(ctx *atreugo.RequestCtx) error {
+	server.TimeoutPath("GET", "/jsonPage", func(ctx *atreugo.RequestCtx) error {
 		return ctx.JSONResponse(atreugo.JSON{"Atreugo": true})
-	})
+	}, 5*time.Second, "Timeout response message")
 
 	err := server.ListenAndServe()
 	if err != nil {

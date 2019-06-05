@@ -417,9 +417,10 @@ func TestAtreugo_ServeFile(t *testing.T) {
 
 func TestAtreugo_Path(t *testing.T) {
 	type args struct {
-		method string
-		url    string
-		viewFn View
+		method  string
+		url     string
+		viewFn  View
+		timeout time.Duration
 	}
 	type want struct {
 		getPanic bool
@@ -444,11 +445,35 @@ func TestAtreugo_Path(t *testing.T) {
 			},
 		},
 		{
+			name: "GET_Timeout",
+			args: args{
+				method:  "GET",
+				url:     "/",
+				viewFn:  testViewFn,
+				timeout: 1 * time.Second,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
 			name: "InvalidMethod",
 			args: args{
 				method: "get",
 				url:    "/",
 				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: true,
+			},
+		},
+		{
+			name: "InvalidMethod_Timeout",
+			args: args{
+				method:  "get",
+				url:     "/",
+				viewFn:  testViewFn,
+				timeout: 1 * time.Second,
 			},
 			want: want{
 				getPanic: true,
@@ -468,7 +493,11 @@ func TestAtreugo_Path(t *testing.T) {
 			}()
 
 			s := New(testAtreugoConfig)
-			s.Path(tt.args.method, tt.args.url, tt.args.viewFn)
+			if tt.args.timeout == 0 {
+				s.Path(tt.args.method, tt.args.url, tt.args.viewFn)
+			} else {
+				s.TimeoutPath(tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message")
+			}
 		})
 	}
 }
