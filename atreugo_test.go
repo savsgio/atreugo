@@ -444,75 +444,9 @@ func TestAtreugo_Path(t *testing.T) {
 			},
 		},
 		{
-			name: "HEAD",
-			args: args{
-				method: "HEAD",
-				url:    "/",
-				viewFn: testViewFn,
-			},
-			want: want{
-				getPanic: false,
-			},
-		},
-		{
-			name: "OPTIONS",
-			args: args{
-				method: "OPTIONS",
-				url:    "/",
-				viewFn: testViewFn,
-			},
-			want: want{
-				getPanic: false,
-			},
-		},
-		{
-			name: "POST",
-			args: args{
-				method: "POST",
-				url:    "/",
-				viewFn: testViewFn,
-			},
-			want: want{
-				getPanic: false,
-			},
-		},
-		{
-			name: "PUT",
-			args: args{
-				method: "PUT",
-				url:    "/",
-				viewFn: testViewFn,
-			},
-			want: want{
-				getPanic: false,
-			},
-		},
-		{
-			name: "PATCH",
-			args: args{
-				method: "PATCH",
-				url:    "/",
-				viewFn: testViewFn,
-			},
-			want: want{
-				getPanic: false,
-			},
-		},
-		{
-			name: "DELETE",
-			args: args{
-				method: "DELETE",
-				url:    "/",
-				viewFn: testViewFn,
-			},
-			want: want{
-				getPanic: false,
-			},
-		},
-		{
 			name: "InvalidMethod",
 			args: args{
-				method: "FAKE",
+				method: "get",
 				url:    "/",
 				viewFn: testViewFn,
 			},

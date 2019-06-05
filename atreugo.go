@@ -15,8 +15,6 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-var allowedHTTPMethods = []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
-
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
 	if cfg.Fasthttp == nil {
@@ -206,10 +204,9 @@ func (s *Atreugo) ServeFile(url, filePath string) {
 
 // Path add the view to serve from the given path and method
 func (s *Atreugo) Path(httpMethod string, url string, viewFn View) {
-	if !include(allowedHTTPMethods, httpMethod) {
-		panic("Invalid http method '" + httpMethod + "' for the url " + url)
+	if httpMethod != strings.ToUpper(httpMethod) {
+		panic("The http method '" + httpMethod + "' must be in uppercase")
 	}
-
 	s.router.Handle(httpMethod, url, s.handler(viewFn))
 }
 
