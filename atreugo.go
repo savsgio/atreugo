@@ -95,7 +95,7 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 			actx.requestID = uuid.New().String()
 		}
 
-		ctx.Response.Header.Add("X-Request-ID", actx.requestID)
+		ctx.Response.Header.Add(xRequestID, actx.requestID)
 
 
 		if s.log.DebugEnabled() {
