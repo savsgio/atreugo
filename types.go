@@ -228,6 +228,7 @@ type Atreugo struct {
 // RequestCtx context wrapper for fasthttp.RequestCtx to adds extra funtionality
 type RequestCtx struct {
 	*fasthttp.RequestCtx
+	requestID 	 string
 }
 
 // View must process incoming requests.

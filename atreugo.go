@@ -12,7 +12,8 @@ import (
 	"time"
 
 	"github.com/fasthttp/router"
-	logger "github.com/savsgio/go-logger"
+	"github.com/google/uuid"
+	"github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
 )
 
@@ -86,6 +87,17 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := acquireRequestCtx(ctx)
 
+		xReqID := ctx.Request.Header.Peek(xRequestID)
+
+		if len(xReqID) > 0 {
+			actx.requestID = string(xReqID)
+		} else {
+			actx.requestID = uuid.New().String()
+		}
+
+		ctx.Response.Header.Add("X-Request-ID", actx.requestID)
+
+
 		if s.log.DebugEnabled() {
 			s.log.Debugf("%s %s", actx.Method(), actx.URI())
 		}
@@ -105,7 +117,6 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 			s.log.Error(err)
 			actx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		}
-
 		releaseRequestCtx(actx)
 	}
 }
