@@ -117,3 +117,59 @@ func Test_include(t *testing.T) {
 		})
 	}
 }
+
+func Test_execMiddlewares(t *testing.T) {
+	type args struct {
+		middlewares []Middleware
+	}
+	type want struct {
+		statusCode int
+		err        bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "OK",
+			args: args{
+				middlewares: []Middleware{
+					func(ctx *RequestCtx) (int, error) {
+						return 200, nil
+					},
+				},
+			},
+			want: want{
+				statusCode: 200,
+				err:        false,
+			},
+		},
+		{
+			name: "Error",
+			args: args{
+				middlewares: []Middleware{
+					func(ctx *RequestCtx) (int, error) {
+						return 500, errors.New("middleware error")
+					},
+				},
+			},
+			want: want{
+				statusCode: 500,
+				err:        true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := new(RequestCtx)
+
+			statusCode, err := execMiddlewares(ctx, tt.args.middlewares)
+			if (err != nil) != tt.want.err {
+				t.Errorf("execMiddlewares() unexpected error: %v", err)
+			} else if statusCode != tt.want.statusCode {
+				t.Errorf("execMiddlewares() status code = %v, want %v", statusCode, tt.want)
+			}
+		})
+	}
+}

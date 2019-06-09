@@ -218,11 +218,12 @@ type Config struct {
 type Atreugo struct {
 	lnAddr string
 
-	server      *fasthttp.Server
-	router      *router.Router
-	middlewares []Middleware
-	log         *logger.Logger
-	cfg         *Config
+	server            *fasthttp.Server
+	router            *router.Router
+	beforeMiddlewares []Middleware
+	afterMiddlewares  []Middleware
+	log               *logger.Logger
+	cfg               *Config
 }
 
 // RequestCtx context wrapper for fasthttp.RequestCtx to adds extra funtionality

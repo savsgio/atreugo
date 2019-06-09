@@ -24,7 +24,8 @@ func main() {
 		return fasthttp.StatusBadRequest, errors.New("Error example")
 	}
 
-	server.UseMiddleware(fnMiddlewareOne, fnMiddlewareTwo)
+	server.UseBefore(fnMiddlewareOne)
+	server.UseAfter(fnMiddlewareTwo)
 
 	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
 		return ctx.HTTPResponse("<h1>Atreugo Micro-Framework</h1>")

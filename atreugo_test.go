@@ -193,7 +193,7 @@ func TestAtreugoServer(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(testAtreugoConfig)
-			s.UseMiddleware(tt.args.middlewareFns...)
+			s.UseBefore(tt.args.middlewareFns...)
 			s.Path("GET", "/", tt.args.viewFn)
 
 			ln := fasthttputil.NewInmemoryListener()
@@ -502,7 +502,7 @@ func TestAtreugo_Path(t *testing.T) {
 	}
 }
 
-func TestAtreugo_UseMiddleware(t *testing.T) {
+func TestAtreugo_UseBefore(t *testing.T) {
 	middlewareFns := []Middleware{
 		func(ctx *RequestCtx) (int, error) {
 			return 403, errors.New("Bad request")
@@ -513,12 +513,29 @@ func TestAtreugo_UseMiddleware(t *testing.T) {
 	}
 
 	s := New(testAtreugoConfig)
-	s.UseMiddleware(middlewareFns...)
+	s.UseBefore(middlewareFns...)
 
-	if len(s.middlewares) != len(middlewareFns) {
+	if len(s.beforeMiddlewares) != len(middlewareFns) {
 		t.Errorf("Middlewares are not registered")
 	}
+}
 
+func TestAtreugo_UseAfter(t *testing.T) {
+	middlewareFns := []Middleware{
+		func(ctx *RequestCtx) (int, error) {
+			return 403, errors.New("Bad request")
+		},
+		func(ctx *RequestCtx) (int, error) {
+			return 0, nil
+		},
+	}
+
+	s := New(testAtreugoConfig)
+	s.UseAfter(middlewareFns...)
+
+	if len(s.afterMiddlewares) != len(middlewareFns) {
+		t.Errorf("Middlewares are not registered")
+	}
 }
 
 func TestAtreugo_SetLogOutput(t *testing.T) {
@@ -628,7 +645,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 func Benchmark_handler(b *testing.B) {
 	s := New(testAtreugoConfig)
 	viewFn := func(ctx *RequestCtx) error {
-		return nil
+		return ctx.HTTPResponse("Hello world")
 	}
 	ctx := new(fasthttp.RequestCtx)
 	h := s.handler(viewFn)

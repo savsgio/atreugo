@@ -90,20 +90,20 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 			s.log.Debugf("%s %s", actx.Method(), actx.URI())
 		}
 
-		for _, middlewareFn := range s.middlewares {
-			if statusCode, err := middlewareFn(actx); err != nil {
-				s.log.Errorf("%s %s - %s", actx.Method(), actx.URI(), err)
-				actx.Error(err.Error(), statusCode)
+		var err error
+		var statusCode int
 
-				releaseRequestCtx(actx)
-
-				return
+		if statusCode, err = execMiddlewares(actx, s.beforeMiddlewares); err == nil {
+			if err = viewFn(actx); err != nil {
+				statusCode = fasthttp.StatusInternalServerError
+			} else {
+				statusCode, err = execMiddlewares(actx, s.afterMiddlewares)
 			}
 		}
 
-		if err := viewFn(actx); err != nil {
+		if err != nil {
 			s.log.Error(err)
-			actx.Error(err.Error(), fasthttp.StatusInternalServerError)
+			actx.Error(err.Error(), statusCode)
 		}
 
 		releaseRequestCtx(actx)
@@ -224,9 +224,14 @@ func (s *Atreugo) TimeoutPath(httpMethod string, url string, viewFn View, timeou
 	s.router.Handle(httpMethod, url, fasthttp.TimeoutHandler(handler, timeout, msg))
 }
 
-// UseMiddleware register middleware functions in the order you want to execute them
-func (s *Atreugo) UseMiddleware(fns ...Middleware) {
-	s.middlewares = append(s.middlewares, fns...)
+// UseBefore register middleware functions in the order you want to execute them before the view execution
+func (s *Atreugo) UseBefore(fns ...Middleware) {
+	s.beforeMiddlewares = append(s.beforeMiddlewares, fns...)
+}
+
+// UseAfter register middleware functions in the order you want to execute them after the view execution
+func (s *Atreugo) UseAfter(fns ...Middleware) {
+	s.afterMiddlewares = append(s.afterMiddlewares, fns...)
 }
 
 // SetLogOutput set log output of server

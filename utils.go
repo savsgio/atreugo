@@ -1,5 +1,7 @@
 package atreugo
 
+import "github.com/valyala/fasthttp"
+
 func panicOnError(err error) {
 	if err != nil {
 		panic(err)
@@ -21,4 +23,15 @@ func indexOf(vs []string, t string) int {
 // slice.
 func include(vs []string, t string) bool {
 	return indexOf(vs, t) >= 0
+}
+
+// execMiddlewares execute all the middlewares functions with the request context given
+func execMiddlewares(ctx *RequestCtx, middlewares []Middleware) (int, error) {
+	for _, middlewareFn := range middlewares {
+		if statusCode, err := middlewareFn(ctx); err != nil {
+			return statusCode, err
+		}
+	}
+
+	return fasthttp.StatusOK, nil
 }
