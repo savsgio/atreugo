@@ -86,7 +86,7 @@ func main() {
 	}
 	server := atreugo.New(config)
 
-	server.UseMiddleware(checkTokenMiddleware)
+	server.UseBefore(checkTokenMiddleware)
 
 	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
 		return ctx.HTTPResponse(fmt.Sprintf(`<h1>You are login with JWT</h1>
