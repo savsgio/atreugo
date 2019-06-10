@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 	"github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
 
 // New create a new instance of Atreugo Server
@@ -222,6 +224,32 @@ func (s *Atreugo) TimeoutPath(httpMethod string, url string, viewFn View, timeou
 
 	handler := s.handler(viewFn)
 	s.router.Handle(httpMethod, url, fasthttp.TimeoutHandler(handler, timeout, msg))
+}
+
+// NetHTTPPath wraps net/http handler to atreugo view for the given path and method
+//
+// While this function may be used for easy switching from net/http to fasthttp,
+// it has the following drawbacks comparing to using manually written fasthttp
+// request handler:
+//
+//     * A lot of useful functionality provided by fasthttp/atreugo is missing
+//       from net/http handler.
+//     * net/http -> fasthttp/atreugo handler conversion has some overhead,
+//       so the returned handler will be always slower than manually written
+//       fasthttp/atreugo handler.
+//
+// So it is advisable using this function only for quick net/http -> fasthttp
+// switching. Then manually convert net/http handlers to fasthttp handlers
+// according to https://github.com/valyala/fasthttp#switching-from-nethttp-to-fasthttp .
+func (s *Atreugo) NetHTTPPath(httpMethod string, url string, handler http.Handler) {
+	h := fasthttpadaptor.NewFastHTTPHandler(handler)
+
+	aHandler := func(ctx *RequestCtx) error {
+		h(ctx.RequestCtx)
+		return nil
+	}
+
+	s.router.Handle(httpMethod, url, s.handler(aHandler))
 }
 
 // UseBefore register middleware functions in the order you want to execute them before the view execution

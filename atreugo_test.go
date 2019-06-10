@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"reflect"
 	"testing"
 	"time"
@@ -417,10 +419,11 @@ func TestAtreugo_ServeFile(t *testing.T) {
 
 func TestAtreugo_Path(t *testing.T) {
 	type args struct {
-		method  string
-		url     string
-		viewFn  View
-		timeout time.Duration
+		method         string
+		url            string
+		viewFn         View
+		netHTTPHandler http.Handler
+		timeout        time.Duration
 	}
 	type want struct {
 		getPanic bool
@@ -428,6 +431,13 @@ func TestAtreugo_Path(t *testing.T) {
 	testViewFn := func(ctx *RequestCtx) error {
 		return nil
 	}
+
+	testNetHTTPHandler := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Test")
+	}
+	testMuxHandler := http.NewServeMux()
+	testMuxHandler.HandleFunc("/", testNetHTTPHandler)
+
 	tests := []struct {
 		name string
 		args args
@@ -451,6 +461,18 @@ func TestAtreugo_Path(t *testing.T) {
 				url:     "/",
 				viewFn:  testViewFn,
 				timeout: 1 * time.Second,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "GET_NetHTTP_Handler",
+			args: args{
+				method:         "GET",
+				url:            "/",
+				netHTTPHandler: testMuxHandler,
+				timeout:        1 * time.Second,
 			},
 			want: want{
 				getPanic: false,
@@ -492,11 +514,20 @@ func TestAtreugo_Path(t *testing.T) {
 				}
 			}()
 
+			ctx := new(RequestCtx)
+
 			s := New(testAtreugoConfig)
-			if tt.args.timeout == 0 {
-				s.Path(tt.args.method, tt.args.url, tt.args.viewFn)
-			} else {
+			if tt.args.netHTTPHandler != nil {
+				s.NetHTTPPath(tt.args.method, tt.args.url, tt.args.netHTTPHandler)
+			} else if tt.args.timeout > 0 {
 				s.TimeoutPath(tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message")
+			} else {
+				s.Path(tt.args.method, tt.args.url, tt.args.viewFn)
+			}
+
+			handler, _ := s.router.Lookup("GET", tt.args.url, ctx.RequestCtx)
+			if handler == nil {
+				t.Error("Path() is not configured")
 			}
 		})
 	}
