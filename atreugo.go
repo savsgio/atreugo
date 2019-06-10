@@ -228,8 +228,8 @@ func (s *Atreugo) TimeoutPath(httpMethod string, url string, viewFn View, timeou
 
 // NetHTTPPath wraps net/http handler to atreugo view for the given path and method
 //
-// While this function may be used for easy switching from net/http to fasthttp,
-// it has the following drawbacks comparing to using manually written fasthttp
+// While this function may be used for easy switching from net/http to fasthttp/atreugo,
+// it has the following drawbacks comparing to using manually written fasthttp/atreugo,
 // request handler:
 //
 //     * A lot of useful functionality provided by fasthttp/atreugo is missing
