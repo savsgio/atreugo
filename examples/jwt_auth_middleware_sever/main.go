@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/savsgio/atreugo/v7"
+	"github.com/savsgio/atreugo/v8"
 	"github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
 )

@@ -12,7 +12,7 @@ Micro-framework to make simple the use of routing and middlewares in [fasthttp](
 ## Install
 
 ```bash
-go get github.com/savsgio/atreugo/v7
+go get github.com/savsgio/atreugo/v8
 ```
 
 ## Benchmark
@@ -42,8 +42,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/savsgio/atreugo/v7"
-	"github.com/savsgio/atreugo/v7/middlewares"
+	"github.com/savsgio/atreugo/v8"
+	"github.com/savsgio/atreugo/v8/middlewares"
 	"github.com/valyala/fasthttp"
 )
 

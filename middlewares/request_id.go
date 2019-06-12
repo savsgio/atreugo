@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"github.com/google/uuid"
-	"github.com/savsgio/atreugo/v7"
+	"github.com/savsgio/atreugo/v8"
 	"github.com/valyala/fasthttp"
 )
 

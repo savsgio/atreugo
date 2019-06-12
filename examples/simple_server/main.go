@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/savsgio/atreugo/v7"
-	"github.com/savsgio/atreugo/v7/middlewares"
+	"github.com/savsgio/atreugo/v8"
+	"github.com/savsgio/atreugo/v8/middlewares"
 	"github.com/valyala/fasthttp"
 )
 
