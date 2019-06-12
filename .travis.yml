@@ -1,31 +1,37 @@
 language: go
-
+sudo: false
 go:
   - 1.9.x
   - 1.10.x
   - 1.11.x
   - 1.12.x
+  - tip
 
 os:
   - linux
   - osx
 
-matrix:
-  include:
-    - go: tip
-      env: ATREUGO_VERSION=v7
-  allow_failures:
-    - go: tip
-  fast_finish: true
-
 before_install:
+  - go get -u -v golang.org/x/tools/cmd/cover
+  - go get -u -v github.com/modocache/gover
   - go get -u -v github.com/mattn/goveralls
+  - go get -v ./...
 
 script:
+    # build test for supported platforms
   - GOOS=linux go build
   - GOOS=darwin go build
   - GOOS=freebsd go build
   - GOOS=windows go build
   - GOARCH=386 go build
 
-  - $GOPATH/bin/goveralls -v -service=travis-ci -package github.com/savsgio/atreugo/$ATREUGO_VERSION
+  # run tests
+  - |
+    pkgs=($(go list ./... | grep -v examples | tr '\n' ' '))
+    for i in "${!pkgs[@]}"; do
+      go test -v -cover -coverprofile=$i.coverprofile ${pkgs[i]}
+    done
+
+  # send coverage
+  - $HOME/gopath/bin/gover
+  - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci

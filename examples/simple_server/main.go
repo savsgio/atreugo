@@ -1,10 +1,11 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/savsgio/atreugo/v7"
+	"github.com/savsgio/atreugo/v7/middlewares"
 	"github.com/valyala/fasthttp"
 )
 
@@ -16,19 +17,22 @@ func main() {
 	server := atreugo.New(config)
 
 	fnMiddlewareOne := func(ctx *atreugo.RequestCtx) (int, error) {
+		// ... your code
 		return fasthttp.StatusOK, nil
 	}
 
 	fnMiddlewareTwo := func(ctx *atreugo.RequestCtx) (int, error) {
+		// ... your code
+
 		// Disable this middleware if you don't want to see this error
-		return fasthttp.StatusBadRequest, errors.New("Error example")
+		return fasthttp.StatusBadRequest, fmt.Errorf("%s - Error example", ctx.RequestID())
 	}
 
-	server.UseBefore(fnMiddlewareOne)
+	server.UseBefore(middlewares.RequestIDMiddleware, fnMiddlewareOne)
 	server.UseAfter(fnMiddlewareTwo)
 
 	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
-		return ctx.HTTPResponse("<h1>Atreugo Micro-Framework</h1>")
+		return ctx.HTTPResponse("<h1>Atreugo</h1>")
 	})
 
 	server.TimeoutPath("GET", "/jsonPage", func(ctx *atreugo.RequestCtx) error {

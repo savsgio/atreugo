@@ -17,6 +17,19 @@ func TestRequestCtx_reset(t *testing.T) {
 	}
 }
 
+func TestRequestCtx_RequestID(t *testing.T) {
+	value := "123bnj3r2j3rj23"
+
+	ctx := new(RequestCtx)
+	ctx.RequestCtx = new(fasthttp.RequestCtx)
+	ctx.Request.Header.Set(XRequestIDHeader, value)
+
+	currentValue := string(ctx.RequestID())
+	if currentValue != value {
+		t.Errorf("ctx.RequestID() = '%s', want '%s'", currentValue, value)
+	}
+}
+
 func Test_acquireRequestCtx(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
 	actx := acquireRequestCtx(ctx)
