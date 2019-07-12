@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/savsgio/atreugo/v8"
-	"github.com/savsgio/atreugo/v8/middlewares"
 	"github.com/valyala/fasthttp"
 )
 
@@ -18,22 +16,39 @@ func main() {
 
 	fnMiddlewareOne := func(ctx *atreugo.RequestCtx) (int, error) {
 		// ... your code
+
 		return fasthttp.StatusOK, nil
 	}
 
 	fnMiddlewareTwo := func(ctx *atreugo.RequestCtx) (int, error) {
 		// ... your code
 
-		// Disable this middleware if you don't want to see this error
-		return fasthttp.StatusBadRequest, fmt.Errorf("%s - Error example", ctx.RequestID())
+		return fasthttp.StatusOK, nil
 	}
 
-	server.UseBefore(middlewares.RequestIDMiddleware, fnMiddlewareOne)
+	filters := atreugo.Filters{
+		Before: []atreugo.Middleware{
+			func(ctx *atreugo.RequestCtx) (int, error) {
+				// ... your code
+
+				return fasthttp.StatusOK, nil
+			},
+		},
+		After: []atreugo.Middleware{
+			func(ctx *atreugo.RequestCtx) (int, error) {
+				// ... your code
+
+				return fasthttp.StatusOK, nil
+			},
+		},
+	}
+
+	server.UseBefore(fnMiddlewareOne)
 	server.UseAfter(fnMiddlewareTwo)
 
-	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
+	server.PathWithFilters("GET", "/", func(ctx *atreugo.RequestCtx) error {
 		return ctx.HTTPResponse("<h1>Atreugo</h1>")
-	})
+	}, filters)
 
 	server.TimeoutPath("GET", "/jsonPage", func(ctx *atreugo.RequestCtx) error {
 		return ctx.JSONResponse(atreugo.JSON{"Atreugo": true})

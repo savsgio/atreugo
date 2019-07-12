@@ -18,6 +18,8 @@ import (
 	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
 
+var emptyFilters = Filters{}
+
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
 	if cfg.Fasthttp == nil {
@@ -84,7 +86,10 @@ func New(cfg *Config) *Atreugo {
 	return server
 }
 
-func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
+func (s *Atreugo) handler(viewFn View, filters Filters) fasthttp.RequestHandler {
+	before := append(s.beforeMiddlewares, filters.Before...)
+	after := append(filters.After, s.afterMiddlewares...)
+
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := acquireRequestCtx(ctx)
 
@@ -95,11 +100,11 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 		var err error
 		var statusCode int
 
-		if statusCode, err = execMiddlewares(actx, s.beforeMiddlewares); err == nil {
+		if statusCode, err = execMiddlewares(actx, before); err == nil {
 			if err = viewFn(actx); err != nil {
 				statusCode = fasthttp.StatusInternalServerError
 			} else {
-				statusCode, err = execMiddlewares(actx, s.afterMiddlewares)
+				statusCode, err = execMiddlewares(actx, after)
 			}
 		}
 
@@ -110,6 +115,14 @@ func (s *Atreugo) handler(viewFn View) fasthttp.RequestHandler {
 
 		releaseRequestCtx(actx)
 	}
+}
+
+func (s *Atreugo) addRoute(httpMethod, url string, handler fasthttp.RequestHandler) {
+	if httpMethod != strings.ToUpper(httpMethod) {
+		panic("The http method '" + httpMethod + "' must be in uppercase")
+	}
+
+	s.router.Handle(httpMethod, url, handler)
 }
 
 // Serve serves incoming connections from the given listener.
@@ -206,24 +219,33 @@ func (s *Atreugo) ServeFile(url, filePath string) {
 }
 
 // Path add the view to serve from the given path and method
-func (s *Atreugo) Path(httpMethod string, url string, viewFn View) {
-	if httpMethod != strings.ToUpper(httpMethod) {
-		panic("The http method '" + httpMethod + "' must be in uppercase")
-	}
-
-	s.router.Handle(httpMethod, url, s.handler(viewFn))
+func (s *Atreugo) Path(httpMethod, url string, viewFn View) {
+	s.PathWithFilters(httpMethod, url, viewFn, emptyFilters)
 }
 
-// TimeoutPath add the view to serve from the given path and method.
+// PathWithFilters add the view to serve from the given path and method
+// with filters that will execute before and after
+func (s *Atreugo) PathWithFilters(httpMethod, url string, viewFn View, filters Filters) {
+	s.addRoute(httpMethod, url, s.handler(viewFn, filters))
+}
+
+// TimeoutPath add the view to serve from the given path and method
+//
 // If timeout is reached, returns a 408 status code
 // with the given msg to the client if handler didn't return a response
-func (s *Atreugo) TimeoutPath(httpMethod string, url string, viewFn View, timeout time.Duration, msg string) {
-	if httpMethod != strings.ToUpper(httpMethod) {
-		panic("The http method '" + httpMethod + "' must be in uppercase")
-	}
+func (s *Atreugo) TimeoutPath(httpMethod, url string, viewFn View, timeout time.Duration, msg string) {
+	s.TimeoutPathWithFilters(httpMethod, url, viewFn, emptyFilters, timeout, msg)
+}
 
-	handler := s.handler(viewFn)
-	s.router.Handle(httpMethod, url, fasthttp.TimeoutHandler(handler, timeout, msg))
+// TimeoutPathWithFilters add the view to serve from the given path and method
+// with filters that will execute before and after
+//
+// If timeout is reached, returns a 408 status code
+// with the given msg to the client if handler didn't return a response
+func (s *Atreugo) TimeoutPathWithFilters(httpMethod, url string, viewFn View, filters Filters,
+	timeout time.Duration, msg string) {
+	handler := s.handler(viewFn, filters)
+	s.addRoute(httpMethod, url, fasthttp.TimeoutHandler(handler, timeout, msg))
 }
 
 // NetHTTPPath wraps net/http handler to atreugo view for the given path and method
@@ -241,7 +263,27 @@ func (s *Atreugo) TimeoutPath(httpMethod string, url string, viewFn View, timeou
 // So it is advisable using this function only for quick net/http -> fasthttp
 // switching. Then manually convert net/http handlers to fasthttp handlers
 // according to https://github.com/valyala/fasthttp#switching-from-nethttp-to-fasthttp .
-func (s *Atreugo) NetHTTPPath(httpMethod string, url string, handler http.Handler) {
+func (s *Atreugo) NetHTTPPath(httpMethod, url string, handler http.Handler) {
+	s.NetHTTPPathWithFilters(httpMethod, url, handler, emptyFilters)
+}
+
+// NetHTTPPathWithFilters wraps net/http handler to atreugo view for the given path and method
+// with filters that will execute before and after
+//
+// While this function may be used for easy switching from net/http to fasthttp/atreugo,
+// it has the following drawbacks comparing to using manually written fasthttp/atreugo,
+// request handler:
+//
+//     * A lot of useful functionality provided by fasthttp/atreugo is missing
+//       from net/http handler.
+//     * net/http -> fasthttp/atreugo handler conversion has some overhead,
+//       so the returned handler will be always slower than manually written
+//       fasthttp/atreugo handler.
+//
+// So it is advisable using this function only for quick net/http -> fasthttp
+// switching. Then manually convert net/http handlers to fasthttp handlers
+// according to https://github.com/valyala/fasthttp#switching-from-nethttp-to-fasthttp .
+func (s *Atreugo) NetHTTPPathWithFilters(httpMethod, url string, handler http.Handler, filters Filters) {
 	h := fasthttpadaptor.NewFastHTTPHandler(handler)
 
 	aHandler := func(ctx *RequestCtx) error {
@@ -249,7 +291,7 @@ func (s *Atreugo) NetHTTPPath(httpMethod string, url string, handler http.Handle
 		return nil
 	}
 
-	s.router.Handle(httpMethod, url, s.handler(aHandler))
+	s.addRoute(httpMethod, url, s.handler(aHandler, filters))
 }
 
 // UseBefore register middleware functions in the order you want to execute them before the view execution

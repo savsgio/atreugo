@@ -237,5 +237,13 @@ type View func(ctx *RequestCtx) error
 // Middleware must process all incoming requests before defined views.
 type Middleware func(ctx *RequestCtx) (int, error)
 
+// Filters like middlewares, but for specific paths.
+// It will be executed before and after execute the view defined in the path
+// in addition of the general middlewares
+type Filters struct {
+	Before []Middleware
+	After  []Middleware
+}
+
 // JSON is a map whose key is a string and whose value an interface
 type JSON map[string]interface{}

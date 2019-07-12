@@ -82,19 +82,59 @@ func Test_New(t *testing.T) {
 	}
 }
 
-func TestAtreugoServer(t *testing.T) {
-	type args struct {
-		viewFn        View
-		middlewareFns []Middleware
-	}
-	type want struct {
-		statusCode        int
+func TestAtreugo_handler(t *testing.T) {
+	type counter struct {
 		viewCalled        bool
-		middleWareCounter int
+		beforeMiddlewares int
+		beforeFilters     int
+		afterFilters      int
+		afterMiddlewares  int
 	}
 
-	viewCalled := false
-	middleWareCounter := 0
+	type args struct {
+		viewFn  View
+		before  []Middleware
+		after   []Middleware
+		filters Filters
+	}
+	type want struct {
+		statusCode int
+		counter    counter
+	}
+
+	handlerCounter := counter{}
+	err := errors.New("test error")
+
+	viewFn := func(ctx *RequestCtx) error {
+		handlerCounter.viewCalled = true
+		return nil
+	}
+	before := []Middleware{
+		func(ctx *RequestCtx) (int, error) {
+			handlerCounter.beforeMiddlewares++
+			return fasthttp.StatusOK, nil
+		},
+	}
+	after := []Middleware{
+		func(ctx *RequestCtx) (int, error) {
+			handlerCounter.afterMiddlewares++
+			return fasthttp.StatusOK, nil
+		},
+	}
+	filters := Filters{
+		Before: []Middleware{
+			func(ctx *RequestCtx) (int, error) {
+				handlerCounter.beforeFilters++
+				return fasthttp.StatusOK, nil
+			},
+		},
+		After: []Middleware{
+			func(ctx *RequestCtx) (int, error) {
+				handlerCounter.afterFilters++
+				return fasthttp.StatusOK, nil
+			},
+		},
+	}
 
 	tests := []struct {
 		name string
@@ -104,99 +144,169 @@ func TestAtreugoServer(t *testing.T) {
 		{
 			name: "AllOk",
 			args: args{
-				viewFn: func(ctx *RequestCtx) error {
-					viewCalled = true
-					return nil
-				},
-				middlewareFns: []Middleware{
-					func(ctx *RequestCtx) (int, error) {
-						middleWareCounter++
-						return 0, nil
-					},
-				},
+				viewFn:  viewFn,
+				before:  before,
+				after:   after,
+				filters: filters,
 			},
 			want: want{
-				statusCode:        fasthttp.StatusOK,
-				viewCalled:        true,
-				middleWareCounter: 1,
-			},
-		},
-		{
-			name: "FirstMiddlewareError",
-			args: args{
-				viewFn: func(ctx *RequestCtx) error {
-					viewCalled = true
-					return nil
+				statusCode: fasthttp.StatusOK,
+				counter: counter{
+					viewCalled:        true,
+					beforeMiddlewares: len(before),
+					beforeFilters:     len(filters.Before),
+					afterFilters:      len(filters.After),
+					afterMiddlewares:  len(after),
 				},
-				middlewareFns: []Middleware{
-					func(ctx *RequestCtx) (int, error) {
-						return 403, errors.New("Bad request")
-					},
-					func(ctx *RequestCtx) (int, error) {
-						middleWareCounter++
-						return 0, nil
-					},
-				},
-			},
-			want: want{
-				statusCode:        403,
-				viewCalled:        false,
-				middleWareCounter: 0,
-			},
-		},
-		{
-			name: "SecondMiddlewareError",
-			args: args{
-				viewFn: func(ctx *RequestCtx) error {
-					viewCalled = true
-					return nil
-				},
-				middlewareFns: []Middleware{
-					func(ctx *RequestCtx) (int, error) {
-						middleWareCounter++
-						return 0, nil
-					},
-					func(ctx *RequestCtx) (int, error) {
-						return 403, errors.New("Bad request")
-					},
-				},
-			},
-			want: want{
-				statusCode:        403,
-				viewCalled:        false,
-				middleWareCounter: 1,
 			},
 		},
 		{
 			name: "ViewError",
 			args: args{
 				viewFn: func(ctx *RequestCtx) error {
-					viewCalled = true
-					return errors.New("Fake error")
+					return err
 				},
-				middlewareFns: []Middleware{
+				before:  before,
+				after:   after,
+				filters: filters,
+			},
+			want: want{
+				statusCode: fasthttp.StatusInternalServerError,
+				counter: counter{
+					viewCalled:        false,
+					beforeMiddlewares: len(before),
+					beforeFilters:     len(filters.Before),
+					afterFilters:      0,
+					afterMiddlewares:  0,
+				},
+			},
+		},
+		{
+			name: "BeforeMiddlewaresError",
+			args: args{
+				viewFn: viewFn,
+				before: []Middleware{
 					func(ctx *RequestCtx) (int, error) {
-						middleWareCounter++
-						return 0, nil
+						handlerCounter.beforeMiddlewares++
+						return fasthttp.StatusBadRequest, err
+					},
+				},
+				after:   after,
+				filters: filters,
+			},
+			want: want{
+				statusCode: fasthttp.StatusBadRequest,
+				counter: counter{
+					viewCalled:        false,
+					beforeMiddlewares: 1,
+					beforeFilters:     0,
+					afterFilters:      0,
+					afterMiddlewares:  0,
+				},
+			},
+		},
+		{
+			name: "BeforeFiltersError",
+			args: args{
+				viewFn: viewFn,
+				before: before,
+				after:  after,
+				filters: Filters{
+					Before: []Middleware{
+						func(ctx *RequestCtx) (int, error) {
+							handlerCounter.beforeFilters++
+							return fasthttp.StatusBadRequest, err
+						},
+					},
+					After: []Middleware{
+						func(ctx *RequestCtx) (int, error) {
+							handlerCounter.afterFilters++
+							return fasthttp.StatusOK, nil
+						},
 					},
 				},
 			},
 			want: want{
-				statusCode:        fasthttp.StatusInternalServerError,
-				viewCalled:        true,
-				middleWareCounter: 1,
+				statusCode: fasthttp.StatusBadRequest,
+				counter: counter{
+					viewCalled:        false,
+					beforeMiddlewares: len(before),
+					beforeFilters:     1,
+					afterFilters:      0,
+					afterMiddlewares:  0,
+				},
+			},
+		},
+		{
+			name: "AfterFiltersError",
+			args: args{
+				viewFn: viewFn,
+				before: before,
+				after:  after,
+				filters: Filters{
+					Before: []Middleware{
+						func(ctx *RequestCtx) (int, error) {
+							handlerCounter.beforeFilters++
+							return fasthttp.StatusOK, nil
+						},
+					},
+					After: []Middleware{
+						func(ctx *RequestCtx) (int, error) {
+							handlerCounter.afterFilters++
+							return fasthttp.StatusBadRequest, err
+						},
+					},
+				},
+			},
+			want: want{
+				statusCode: fasthttp.StatusBadRequest,
+				counter: counter{
+					viewCalled:        true,
+					beforeMiddlewares: len(before),
+					beforeFilters:     1,
+					afterFilters:      1,
+					afterMiddlewares:  0,
+				},
+			},
+		},
+		{
+			name: "AfterMiddlewaresError",
+			args: args{
+				viewFn: viewFn,
+				before: before,
+				after: []Middleware{
+					func(ctx *RequestCtx) (int, error) {
+						handlerCounter.afterMiddlewares++
+						return fasthttp.StatusBadRequest, err
+					},
+				},
+				filters: filters,
+			},
+			want: want{
+				statusCode: fasthttp.StatusBadRequest,
+				counter: counter{
+					viewCalled:        true,
+					beforeMiddlewares: len(before),
+					beforeFilters:     len(filters.Before),
+					afterFilters:      len(filters.After),
+					afterMiddlewares:  1,
+				},
 			},
 		},
 	}
 
 	for _, tt := range tests {
-		viewCalled = false
-		middleWareCounter = 0
+		handlerCounter.viewCalled = false
+		handlerCounter.beforeMiddlewares = 0
+		handlerCounter.beforeFilters = 0
+		handlerCounter.afterFilters = 0
+		handlerCounter.afterMiddlewares = 0
 
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(testAtreugoConfig)
-			s.UseBefore(tt.args.middlewareFns...)
-			s.Path("GET", "/", tt.args.viewFn)
+			s.UseBefore(tt.args.before...)
+			s.UseAfter(tt.args.after...)
+			s.PathWithFilters("GET", "/", tt.args.viewFn, tt.args.filters)
 
 			ln := fasthttputil.NewInmemoryListener()
 
@@ -224,12 +334,28 @@ func TestAtreugoServer(t *testing.T) {
 					t.Fatalf("Unexpected status code: '%d', want '%d'", resp.StatusCode(), tt.want.statusCode)
 				}
 
-				if viewCalled != tt.want.viewCalled {
-					t.Errorf("View called = %v, want %v", viewCalled, tt.want.viewCalled)
+				if handlerCounter.viewCalled != tt.want.counter.viewCalled {
+					t.Errorf("View called = %v, want %v", handlerCounter.viewCalled, tt.want.counter.viewCalled)
 				}
 
-				if middleWareCounter != tt.want.middleWareCounter {
-					t.Errorf("Middleware call counter = %v, want %v", middleWareCounter, tt.want.middleWareCounter)
+				if handlerCounter.beforeMiddlewares != tt.want.counter.beforeMiddlewares {
+					t.Errorf("Before middlewares call counter = %v, want %v", handlerCounter.beforeMiddlewares,
+						tt.want.counter.beforeMiddlewares)
+				}
+
+				if handlerCounter.beforeFilters != tt.want.counter.beforeFilters {
+					t.Errorf("Before filters call counter = %v, want %v", handlerCounter.beforeFilters,
+						tt.want.counter.beforeFilters)
+				}
+
+				if handlerCounter.afterMiddlewares != tt.want.counter.afterMiddlewares {
+					t.Errorf("After middlewares call counter = %v, want %v", handlerCounter.afterMiddlewares,
+						tt.want.counter.afterMiddlewares)
+				}
+
+				if handlerCounter.afterFilters != tt.want.counter.afterFilters {
+					t.Errorf("After filters call counter = %v, want %v", handlerCounter.afterFilters,
+						tt.want.counter.afterFilters)
 				}
 
 				clientCh <- c.Close()
@@ -444,7 +570,7 @@ func TestAtreugo_Path(t *testing.T) {
 		want want
 	}{
 		{
-			name: "GET",
+			name: "Path",
 			args: args{
 				method: "GET",
 				url:    "/",
@@ -455,7 +581,7 @@ func TestAtreugo_Path(t *testing.T) {
 			},
 		},
 		{
-			name: "GET_Timeout",
+			name: "TimeoutPath",
 			args: args{
 				method:  "GET",
 				url:     "/",
@@ -467,7 +593,7 @@ func TestAtreugo_Path(t *testing.T) {
 			},
 		},
 		{
-			name: "GET_NetHTTP_Handler",
+			name: "NetHTTPPath",
 			args: args{
 				method:         "GET",
 				url:            "/",
@@ -679,7 +805,7 @@ func Benchmark_handler(b *testing.B) {
 		return ctx.HTTPResponse("Hello world")
 	}
 	ctx := new(fasthttp.RequestCtx)
-	h := s.handler(viewFn)
+	h := s.handler(viewFn, emptyFilters)
 
 	b.ResetTimer()
 	for i := 0; i <= b.N; i++ {
