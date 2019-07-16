@@ -53,16 +53,17 @@ type FasthttpConfig struct {
 	// Default buffer size is used if not set.
 	WriteBufferSize int
 
-	// Maximum duration for reading the full request (including body).
+	// ReadTimeout is the amount of time allowed to read
+	// the full request including body. The connection's read
+	// deadline is reset when the connection opens, or for
+	// keep-alive connections after the first byte has been read.
 	//
-	// This also limits the maximum duration for idle keep-alive
-	// connections.
-	//
-	// By default request read timeout is unlimited if Graceful Shutdown is set to false,
-	// unless will use the default ReadTimeout
+	// By default request read timeout is unlimited.
 	ReadTimeout time.Duration
 
-	// Maximum duration for writing the full response (including body).
+	// WriteTimeout is the maximum duration before timing out
+	// writes of the response. It is reset after the request handler
+	// has returned.
 	//
 	// By default response write timeout is unlimited.
 	WriteTimeout time.Duration
@@ -86,15 +87,8 @@ type FasthttpConfig struct {
 	// By default unlimited number of requests may be served per connection.
 	MaxRequestsPerConn int
 
-	// Maximum keep-alive connection lifetime.
-	//
-	// The server closes keep-alive connection after its' lifetime
-	// expiration.
-	//
-	// See also ReadTimeout for limiting the duration of idle keep-alive
-	// connections.
-	//
-	// By default keep-alive connection lifetime is unlimited.
+	// MaxKeepaliveDuration is a no-op and only left here for backwards compatibility.
+	// Deprecated: Use IdleTimeout instead.
 	MaxKeepaliveDuration time.Duration
 
 	// Maximum request body size.
@@ -216,14 +210,14 @@ type Config struct {
 
 // Atreugo struct for make up a server
 type Atreugo struct {
-	lnAddr string
+	server *fasthttp.Server
+	router *router.Router
+	log    *logger.Logger
+	cfg    *Config
 
-	server            *fasthttp.Server
-	router            *router.Router
+	lnAddr            string
 	beforeMiddlewares []Middleware
 	afterMiddlewares  []Middleware
-	log               *logger.Logger
-	cfg               *Config
 }
 
 // RequestCtx context wrapper for fasthttp.RequestCtx to adds extra funtionality
