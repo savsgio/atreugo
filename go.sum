@@ -1,6 +1,5 @@
-github.com/fasthttp/router v0.3.4 h1:/ZlR7DKG1UOAgwY5ChxLIr+QFzoJylXb2Kc0qoU7cgM=
-github.com/fasthttp/router v0.3.4/go.mod h1:Dox9pMCKygoMajltoDohsnHlP0iYFDDosirAN8TNr8U=
-github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
+github.com/fasthttp/router v0.4.0 h1:Q3UewStfPNhNiz0nBmEiRrQprmw5jQGJ7Q4muyRa/Rk=
+github.com/fasthttp/router v0.4.0/go.mod h1:lEEZAHnTxjTcHUy3HKrC0ZxVteWfkEMNfy5J49xG8/k=
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/json-iterator/go v1.1.6 h1:MrUvLMLTMxbqFJ9kzlvat/rYZqZnW3u4wkLzWTaFwKs=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
@@ -14,12 +13,12 @@ github.com/modern-go/reflect2 v1.0.1 h1:9f412s+6RmYXLWZSEzVVgPGK7C2PphHj5RJrvfx9
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/savsgio/go-logger v1.0.0 h1:jiaRvohRr8RwtcK/WDcA/Yp4eaPaarAko3JNPzt1xoQ=
 github.com/savsgio/go-logger v1.0.0/go.mod h1:/ZzTTmB3JJqjZQcLlxTGbwy3fIsLUoYyldsSEL5rU2g=
-github.com/savsgio/gotils v0.0.0-20190409142739-e36d23089e10 h1:Rk4AHSMs6BX9Vb84H+SmYEA3X/VrtLV9qYSU/lc7xk4=
-github.com/savsgio/gotils v0.0.0-20190409142739-e36d23089e10/go.mod h1:w803/Fg1m0hrp1ZT9KNfQe4E4+WOMMFLcgzPvOcye10=
+github.com/savsgio/gotils v0.0.0-20190714152828-365999d0a274 h1:F52t1X2ziOrMcQMVHo8ZxwOrDTMAq6MrlKtL1Atu2wU=
+github.com/savsgio/gotils v0.0.0-20190714152828-365999d0a274/go.mod h1:w803/Fg1m0hrp1ZT9KNfQe4E4+WOMMFLcgzPvOcye10=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
-github.com/valyala/fasthttp v1.3.0 h1:++0WUtakkqBuHHY5JRFFl6O44I03XLBqxNnrBX0yH7Y=
-github.com/valyala/fasthttp v1.3.0/go.mod h1:4vX61m6KN+xDduDNwXrhIAVZaZaZiQ1luJk8LWSxF3s=
+github.com/valyala/fasthttp v1.4.0 h1:PuaTGZIw3mjYhhhbVbCQp8aciRZN9YdoB7MGX9Ko76A=
+github.com/valyala/fasthttp v1.4.0/go.mod h1:4vX61m6KN+xDduDNwXrhIAVZaZaZiQ1luJk8LWSxF3s=
 github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a h1:0R4NLDRDZX6JcmhJgXi5E4b8Wg84ihbmUKp/GvSPEzc=
 github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a/go.mod h1:v3UYOV9WzVtRmSR+PDvWpU/qWl4Wa5LApYYX4ZtKbio=
 golang.org/x/net v0.0.0-20180911220305-26e67e76b6c3/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
