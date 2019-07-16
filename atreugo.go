@@ -229,23 +229,53 @@ func (s *Atreugo) PathWithFilters(httpMethod, url string, viewFn View, filters F
 	s.addRoute(httpMethod, url, s.handler(viewFn, filters))
 }
 
-// TimeoutPath add the view to serve from the given path and method
+// TimeoutPath add the view to serve from the given path and method,
+// which returns StatusRequestTimeout error with the given msg to the client
+// if view didn't return during the given duration.
 //
-// If timeout is reached, returns a 408 status code
-// with the given msg to the client if handler didn't return a response
+// The returned handler may return StatusTooManyRequests error with the given
+// msg to the client if there are more than Server.Concurrency concurrent
+// handlers view are running at the moment.
 func (s *Atreugo) TimeoutPath(httpMethod, url string, viewFn View, timeout time.Duration, msg string) {
 	s.TimeoutPathWithFilters(httpMethod, url, viewFn, emptyFilters, timeout, msg)
 }
 
 // TimeoutPathWithFilters add the view to serve from the given path and method
-// with filters that will execute before and after
+// with filters, which returns StatusRequestTimeout error with the given msg
+// to the client if view/filters didn't return during the given duration.
 //
-// If timeout is reached, returns a 408 status code
-// with the given msg to the client if handler didn't return a response
+// The returned handler may return StatusTooManyRequests error with the given
+// msg to the client if there are more than Server.Concurrency concurrent
+// handlers view/filters are running at the moment.
 func (s *Atreugo) TimeoutPathWithFilters(httpMethod, url string, viewFn View, filters Filters,
 	timeout time.Duration, msg string) {
 	handler := s.handler(viewFn, filters)
 	s.addRoute(httpMethod, url, fasthttp.TimeoutHandler(handler, timeout, msg))
+}
+
+// TimeoutWithCodePath add the view to serve from the given path and method,
+// which returns an error with the given msg and status code to the client
+// if view/filters didn't return during the given duration.
+//
+// The returned handler may return StatusTooManyRequests error with the given
+// msg to the client if there are more than Server.Concurrency concurrent
+// handlers view/filters are running at the moment.
+func (s *Atreugo) TimeoutWithCodePath(httpMethod, url string, viewFn View,
+	timeout time.Duration, msg string, statusCode int) {
+	s.TimeoutWithCodePathWithFilters(httpMethod, url, viewFn, emptyFilters, timeout, msg, statusCode)
+}
+
+// TimeoutWithCodePathWithFilters add the view to serve from the given path and method
+// with filters, which returns an error with the given msg and status code to the client
+// if view/filters didn't return during the given duration.
+//
+// The returned handler may return StatusTooManyRequests error with the given
+// msg to the client if there are more than Server.Concurrency concurrent
+// handlers view/filters are running at the moment.
+func (s *Atreugo) TimeoutWithCodePathWithFilters(httpMethod, url string, viewFn View, filters Filters,
+	timeout time.Duration, msg string, statusCode int) {
+	handler := s.handler(viewFn, filters)
+	s.addRoute(httpMethod, url, fasthttp.TimeoutWithCodeHandler(handler, timeout, msg, statusCode))
 }
 
 // NetHTTPPath wraps net/http handler to atreugo view for the given path and method

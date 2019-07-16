@@ -550,6 +550,7 @@ func TestAtreugo_Path(t *testing.T) {
 		viewFn         View
 		netHTTPHandler http.Handler
 		timeout        time.Duration
+		statusCode     int
 	}
 	type want struct {
 		getPanic bool
@@ -587,6 +588,19 @@ func TestAtreugo_Path(t *testing.T) {
 				url:     "/",
 				viewFn:  testViewFn,
 				timeout: 1 * time.Second,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "TimeoutWithCodePath",
+			args: args{
+				method:     "GET",
+				url:        "/",
+				viewFn:     testViewFn,
+				timeout:    1 * time.Second,
+				statusCode: 201,
 			},
 			want: want{
 				getPanic: false,
@@ -646,7 +660,13 @@ func TestAtreugo_Path(t *testing.T) {
 			if tt.args.netHTTPHandler != nil {
 				s.NetHTTPPath(tt.args.method, tt.args.url, tt.args.netHTTPHandler)
 			} else if tt.args.timeout > 0 {
-				s.TimeoutPath(tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message")
+				if tt.args.statusCode > 0 {
+					s.TimeoutWithCodePath(
+						tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message", tt.args.statusCode,
+					)
+				} else {
+					s.TimeoutPath(tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message")
+				}
 			} else {
 				s.Path(tt.args.method, tt.args.url, tt.args.viewFn)
 			}
