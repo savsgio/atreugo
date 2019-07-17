@@ -4,21 +4,15 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"strings"
 	"syscall"
-	"time"
 
-	"github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
-	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
-
-var emptyFilters = Filters{}
 
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
@@ -40,22 +34,10 @@ func New(cfg *Config) *Atreugo {
 		cfg.LogName = defaultLogName
 	}
 
-	r := router.New()
-	if cfg.NotFoundHandler != nil {
-		r.NotFound = cfg.NotFoundHandler
-	}
-
-	handler := r.Handler
-	if cfg.Compress {
-		handler = fasthttp.CompressHandler(handler)
-	}
-
 	log := logger.New(cfg.LogName, cfg.LogLevel, os.Stderr)
 
 	server := &Atreugo{
-		router: r,
 		server: &fasthttp.Server{
-			Handler:                            handler,
 			Name:                               cfg.Fasthttp.Name,
 			Concurrency:                        cfg.Fasthttp.Concurrency,
 			DisableKeepalive:                   cfg.Fasthttp.DisableKeepalive,
@@ -83,46 +65,20 @@ func New(cfg *Config) *Atreugo {
 		cfg: cfg,
 	}
 
+	r := newRouter(log)
+	if cfg.NotFoundHandler != nil {
+		r.router.NotFound = cfg.NotFoundHandler
+	}
+
+	handler := r.router.Handler
+	if cfg.Compress {
+		handler = fasthttp.CompressHandler(handler)
+	}
+
+	server.router = r
+	server.server.Handler = handler
+
 	return server
-}
-
-func (s *Atreugo) handler(viewFn View, filters Filters) fasthttp.RequestHandler {
-	before := append(s.beforeMiddlewares, filters.Before...)
-	after := append(filters.After, s.afterMiddlewares...)
-
-	return func(ctx *fasthttp.RequestCtx) {
-		actx := acquireRequestCtx(ctx)
-
-		if s.log.DebugEnabled() {
-			s.log.Debugf("%s %s", actx.Method(), actx.URI())
-		}
-
-		var err error
-		var statusCode int
-
-		if statusCode, err = execMiddlewares(actx, before); err == nil {
-			if err = viewFn(actx); err != nil {
-				statusCode = fasthttp.StatusInternalServerError
-			} else {
-				statusCode, err = execMiddlewares(actx, after)
-			}
-		}
-
-		if err != nil {
-			s.log.Error(err)
-			actx.Error(err.Error(), statusCode)
-		}
-
-		releaseRequestCtx(actx)
-	}
-}
-
-func (s *Atreugo) addRoute(httpMethod, url string, handler fasthttp.RequestHandler) {
-	if httpMethod != strings.ToUpper(httpMethod) {
-		panic("The http method '" + httpMethod + "' must be in uppercase")
-	}
-
-	s.router.Handle(httpMethod, url, handler)
 }
 
 // Serve serves incoming connections from the given listener.
@@ -199,139 +155,6 @@ func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	}
 
 	return nil
-}
-
-// Static serves static files from the given file system root.
-func (s *Atreugo) Static(url, rootPath string) {
-	if strings.HasSuffix(url, "/") {
-		url = url[:len(url)-1]
-	}
-
-	s.router.ServeFiles(url+"/*filepath", rootPath)
-}
-
-// ServeFile serves a file from the given system path
-func (s *Atreugo) ServeFile(url, filePath string) {
-	s.Path("GET", url, func(ctx *RequestCtx) error {
-		fasthttp.ServeFile(ctx.RequestCtx, filePath)
-		return nil
-	})
-}
-
-// Path add the view to serve from the given path and method
-func (s *Atreugo) Path(httpMethod, url string, viewFn View) {
-	s.PathWithFilters(httpMethod, url, viewFn, emptyFilters)
-}
-
-// PathWithFilters add the view to serve from the given path and method
-// with filters that will execute before and after
-func (s *Atreugo) PathWithFilters(httpMethod, url string, viewFn View, filters Filters) {
-	s.addRoute(httpMethod, url, s.handler(viewFn, filters))
-}
-
-// TimeoutPath add the view to serve from the given path and method,
-// which returns StatusRequestTimeout error with the given msg to the client
-// if view didn't return during the given duration.
-//
-// The returned handler may return StatusTooManyRequests error with the given
-// msg to the client if there are more than Server.Concurrency concurrent
-// handlers view are running at the moment.
-func (s *Atreugo) TimeoutPath(httpMethod, url string, viewFn View, timeout time.Duration, msg string) {
-	s.TimeoutPathWithFilters(httpMethod, url, viewFn, emptyFilters, timeout, msg)
-}
-
-// TimeoutPathWithFilters add the view to serve from the given path and method
-// with filters, which returns StatusRequestTimeout error with the given msg
-// to the client if view/filters didn't return during the given duration.
-//
-// The returned handler may return StatusTooManyRequests error with the given
-// msg to the client if there are more than Server.Concurrency concurrent
-// handlers view/filters are running at the moment.
-func (s *Atreugo) TimeoutPathWithFilters(httpMethod, url string, viewFn View, filters Filters,
-	timeout time.Duration, msg string) {
-	handler := s.handler(viewFn, filters)
-	s.addRoute(httpMethod, url, fasthttp.TimeoutHandler(handler, timeout, msg))
-}
-
-// TimeoutWithCodePath add the view to serve from the given path and method,
-// which returns an error with the given msg and status code to the client
-// if view/filters didn't return during the given duration.
-//
-// The returned handler may return StatusTooManyRequests error with the given
-// msg to the client if there are more than Server.Concurrency concurrent
-// handlers view/filters are running at the moment.
-func (s *Atreugo) TimeoutWithCodePath(httpMethod, url string, viewFn View,
-	timeout time.Duration, msg string, statusCode int) {
-	s.TimeoutWithCodePathWithFilters(httpMethod, url, viewFn, emptyFilters, timeout, msg, statusCode)
-}
-
-// TimeoutWithCodePathWithFilters add the view to serve from the given path and method
-// with filters, which returns an error with the given msg and status code to the client
-// if view/filters didn't return during the given duration.
-//
-// The returned handler may return StatusTooManyRequests error with the given
-// msg to the client if there are more than Server.Concurrency concurrent
-// handlers view/filters are running at the moment.
-func (s *Atreugo) TimeoutWithCodePathWithFilters(httpMethod, url string, viewFn View, filters Filters,
-	timeout time.Duration, msg string, statusCode int) {
-	handler := s.handler(viewFn, filters)
-	s.addRoute(httpMethod, url, fasthttp.TimeoutWithCodeHandler(handler, timeout, msg, statusCode))
-}
-
-// NetHTTPPath wraps net/http handler to atreugo view for the given path and method
-//
-// While this function may be used for easy switching from net/http to fasthttp/atreugo,
-// it has the following drawbacks comparing to using manually written fasthttp/atreugo,
-// request handler:
-//
-//     * A lot of useful functionality provided by fasthttp/atreugo is missing
-//       from net/http handler.
-//     * net/http -> fasthttp/atreugo handler conversion has some overhead,
-//       so the returned handler will be always slower than manually written
-//       fasthttp/atreugo handler.
-//
-// So it is advisable using this function only for quick net/http -> fasthttp
-// switching. Then manually convert net/http handlers to fasthttp handlers
-// according to https://github.com/valyala/fasthttp#switching-from-nethttp-to-fasthttp .
-func (s *Atreugo) NetHTTPPath(httpMethod, url string, handler http.Handler) {
-	s.NetHTTPPathWithFilters(httpMethod, url, handler, emptyFilters)
-}
-
-// NetHTTPPathWithFilters wraps net/http handler to atreugo view for the given path and method
-// with filters that will execute before and after
-//
-// While this function may be used for easy switching from net/http to fasthttp/atreugo,
-// it has the following drawbacks comparing to using manually written fasthttp/atreugo,
-// request handler:
-//
-//     * A lot of useful functionality provided by fasthttp/atreugo is missing
-//       from net/http handler.
-//     * net/http -> fasthttp/atreugo handler conversion has some overhead,
-//       so the returned handler will be always slower than manually written
-//       fasthttp/atreugo handler.
-//
-// So it is advisable using this function only for quick net/http -> fasthttp
-// switching. Then manually convert net/http handlers to fasthttp handlers
-// according to https://github.com/valyala/fasthttp#switching-from-nethttp-to-fasthttp .
-func (s *Atreugo) NetHTTPPathWithFilters(httpMethod, url string, handler http.Handler, filters Filters) {
-	h := fasthttpadaptor.NewFastHTTPHandler(handler)
-
-	aHandler := func(ctx *RequestCtx) error {
-		h(ctx.RequestCtx)
-		return nil
-	}
-
-	s.addRoute(httpMethod, url, s.handler(aHandler, filters))
-}
-
-// UseBefore register middleware functions in the order you want to execute them before the view execution
-func (s *Atreugo) UseBefore(fns ...Middleware) {
-	s.beforeMiddlewares = append(s.beforeMiddlewares, fns...)
-}
-
-// UseAfter register middleware functions in the order you want to execute them after the view execution
-func (s *Atreugo) UseAfter(fns ...Middleware) {
-	s.afterMiddlewares = append(s.afterMiddlewares, fns...)
 }
 
 // SetLogOutput set log output of server

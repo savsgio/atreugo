@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/savsgio/atreugo/v8"
@@ -53,6 +54,11 @@ func main() {
 	server.TimeoutPath("GET", "/jsonPage", func(ctx *atreugo.RequestCtx) error {
 		return ctx.JSONResponse(atreugo.JSON{"Atreugo": true})
 	}, 5*time.Second, "Timeout response message")
+
+	v1 := server.NewGroupPath("/v1")
+	v1.Path("GET", "/users/:name", func(ctx *atreugo.RequestCtx) error {
+		return ctx.TextResponse(fmt.Sprintf("v1 - user name: %s", ctx.UserValue("name")))
+	})
 
 	err := server.ListenAndServe()
 	if err != nil {

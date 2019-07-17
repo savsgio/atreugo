@@ -1,0 +1,580 @@
+package atreugo
+
+import (
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"reflect"
+	"testing"
+	"time"
+
+	logger "github.com/savsgio/go-logger"
+	"github.com/valyala/fasthttp"
+)
+
+var testLog = logger.New("test", "fatal", nil)
+
+func TestRouter_newRouter(t *testing.T) {
+	r := newRouter(testLog)
+
+	if reflect.ValueOf(r.log).Pointer() != reflect.ValueOf(testLog).Pointer() {
+		t.Errorf("Router log == %p, want %p", r.log, testLog)
+	}
+
+	if r.router == nil {
+		t.Error("Router instance is nil")
+	}
+}
+
+func TestRouter_NewGroupPath(t *testing.T) {
+	r := newRouter(testLog)
+	g := r.NewGroupPath("/fast")
+
+	if reflect.ValueOf(g.log).Pointer() != reflect.ValueOf(r.log).Pointer() {
+		t.Errorf("Group log == %p, want %p", g.log, r.log)
+	}
+
+	if g.router == nil {
+		t.Error("Group router instance is nil")
+	}
+}
+
+func TestRouter_handler(t *testing.T) {
+	type counter struct {
+		viewCalled        bool
+		beforeMiddlewares int
+		beforeFilters     int
+		afterFilters      int
+		afterMiddlewares  int
+	}
+
+	type args struct {
+		viewFn  View
+		before  []Middleware
+		after   []Middleware
+		filters Filters
+	}
+	type want struct {
+		statusCode int
+		counter    counter
+	}
+
+	handlerCounter := counter{}
+	err := errors.New("test error")
+
+	viewFn := func(ctx *RequestCtx) error {
+		handlerCounter.viewCalled = true
+		return nil
+	}
+	before := []Middleware{
+		func(ctx *RequestCtx) (int, error) {
+			handlerCounter.beforeMiddlewares++
+			return fasthttp.StatusOK, nil
+		},
+	}
+	after := []Middleware{
+		func(ctx *RequestCtx) (int, error) {
+			handlerCounter.afterMiddlewares++
+			return fasthttp.StatusOK, nil
+		},
+	}
+	filters := Filters{
+		Before: []Middleware{
+			func(ctx *RequestCtx) (int, error) {
+				handlerCounter.beforeFilters++
+				return fasthttp.StatusOK, nil
+			},
+		},
+		After: []Middleware{
+			func(ctx *RequestCtx) (int, error) {
+				handlerCounter.afterFilters++
+				return fasthttp.StatusOK, nil
+			},
+		},
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "AllOk",
+			args: args{
+				viewFn:  viewFn,
+				before:  before,
+				after:   after,
+				filters: filters,
+			},
+			want: want{
+				statusCode: fasthttp.StatusOK,
+				counter: counter{
+					viewCalled:        true,
+					beforeMiddlewares: len(before),
+					beforeFilters:     len(filters.Before),
+					afterFilters:      len(filters.After),
+					afterMiddlewares:  len(after),
+				},
+			},
+		},
+		{
+			name: "ViewError",
+			args: args{
+				viewFn: func(ctx *RequestCtx) error {
+					return err
+				},
+				before:  before,
+				after:   after,
+				filters: filters,
+			},
+			want: want{
+				statusCode: fasthttp.StatusInternalServerError,
+				counter: counter{
+					viewCalled:        false,
+					beforeMiddlewares: len(before),
+					beforeFilters:     len(filters.Before),
+					afterFilters:      0,
+					afterMiddlewares:  0,
+				},
+			},
+		},
+		{
+			name: "BeforeMiddlewaresError",
+			args: args{
+				viewFn: viewFn,
+				before: []Middleware{
+					func(ctx *RequestCtx) (int, error) {
+						handlerCounter.beforeMiddlewares++
+						return fasthttp.StatusBadRequest, err
+					},
+				},
+				after:   after,
+				filters: filters,
+			},
+			want: want{
+				statusCode: fasthttp.StatusBadRequest,
+				counter: counter{
+					viewCalled:        false,
+					beforeMiddlewares: 1,
+					beforeFilters:     0,
+					afterFilters:      0,
+					afterMiddlewares:  0,
+				},
+			},
+		},
+		{
+			name: "BeforeFiltersError",
+			args: args{
+				viewFn: viewFn,
+				before: before,
+				after:  after,
+				filters: Filters{
+					Before: []Middleware{
+						func(ctx *RequestCtx) (int, error) {
+							handlerCounter.beforeFilters++
+							return fasthttp.StatusBadRequest, err
+						},
+					},
+					After: []Middleware{
+						func(ctx *RequestCtx) (int, error) {
+							handlerCounter.afterFilters++
+							return fasthttp.StatusOK, nil
+						},
+					},
+				},
+			},
+			want: want{
+				statusCode: fasthttp.StatusBadRequest,
+				counter: counter{
+					viewCalled:        false,
+					beforeMiddlewares: len(before),
+					beforeFilters:     1,
+					afterFilters:      0,
+					afterMiddlewares:  0,
+				},
+			},
+		},
+		{
+			name: "AfterFiltersError",
+			args: args{
+				viewFn: viewFn,
+				before: before,
+				after:  after,
+				filters: Filters{
+					Before: []Middleware{
+						func(ctx *RequestCtx) (int, error) {
+							handlerCounter.beforeFilters++
+							return fasthttp.StatusOK, nil
+						},
+					},
+					After: []Middleware{
+						func(ctx *RequestCtx) (int, error) {
+							handlerCounter.afterFilters++
+							return fasthttp.StatusBadRequest, err
+						},
+					},
+				},
+			},
+			want: want{
+				statusCode: fasthttp.StatusBadRequest,
+				counter: counter{
+					viewCalled:        true,
+					beforeMiddlewares: len(before),
+					beforeFilters:     1,
+					afterFilters:      1,
+					afterMiddlewares:  0,
+				},
+			},
+		},
+		{
+			name: "AfterMiddlewaresError",
+			args: args{
+				viewFn: viewFn,
+				before: before,
+				after: []Middleware{
+					func(ctx *RequestCtx) (int, error) {
+						handlerCounter.afterMiddlewares++
+						return fasthttp.StatusBadRequest, err
+					},
+				},
+				filters: filters,
+			},
+			want: want{
+				statusCode: fasthttp.StatusBadRequest,
+				counter: counter{
+					viewCalled:        true,
+					beforeMiddlewares: len(before),
+					beforeFilters:     len(filters.Before),
+					afterFilters:      len(filters.After),
+					afterMiddlewares:  1,
+				},
+			},
+		},
+	}
+
+	httpMethod := "GET"
+	path := "/"
+
+	for _, tt := range tests {
+		handlerCounter.viewCalled = false
+		handlerCounter.beforeMiddlewares = 0
+		handlerCounter.beforeFilters = 0
+		handlerCounter.afterFilters = 0
+		handlerCounter.afterMiddlewares = 0
+
+		t.Run(tt.name, func(t *testing.T) {
+			r := newRouter(testLog)
+			r.UseBefore(tt.args.before...)
+			r.UseAfter(tt.args.after...)
+			r.PathWithFilters(httpMethod, path, tt.args.viewFn, tt.args.filters)
+
+			ctx := new(fasthttp.RequestCtx)
+
+			h, _ := r.router.Lookup(httpMethod, path, ctx)
+			h(ctx)
+
+			if ctx.Response.StatusCode() != tt.want.statusCode {
+				t.Fatalf("Unexpected status code: '%d', want '%d'", ctx.Response.StatusCode(), tt.want.statusCode)
+			}
+
+			if handlerCounter.viewCalled != tt.want.counter.viewCalled {
+				t.Errorf("View called = %v, want %v", handlerCounter.viewCalled, tt.want.counter.viewCalled)
+			}
+
+			if handlerCounter.beforeMiddlewares != tt.want.counter.beforeMiddlewares {
+				t.Errorf("Before middlewares call counter = %v, want %v", handlerCounter.beforeMiddlewares,
+					tt.want.counter.beforeMiddlewares)
+			}
+
+			if handlerCounter.beforeFilters != tt.want.counter.beforeFilters {
+				t.Errorf("Before filters call counter = %v, want %v", handlerCounter.beforeFilters,
+					tt.want.counter.beforeFilters)
+			}
+
+			if handlerCounter.afterMiddlewares != tt.want.counter.afterMiddlewares {
+				t.Errorf("After middlewares call counter = %v, want %v", handlerCounter.afterMiddlewares,
+					tt.want.counter.afterMiddlewares)
+			}
+
+			if handlerCounter.afterFilters != tt.want.counter.afterFilters {
+				t.Errorf("After filters call counter = %v, want %v", handlerCounter.afterFilters,
+					tt.want.counter.afterFilters)
+			}
+
+		})
+	}
+}
+
+func TestRouter_UseBefore(t *testing.T) {
+	middlewareFns := []Middleware{
+		func(ctx *RequestCtx) (int, error) {
+			return 403, errors.New("Bad request")
+		},
+		func(ctx *RequestCtx) (int, error) {
+			return 0, nil
+		},
+	}
+
+	r := newRouter(testLog)
+	r.UseBefore(middlewareFns...)
+
+	if len(r.beforeMiddlewares) != len(middlewareFns) {
+		t.Errorf("Middlewares are not registered")
+	}
+}
+
+func TestRouter_UseAfter(t *testing.T) {
+	middlewareFns := []Middleware{
+		func(ctx *RequestCtx) (int, error) {
+			return 403, errors.New("Bad request")
+		},
+		func(ctx *RequestCtx) (int, error) {
+			return 0, nil
+		},
+	}
+
+	r := newRouter(testLog)
+	r.UseAfter(middlewareFns...)
+
+	if len(r.afterMiddlewares) != len(middlewareFns) {
+		t.Errorf("Middlewares are not registered")
+	}
+}
+
+func TestRouter_Path(t *testing.T) {
+	type args struct {
+		method         string
+		url            string
+		viewFn         View
+		netHTTPHandler http.Handler
+		timeout        time.Duration
+		statusCode     int
+	}
+	type want struct {
+		getPanic bool
+	}
+	testViewFn := func(ctx *RequestCtx) error {
+		return nil
+	}
+
+	testNetHTTPHandler := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Test")
+	}
+	testMuxHandler := http.NewServeMux()
+	testMuxHandler.HandleFunc("/", testNetHTTPHandler)
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Path",
+			args: args{
+				method: "GET",
+				url:    "/",
+				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "TimeoutPath",
+			args: args{
+				method:  "GET",
+				url:     "/",
+				viewFn:  testViewFn,
+				timeout: 1 * time.Second,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "TimeoutWithCodePath",
+			args: args{
+				method:     "GET",
+				url:        "/",
+				viewFn:     testViewFn,
+				timeout:    1 * time.Second,
+				statusCode: 201,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "NetHTTPPath",
+			args: args{
+				method:         "GET",
+				url:            "/",
+				netHTTPHandler: testMuxHandler,
+				timeout:        1 * time.Second,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
+			name: "InvalidMethod",
+			args: args{
+				method: "get",
+				url:    "/",
+				viewFn: testViewFn,
+			},
+			want: want{
+				getPanic: true,
+			},
+		},
+		{
+			name: "InvalidMethod_Timeout",
+			args: args{
+				method:  "get",
+				url:     "/",
+				viewFn:  testViewFn,
+				timeout: 1 * time.Second,
+			},
+			want: want{
+				getPanic: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				r := recover()
+
+				if tt.want.getPanic && r == nil {
+					t.Errorf("Panic expected")
+				} else if !tt.want.getPanic && r != nil {
+					t.Errorf("Unexpected panic")
+				}
+			}()
+
+			ctx := new(RequestCtx)
+
+			r := newRouter(testLog)
+			if tt.args.netHTTPHandler != nil {
+				r.NetHTTPPath(tt.args.method, tt.args.url, tt.args.netHTTPHandler)
+			} else if tt.args.timeout > 0 {
+				if tt.args.statusCode > 0 {
+					r.TimeoutWithCodePath(
+						tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message", tt.args.statusCode,
+					)
+				} else {
+					r.TimeoutPath(tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message")
+				}
+			} else {
+				r.Path(tt.args.method, tt.args.url, tt.args.viewFn)
+			}
+
+			handler, _ := r.router.Lookup("GET", tt.args.url, ctx.RequestCtx)
+			if handler == nil {
+				t.Error("Path() is not configured")
+			}
+		})
+	}
+}
+
+func TestRouter_Static(t *testing.T) {
+	type args struct {
+		url      string
+		rootPath string
+	}
+	type want struct {
+		routerPath string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want
+	}{
+		{
+			name: "WithoutTrailingSlash",
+			args: args{
+				url:      "/tmp",
+				rootPath: "/var/www",
+			},
+			want: want{
+				routerPath: "/tmp/*filepath",
+			},
+		},
+		{
+			name: "WithTrailingSlash",
+			args: args{
+				url:      "/tmp/",
+				rootPath: "/var/www",
+			},
+			want: want{
+				routerPath: "/tmp/*filepath",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := newRouter(testLog)
+			r.Static(tt.args.url, tt.args.rootPath)
+
+			handler, _ := r.router.Lookup("GET", tt.want.routerPath, &fasthttp.RequestCtx{})
+			if handler == nil {
+				t.Error("Static files is not configured")
+			}
+		})
+	}
+}
+
+func TestRouter_ServeFile(t *testing.T) {
+	type args struct {
+		url      string
+		filePath string
+	}
+
+	filePath := "./README.md"
+	body, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		panic(err)
+	}
+
+	test := struct {
+		args args
+	}{
+		args: args{
+			url:      "/readme",
+			filePath: filePath,
+		},
+	}
+
+	r := newRouter(testLog)
+	r.ServeFile(test.args.url, test.args.filePath)
+	ctx := new(fasthttp.RequestCtx)
+
+	handler, _ := r.router.Lookup("GET", test.args.url, ctx)
+	if handler == nil {
+		t.Error("ServeFile() is not configured")
+	}
+
+	handler(ctx)
+	if string(ctx.Response.Body()) != string(body) {
+		t.Fatal("Invalid response")
+	}
+
+}
+
+// Benchmarks
+func Benchmark_handler(b *testing.B) {
+	r := newRouter(testLog)
+	viewFn := func(ctx *RequestCtx) error {
+		return ctx.HTTPResponse("Hello world")
+	}
+	ctx := new(fasthttp.RequestCtx)
+	h := r.handler(viewFn, emptyFilters)
+
+	b.ResetTimer()
+	for i := 0; i <= b.N; i++ {
+		h(ctx)
+	}
+}

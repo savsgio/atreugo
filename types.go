@@ -4,7 +4,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/fasthttp/router"
+	fastrouter "github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
 )
@@ -211,11 +211,19 @@ type Config struct {
 // Atreugo struct for make up a server
 type Atreugo struct {
 	server *fasthttp.Server
-	router *router.Router
 	log    *logger.Logger
 	cfg    *Config
 
-	lnAddr            string
+	lnAddr string
+
+	*router
+}
+
+// router internal router
+type router struct {
+	router *fastrouter.Router
+	log    *logger.Logger
+
 	beforeMiddlewares []Middleware
 	afterMiddlewares  []Middleware
 }
