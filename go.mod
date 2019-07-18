@@ -1,7 +1,7 @@
 module github.com/savsgio/atreugo/v8
 
 require (
-	github.com/fasthttp/router v0.4.0
+	github.com/fasthttp/router v0.4.1
 	github.com/google/uuid v1.1.1
 	github.com/json-iterator/go v1.1.6
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
