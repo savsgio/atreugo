@@ -15,6 +15,13 @@ High performance and extensible micro web framework, build on top of [fasthttp](
 go get github.com/savsgio/atreugo/v8
 ```
 
+## Supported Go versions:
+
+- 1.9.x
+- 1.10.x
+- 1.11.x
+- 1.12.x
+
 ## Documentation
 
 See: [docs](https://github.com/savsgio/atreugo/tree/master/docs)
