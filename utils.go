@@ -2,12 +2,6 @@ package atreugo
 
 import "github.com/valyala/fasthttp"
 
-func panicOnError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 // index returns the first index of the target string `t`, or
 // -1 if no match is found.
 func indexOf(vs []string, t string) int {

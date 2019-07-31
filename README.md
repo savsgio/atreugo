@@ -7,13 +7,27 @@ Atreugo
 [![GoDoc](https://godoc.org/github.com/savsgio/atreugo?status.svg)](https://godoc.org/github.com/savsgio/atreugo)
 [![GitHub release](https://img.shields.io/github/release/savsgio/atreugo.svg)](https://github.com/savsgio/atreugo/releases)
 
-Micro-framework to make simple the use of routing and middlewares in [fasthttp](https://github.com/valyala/fasthttp).
+High performance and extensible micro web framework, build on top of [fasthttp](https://github.com/valyala/fasthttp).
 
 ## Install
 
 ```bash
 go get github.com/savsgio/atreugo/v8
 ```
+
+<!-- ## Documentation
+
+See: [docs]() -->
+
+## Examples:
+
+Go [examples](https://github.com/savsgio/atreugo/tree/master/examples) directory to see how to use Atreugo.
+
+
+## Note:
+`*atreugo.RequestCtx` is equal than `*fasthttp.RequestCtx`, but adding extra funtionality, so you can use
+the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
+
 
 ## Benchmark
 
@@ -29,61 +43,6 @@ go get github.com/savsgio/atreugo/v8
 
 ![](https://raw.githubusercontent.com/smallnest/go-web-framework-benchmark/master/concurrency_alloc.png)
 
-## Note:
-`*atreugo.RequestCtx` is equal than `*fasthttp.RequestCtx`, but adding extra funtionality, so you can use
-the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
-
-## Example:
-
-```go
-package main
-
-import (
-	"fmt"
-	"time"
-
-	"github.com/savsgio/atreugo/v8"
-	"github.com/savsgio/atreugo/v8/middlewares"
-	"github.com/valyala/fasthttp"
-)
-
-func main() {
-	config := &atreugo.Config{
-		Host: "0.0.0.0",
-		Port: 8000,
-	}
-	server := atreugo.New(config)
-
-	fnMiddlewareOne := func(ctx *atreugo.RequestCtx) (int, error) {
-		// ... your code
-		return fasthttp.StatusOK, nil
-	}
-
-	fnMiddlewareTwo := func(ctx *atreugo.RequestCtx) (int, error) {
-		// ... your code
-
-		// Disable this middleware if you don't want to see this error
-		return fasthttp.StatusBadRequest, fmt.Errorf("%s - Error example", ctx.RequestID())
-	}
-
-	server.UseBefore(middlewares.RequestIDMiddleware, fnMiddlewareOne)
-	server.UseAfter(fnMiddlewareTwo)
-
-	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
-		return ctx.HTTPResponse("<h1>Atreugo</h1>")
-	})
-
-	server.TimeoutPath("GET", "/jsonPage", func(ctx *atreugo.RequestCtx) error {
-		return ctx.JSONResponse(atreugo.JSON{"Atreugo": true})
-	}, 5*time.Second, "Timeout response message")
-
-	err := server.ListenAndServe()
-	if err != nil {
-		panic(err)
-	}
-}
-
-```
 
 ## Useful third-party libraries
 

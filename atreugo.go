@@ -75,7 +75,7 @@ func New(cfg *Config) *Atreugo {
 		handler = fasthttp.CompressHandler(handler)
 	}
 
-	server.router = r
+	server.Router = r
 	server.server.Handler = handler
 
 	return server

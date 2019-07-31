@@ -74,8 +74,8 @@ func Test_New(t *testing.T) {
 				t.Fatal("Atreugo router instance is nil")
 			}
 
-			if reflect.ValueOf(s.router.router.NotFound).Pointer() != reflect.ValueOf(tt.want.notFoundHandler).Pointer() {
-				t.Errorf("Invalid NotFoundHandler = %p, want %p", s.router.router.NotFound, tt.want.notFoundHandler)
+			if reflect.ValueOf(s.Router.router.NotFound).Pointer() != reflect.ValueOf(tt.want.notFoundHandler).Pointer() {
+				t.Errorf("Invalid NotFoundHandler = %p, want %p", s.Router.router.NotFound, tt.want.notFoundHandler)
 			}
 		})
 	}
