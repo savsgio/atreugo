@@ -19,7 +19,7 @@ func main() {
 	}
 	server := atreugo.New(config)
 
-	// Register authentication middleware at firts of all
+	// Register authentication middleware at first of all
 	server.UseBefore(authMiddleware)
 
 	// Register index route

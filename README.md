@@ -15,13 +15,13 @@ High performance and extensible micro web framework, build on top of [fasthttp](
 go get github.com/savsgio/atreugo/v8
 ```
 
-<!-- ## Documentation
+## Documentation
 
-See: [docs]() -->
+See: [docs](https://github.com/savsgio/atreugo/tree/master/docs)
 
 ## Examples:
 
-Go [examples](https://github.com/savsgio/atreugo/tree/master/examples) directory to see how to use Atreugo.
+Go to [examples](https://github.com/savsgio/atreugo/tree/master/examples) directory to see how to use Atreugo.
 
 
 ## Note:
