@@ -1,5 +1,5 @@
 /*
-Package atreugo is an ultra high performance and extensible micro web framework.
+Package atreugo is a high performance and extensible micro web framework with zero memory allocations in hot paths
 
 It's build on top of fasthttp and provides the following features:
 

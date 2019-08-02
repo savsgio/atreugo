@@ -7,7 +7,9 @@ Atreugo
 [![GoDoc](https://godoc.org/github.com/savsgio/atreugo?status.svg)](https://godoc.org/github.com/savsgio/atreugo)
 [![GitHub release](https://img.shields.io/github/release/savsgio/atreugo.svg)](https://github.com/savsgio/atreugo/releases)
 
-High performance and extensible micro web framework, build on top of [fasthttp](https://github.com/valyala/fasthttp).
+High performance and extensible micro web framework with zero memory allocations in hot paths.
+
+It's build on top of [fasthttp](https://github.com/valyala/fasthttp).
 
 ## Install
 
