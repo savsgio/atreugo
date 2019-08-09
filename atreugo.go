@@ -26,6 +26,9 @@ func New(cfg *Config) *Atreugo {
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = logger.INFO
 	}
+	if cfg.Network == "" {
+		cfg.Network = defaultNetwork
+	}
 	if cfg.GracefulShutdown && cfg.Fasthttp.ReadTimeout <= 0 {
 		cfg.Fasthttp.ReadTimeout = defaultReadTimeout
 	}

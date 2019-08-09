@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-const network = "tcp4"
+const defaultNetwork = "tcp4"
 
 const defaultLogName = "atreugo"
 const defaultServerName = "Atreugo"
