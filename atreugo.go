@@ -69,8 +69,20 @@ func New(cfg *Config) *Atreugo {
 	}
 
 	r := newRouter(log)
-	if cfg.NotFoundHandler != nil {
-		r.router.NotFound = cfg.NotFoundHandler
+	if cfg.NotFoundView != nil {
+		r.router.NotFound = viewToHandler(cfg.NotFoundView)
+	}
+
+	if cfg.MethodNotAllowedView != nil {
+		r.router.MethodNotAllowed = viewToHandler(cfg.MethodNotAllowedView)
+	}
+
+	if cfg.PanicView != nil {
+		r.router.PanicHandler = func(ctx *fasthttp.RequestCtx, err interface{}) {
+			actx := acquireRequestCtx(ctx)
+			cfg.PanicView(actx, err)
+			releaseRequestCtx(actx)
+		}
 	}
 
 	handler := r.router.Handler

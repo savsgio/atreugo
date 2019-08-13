@@ -3,6 +3,8 @@ package atreugo
 import (
 	"errors"
 	"testing"
+
+	"github.com/valyala/fasthttp"
 )
 
 func Test_indexOf(t *testing.T) {
@@ -130,5 +132,32 @@ func Test_execMiddlewares(t *testing.T) {
 				t.Errorf("execMiddlewares() status code = %v, want %v", statusCode, tt.want)
 			}
 		})
+	}
+}
+
+func Test_viewToHandler(t *testing.T) {
+	called := false
+	err := errors.New("error")
+
+	view := func(ctx *RequestCtx) error {
+		called = true
+		return err
+	}
+
+	ctx := new(fasthttp.RequestCtx)
+
+	handler := viewToHandler(view)
+	handler(ctx)
+
+	if !called {
+		t.Error("View is not called")
+	}
+
+	if ctx.Response.StatusCode() != fasthttp.StatusInternalServerError {
+		t.Errorf("Status code == %d, want %d", ctx.Response.StatusCode(), fasthttp.StatusInternalServerError)
+	}
+
+	if string(ctx.Response.Body()) != err.Error() {
+		t.Errorf("Response body == %s, want %s", ctx.Response.Body(), err.Error())
 	}
 }

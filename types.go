@@ -56,8 +56,23 @@ type Config struct {
 	// Shutdown works by first closing all open listeners and then waiting indefinitely for all connections to return to idle and then shut down.
 	GracefulShutdown bool
 
-	// Custom handler to process when not matching route is found
-	NotFoundHandler fasthttp.RequestHandler
+	// Configurable view which is called when no matching route is
+	// found. If it is not set, http.NotFound is used.
+	NotFoundView View
+
+	// Configurable view which is called when a request
+	// cannot be routed.
+	// If it is not set, http.Error with http.StatusMethodNotAllowed is used.
+	// The "Allow" header with allowed request methods is set before the handler
+	// is called.
+	MethodNotAllowedView View
+
+	// Function to handle panics recovered from views.
+	// It should be used to generate a error page and return the http error code
+	// 500 (Internal Server Error).
+	// The handler can be used to keep your server from crashing because of
+	// unrecovered panics.
+	PanicView PanicView
 
 	// fasthttp server configuration
 	Fasthttp *FasthttpConfig
@@ -238,10 +253,13 @@ type RequestCtx struct {
 }
 
 // View must process incoming requests.
-type View func(ctx *RequestCtx) error
+type View func(*RequestCtx) error
+
+// PanicView must process incoming requests.
+type PanicView func(*RequestCtx, interface{})
 
 // Middleware must process all incoming requests before/after defined views.
-type Middleware func(ctx *RequestCtx) (int, error)
+type Middleware func(*RequestCtx) (int, error)
 
 // Filters like middlewares, but for specific paths.
 // It will be executed before and after the view defined in the path

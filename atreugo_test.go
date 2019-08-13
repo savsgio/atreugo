@@ -2,8 +2,8 @@ package atreugo
 
 import (
 	"bytes"
+	"errors"
 	"math/rand"
-	"reflect"
 	"testing"
 	"time"
 
@@ -23,15 +23,29 @@ var random = func(min, max int) int {
 
 func Test_New(t *testing.T) {
 	type args struct {
-		logLevel        string
-		notFoundHandler fasthttp.RequestHandler
+		logLevel             string
+		notFoundView         View
+		methodNotAllowedView View
+		panicView            PanicView
 	}
 	type want struct {
-		logLevel        string
-		notFoundHandler fasthttp.RequestHandler
+		logLevel             string
+		notFoundView         bool
+		methodNotAllowedView bool
+		panicView            bool
 	}
 
-	notFoundHandler := func(ctx *fasthttp.RequestCtx) {}
+	notFoundView := func(ctx *RequestCtx) error {
+		return nil
+	}
+	methodNotAllowedView := func(ctx *RequestCtx) error {
+		return nil
+	}
+
+	panicErr := errors.New("error")
+	panicView := func(ctx *RequestCtx, err interface{}) {
+		ctx.Error(panicErr.Error(), fasthttp.StatusInternalServerError)
+	}
 
 	tests := []struct {
 		name string
@@ -40,30 +54,38 @@ func Test_New(t *testing.T) {
 	}{
 		{
 			name: "Default",
-			args: args{
-				logLevel:        "",
-				notFoundHandler: notFoundHandler,
-			},
+			args: args{},
 			want: want{
-				logLevel:        logger.INFO,
-				notFoundHandler: notFoundHandler,
+				logLevel:             logger.INFO,
+				notFoundView:         false,
+				methodNotAllowedView: false,
+				panicView:            false,
 			},
 		},
 		{
 			name: "Custom",
 			args: args{
-				logLevel:        logger.WARNING,
-				notFoundHandler: nil,
+				logLevel:             logger.WARNING,
+				notFoundView:         notFoundView,
+				methodNotAllowedView: methodNotAllowedView,
+				panicView:            panicView,
 			},
 			want: want{
-				logLevel:        logger.WARNING,
-				notFoundHandler: nil,
+				logLevel:             logger.WARNING,
+				notFoundView:         true,
+				methodNotAllowedView: true,
+				panicView:            true,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := &Config{LogLevel: tt.args.logLevel, NotFoundHandler: tt.args.notFoundHandler}
+			cfg := &Config{
+				LogLevel:             tt.args.logLevel,
+				NotFoundView:         tt.args.notFoundView,
+				MethodNotAllowedView: tt.args.methodNotAllowedView,
+				PanicView:            tt.args.panicView,
+			}
 			s := New(cfg)
 
 			if cfg.LogLevel != tt.want.logLevel {
@@ -74,9 +96,27 @@ func Test_New(t *testing.T) {
 				t.Fatal("Atreugo router instance is nil")
 			}
 
-			if reflect.ValueOf(s.Router.router.NotFound).Pointer() != reflect.ValueOf(tt.want.notFoundHandler).Pointer() {
-				t.Errorf("Invalid NotFoundHandler = %p, want %p", s.Router.router.NotFound, tt.want.notFoundHandler)
+			if tt.want.notFoundView != (s.router.NotFound != nil) {
+				t.Error("NotFound handler is not setted")
 			}
+
+			if tt.want.methodNotAllowedView != (s.router.MethodNotAllowed != nil) {
+				t.Error("MethodNotAllowed handler is not setted")
+			}
+
+			if tt.want.panicView != (s.router.PanicHandler != nil) {
+				t.Error("PanicHandler handler is not setted")
+			}
+
+			if tt.args.panicView != nil {
+				ctx := new(fasthttp.RequestCtx)
+				s.router.PanicHandler(ctx, panicErr)
+
+				if string(ctx.Response.Body()) != panicErr.Error() {
+					t.Errorf("Panic handler response == %s, want %s", ctx.Response.Body(), panicErr.Error())
+				}
+			}
+
 		})
 	}
 }
