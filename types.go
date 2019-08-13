@@ -255,7 +255,7 @@ type RequestCtx struct {
 // View must process incoming requests.
 type View func(*RequestCtx) error
 
-// PanicView must process incoming requests.
+// PanicView must process panics recovered from views, if it's defined in configuration.
 type PanicView func(*RequestCtx, interface{})
 
 // Middleware must process all incoming requests before/after defined views.
