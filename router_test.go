@@ -348,6 +348,7 @@ func TestRouter_Path(t *testing.T) {
 		url            string
 		viewFn         View
 		netHTTPHandler http.Handler
+		handler        fasthttp.RequestHandler
 		timeout        time.Duration
 		statusCode     int
 	}
@@ -355,6 +356,7 @@ func TestRouter_Path(t *testing.T) {
 		getPanic bool
 	}
 	testViewFn := func(ctx *RequestCtx) error {
+		ctx.WriteString("Test")
 		return nil
 	}
 
@@ -363,6 +365,10 @@ func TestRouter_Path(t *testing.T) {
 	}
 	testMuxHandler := http.NewServeMux()
 	testMuxHandler.HandleFunc("/", testNetHTTPHandler)
+
+	testHandler := func(ctx *fasthttp.RequestCtx) {
+		ctx.WriteString("Test")
+	}
 
 	tests := []struct {
 		name string
@@ -418,6 +424,18 @@ func TestRouter_Path(t *testing.T) {
 			},
 		},
 		{
+			name: "RequestHandlerPath",
+			args: args{
+				method:  "GET",
+				url:     "/",
+				handler: testHandler,
+				timeout: 1 * time.Second,
+			},
+			want: want{
+				getPanic: false,
+			},
+		},
+		{
 			name: "InvalidMethod",
 			args: args{
 				method: "get",
@@ -453,27 +471,42 @@ func TestRouter_Path(t *testing.T) {
 				}
 			}()
 
-			ctx := new(RequestCtx)
+			ctx := new(fasthttp.RequestCtx)
 
 			r := newRouter(testLog)
 			if tt.args.netHTTPHandler != nil {
 				r.NetHTTPPath(tt.args.method, tt.args.url, tt.args.netHTTPHandler)
+			} else if tt.args.handler != nil {
+				r.RequestHandlerPath(tt.args.method, tt.args.url, tt.args.handler)
 			} else if tt.args.timeout > 0 {
 				if tt.args.statusCode > 0 {
 					r.TimeoutWithCodePath(
-						tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message", tt.args.statusCode,
+						tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message",
+						tt.args.statusCode,
 					)
 				} else {
-					r.TimeoutPath(tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message")
+					r.TimeoutPath(
+						tt.args.method, tt.args.url, tt.args.viewFn, tt.args.timeout, "Timeout response message",
+					)
 				}
 			} else {
 				r.Path(tt.args.method, tt.args.url, tt.args.viewFn)
 			}
 
-			handler, _ := r.router.Lookup("GET", tt.args.url, ctx.RequestCtx)
+			handler, _ := r.router.Lookup("GET", tt.args.url, ctx)
 			if handler == nil {
-				t.Error("Path() is not configured")
+				t.Fatal("Path() is not configured")
 			}
+
+			// ctx.Request.SetRequestURI(tt.args.url)
+
+			// ctx.Request.Header.SetMethod(tt.args.method)
+			// handler(ctx)
+
+			// if string(ctx.Response.Body()) != "Test" {
+			// 	t.Error("Error")
+			// }
+
 		})
 	}
 }

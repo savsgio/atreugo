@@ -69,12 +69,12 @@ func (r *Router) handler(viewFn View, filters Filters) fasthttp.RequestHandler {
 	}
 }
 
-// UseBefore register middleware functions in the order you want to execute them before the view execution
+// UseBefore register middleware functions in the order you want to execute them before the view execution.
 func (r *Router) UseBefore(fns ...Middleware) {
 	r.beforeMiddlewares = append(r.beforeMiddlewares, fns...)
 }
 
-// UseAfter register middleware functions in the order you want to execute them after the view execution
+// UseAfter register middleware functions in the order you want to execute them after the view execution.
 func (r *Router) UseAfter(fns ...Middleware) {
 	r.afterMiddlewares = append(r.afterMiddlewares, fns...)
 }
@@ -89,12 +89,30 @@ func (r *Router) Path(httpMethod, url string, viewFn View) {
 }
 
 // PathWithFilters registers a new view with the given path and method,
-// and with filters that will execute before and after
+// and with filters that will execute before and after.
 //
 // This function is intended for bulk loading and to allow the usage of less
 // frequently used, non-standardized or custom methods (e.g. for internal
 // communication with a proxy).
 func (r *Router) PathWithFilters(httpMethod, url string, viewFn View, filters Filters) {
+	r.addRoute(httpMethod, url, r.handler(viewFn, filters))
+}
+
+// RequestHandlerPath wraps fasthttp request handler to atreugo view and registers it to
+// the given path and method.
+func (r *Router) RequestHandlerPath(httpMethod, url string, handler fasthttp.RequestHandler) {
+	r.RequestHandlerPathWithFilters(httpMethod, url, handler, emptyFilters)
+}
+
+// RequestHandlerPathWithFilters wraps fasthttp request handler to atreugo view and registers it to
+// the given path and method, and with filters that will execute before and after.
+func (r *Router) RequestHandlerPathWithFilters(httpMethod, url string, handler fasthttp.RequestHandler,
+	filters Filters) {
+	viewFn := func(ctx *RequestCtx) error {
+		handler(ctx.RequestCtx)
+		return nil
+	}
+
 	r.addRoute(httpMethod, url, r.handler(viewFn, filters))
 }
 

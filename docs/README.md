@@ -30,20 +30,3 @@ myserver.Path("GET", "/users/:name/:surname?", func(ctx *atreugo.RequestCtx) err
   return ctx.TextResponse(fmt.Sprintf("Name: %s, Surname: %s", name, surname))
 })
 ```
-
-
-### - Fasthttp handler compatibility
-
-Atreugo could execute fasthttp handlers inside views.
-To access to `*fasthttp.RequestCtx`, just get it with `ctx.RequestCtx`
-
-```go
-func fasthttpHandler(ctx *fasthttp.RequestCtx) {
-    ctx.WriteString("Hello world")
-}
-
-myserver.Path("GET", "/handler", func (ctx *atreugo.RequestCtx) error {
-    fasthttpHandler(ctx.RequestCtx)
-    return nil
-})
-```
