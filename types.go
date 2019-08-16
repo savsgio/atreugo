@@ -10,7 +10,11 @@ import (
 )
 
 // Atreugo implements high performance HTTP server
+//
+// It is prohibited copying Atreugo values. Create new values instead.
 type Atreugo struct {
+	noCopy noCopy
+
 	server *fasthttp.Server
 	log    *logger.Logger
 	cfg    *Config
@@ -22,7 +26,11 @@ type Atreugo struct {
 
 // Router dispatchs requests to different
 // views via configurable routes (paths)
+//
+// It is prohibited copying Router values. Create new values instead.
 type Router struct {
+	noCopy noCopy
+
 	router *fastrouter.Router
 	log    *logger.Logger
 
@@ -322,7 +330,11 @@ type StaticFS struct {
 }
 
 // RequestCtx context wrapper of fasthttp.RequestCtx to adds extra funtionality
+//
+// It is prohibited copying RequestCtx values. Create new values instead.
 type RequestCtx struct {
+	noCopy noCopy
+
 	*fasthttp.RequestCtx
 }
 
