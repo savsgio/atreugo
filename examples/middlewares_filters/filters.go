@@ -14,7 +14,5 @@ func beforeFilter(ctx *atreugo.RequestCtx) (int, error) {
 func afterFilter(ctx *atreugo.RequestCtx) (int, error) {
 	logger.Info("Filter executed AFTER view")
 
-	beforeFilter(ctx)
-
 	return 200, nil
 }

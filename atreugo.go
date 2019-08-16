@@ -16,12 +16,8 @@ import (
 
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
-	if cfg.Fasthttp == nil {
-		cfg.Fasthttp = new(FasthttpConfig)
-	}
-
-	if cfg.Fasthttp.Name == "" {
-		cfg.Fasthttp.Name = defaultServerName
+	if cfg.Name == "" {
+		cfg.Name = defaultServerName
 	}
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = logger.INFO
@@ -29,8 +25,8 @@ func New(cfg *Config) *Atreugo {
 	if cfg.Network == "" {
 		cfg.Network = defaultNetwork
 	}
-	if cfg.GracefulShutdown && cfg.Fasthttp.ReadTimeout <= 0 {
-		cfg.Fasthttp.ReadTimeout = defaultReadTimeout
+	if cfg.GracefulShutdown && cfg.ReadTimeout <= 0 {
+		cfg.ReadTimeout = defaultReadTimeout
 	}
 
 	if cfg.LogName == "" {
@@ -38,35 +34,6 @@ func New(cfg *Config) *Atreugo {
 	}
 
 	log := logger.New(cfg.LogName, cfg.LogLevel, os.Stderr)
-
-	server := &Atreugo{
-		server: &fasthttp.Server{
-			Name:                               cfg.Fasthttp.Name,
-			Concurrency:                        cfg.Fasthttp.Concurrency,
-			DisableKeepalive:                   cfg.Fasthttp.DisableKeepalive,
-			ReadBufferSize:                     cfg.Fasthttp.ReadBufferSize,
-			WriteBufferSize:                    cfg.Fasthttp.WriteBufferSize,
-			ReadTimeout:                        cfg.Fasthttp.ReadTimeout,
-			WriteTimeout:                       cfg.Fasthttp.WriteTimeout,
-			IdleTimeout:                        cfg.Fasthttp.IdleTimeout,
-			MaxConnsPerIP:                      cfg.Fasthttp.MaxConnsPerIP,
-			MaxRequestsPerConn:                 cfg.Fasthttp.MaxRequestsPerConn,
-			MaxKeepaliveDuration:               cfg.Fasthttp.MaxKeepaliveDuration,
-			MaxRequestBodySize:                 cfg.Fasthttp.MaxRequestBodySize,
-			ReduceMemoryUsage:                  cfg.Fasthttp.ReduceMemoryUsage,
-			GetOnly:                            cfg.Fasthttp.GetOnly,
-			LogAllErrors:                       cfg.Fasthttp.LogAllErrors,
-			DisableHeaderNamesNormalizing:      cfg.Fasthttp.DisableHeaderNamesNormalizing,
-			SleepWhenConcurrencyLimitsExceeded: cfg.Fasthttp.SleepWhenConcurrencyLimitsExceeded,
-			NoDefaultServerHeader:              cfg.Fasthttp.NoDefaultServerHeader,
-			NoDefaultContentType:               cfg.Fasthttp.NoDefaultContentType,
-			ConnState:                          cfg.Fasthttp.ConnState,
-			KeepHijackedConns:                  cfg.Fasthttp.KeepHijackedConns,
-			Logger:                             log,
-		},
-		log: log,
-		cfg: cfg,
-	}
 
 	r := newRouter(log)
 	if cfg.NotFoundView != nil {
@@ -90,8 +57,38 @@ func New(cfg *Config) *Atreugo {
 		handler = fasthttp.CompressHandler(handler)
 	}
 
-	server.Router = r
-	server.server.Handler = handler
+	server := &Atreugo{
+		server: &fasthttp.Server{
+			Name:                               cfg.Name,
+			Handler:                            handler,
+			Concurrency:                        cfg.Concurrency,
+			DisableKeepalive:                   cfg.DisableKeepalive,
+			ReadBufferSize:                     cfg.ReadBufferSize,
+			WriteBufferSize:                    cfg.WriteBufferSize,
+			ReadTimeout:                        cfg.ReadTimeout,
+			WriteTimeout:                       cfg.WriteTimeout,
+			IdleTimeout:                        cfg.IdleTimeout,
+			MaxConnsPerIP:                      cfg.MaxConnsPerIP,
+			MaxRequestsPerConn:                 cfg.MaxRequestsPerConn,
+			MaxKeepaliveDuration:               cfg.MaxKeepaliveDuration,
+			MaxRequestBodySize:                 cfg.MaxRequestBodySize,
+			ReduceMemoryUsage:                  cfg.ReduceMemoryUsage,
+			GetOnly:                            cfg.GetOnly,
+			LogAllErrors:                       cfg.LogAllErrors,
+			DisableHeaderNamesNormalizing:      cfg.DisableHeaderNamesNormalizing,
+			SleepWhenConcurrencyLimitsExceeded: cfg.SleepWhenConcurrencyLimitsExceeded,
+			NoDefaultServerHeader:              cfg.NoDefaultServerHeader,
+			NoDefaultContentType:               cfg.NoDefaultContentType,
+			ConnState:                          cfg.ConnState,
+			KeepHijackedConns:                  cfg.KeepHijackedConns,
+			Logger:                             log,
+		},
+
+		log: log,
+		cfg: cfg,
+
+		Router: r,
+	}
 
 	return server
 }
@@ -143,7 +140,7 @@ func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 		if s.server.ReadTimeout <= 0 {
 			s.log.Infof("Updating ReadTimeout config to '%v'", defaultReadTimeout)
 			s.server.ReadTimeout = defaultReadTimeout
-			s.cfg.Fasthttp.ReadTimeout = defaultReadTimeout
+			s.cfg.ReadTimeout = defaultReadTimeout
 		}
 	}
 

@@ -39,12 +39,18 @@ type Router struct {
 }
 
 // Config configuration to run server
+//
+// Default settings should satisfy the majority of Server users.
+// Adjust Server settings only if you really understand the consequences.
 type Config struct {
 	Host      string
 	Port      int
 	TLSEnable bool
 	CertKey   string
 	CertFile  string
+
+	// Server name for sending in response headers. (default: Atreugo)
+	Name string
 
 	// Default: atreugo
 	LogName string
@@ -82,25 +88,9 @@ type Config struct {
 	// unrecovered panics.
 	PanicView PanicView
 
-	// fasthttp server configuration
-	Fasthttp *FasthttpConfig
-}
-
-// FasthttpConfig fasthttp server configuration
-//
-// Default settings should satisfy the majority of Server users.
-// Adjust Server settings only if you really understand the consequences.
-//
-// It is a copy from https://godoc.org/github.com/valyala/fasthttp#Server without the fields:
-// - Handler: It's created internaly by atreugo
-// - TCPKeepalive: Not supported yet (You can implemented with a custom Listener and pass it directly to Serve)
-// - TCPKeepalivePeriod: Not supported yet (You can implemented with a custom Listener and pass it directly to Serve)
-// - Logger: It's created internaly by atreugo
-type FasthttpConfig struct {
-	// Server name for sending in response headers.
 	//
-	// Default server name is used if left blank.
-	Name string
+	// --- fasthttp server configuration ---
+	//
 
 	// The maximum number of concurrent connections the server may serve.
 	//

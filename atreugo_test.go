@@ -179,8 +179,8 @@ func TestAtreugo_ServeGracefully(t *testing.T) {
 			t.Errorf("Config.GracefulShutdown = %v, want %v", cfg.GracefulShutdown, true)
 		}
 
-		if s.cfg.Fasthttp.ReadTimeout != defaultReadTimeout {
-			t.Errorf("Config.Fasthttp.ReadTimeout = %v, want %v", s.cfg.Fasthttp.ReadTimeout, defaultReadTimeout)
+		if s.cfg.ReadTimeout != defaultReadTimeout {
+			t.Errorf("Config.ReadTimeout = %v, want %v", s.cfg.ReadTimeout, defaultReadTimeout)
 		}
 
 		if s.server.ReadTimeout != defaultReadTimeout {
