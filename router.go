@@ -206,6 +206,36 @@ func (r *Router) Static(url, rootPath string) {
 	r.router.ServeFiles(url+"/*filepath", rootPath)
 }
 
+// StaticCustom ...
+func (r *Router) StaticCustom(url string, fs *StaticFS) {
+	if strings.HasSuffix(url, "/") {
+		url = url[:len(url)-1]
+	}
+
+	ffs := &fasthttp.FS{
+		Root:                 fs.Root,
+		IndexNames:           fs.IndexNames,
+		GenerateIndexPages:   fs.GenerateIndexPages,
+		Compress:             fs.Compress,
+		AcceptByteRange:      fs.AcceptByteRange,
+		PathNotFound:         viewToHandler(fs.PathNotFound),
+		CacheDuration:        fs.CacheDuration,
+		CompressedFileSuffix: fs.CompressedFileSuffix,
+	}
+
+	if fs.PathRewrite != nil {
+		ffs.PathRewrite = func(ctx *fasthttp.RequestCtx) []byte {
+			actx := acquireRequestCtx(ctx)
+			result := fs.PathRewrite(actx)
+			releaseRequestCtx(actx)
+
+			return result
+		}
+	}
+
+	r.router.ServeFilesCustom(url+"/*filepath", ffs)
+}
+
 // ServeFile returns HTTP response containing compressed file contents
 // from the given path.
 //
@@ -219,4 +249,9 @@ func (r *Router) ServeFile(url, filePath string) {
 	r.router.GET(url, func(ctx *fasthttp.RequestCtx) {
 		fasthttp.ServeFile(ctx, filePath)
 	})
+}
+
+// ListPaths returns all registered routes grouped by method
+func (r *Router) ListPaths() map[string][]string {
+	return r.router.List()
 }

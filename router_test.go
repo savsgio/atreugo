@@ -495,21 +495,21 @@ func TestRouter_Static(t *testing.T) {
 		{
 			name: "WithoutTrailingSlash",
 			args: args{
-				url:      "/tmp",
+				url:      "/static",
 				rootPath: "/var/www",
 			},
 			want: want{
-				routerPath: "/tmp/*filepath",
+				routerPath: "/static/*filepath",
 			},
 		},
 		{
 			name: "WithTrailingSlash",
 			args: args{
-				url:      "/tmp/",
+				url:      "/static/",
 				rootPath: "/var/www",
 			},
 			want: want{
-				routerPath: "/tmp/*filepath",
+				routerPath: "/static/*filepath",
 			},
 		},
 	}
@@ -523,6 +523,74 @@ func TestRouter_Static(t *testing.T) {
 			if handler == nil {
 				t.Error("Static files is not configured")
 			}
+		})
+	}
+}
+
+func TestRouter_StaticCustom(t *testing.T) {
+	type args struct {
+		url      string
+		rootPath string
+	}
+	type want struct {
+		routerPath string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want
+	}{
+		{
+			name: "WithoutTrailingSlash",
+			args: args{
+				url:      "/static",
+				rootPath: "./docs",
+			},
+			want: want{
+				routerPath: "/static/*filepath",
+			},
+		},
+		{
+			name: "WithTrailingSlash",
+			args: args{
+				url:      "/static/",
+				rootPath: "./docs",
+			},
+			want: want{
+				routerPath: "/static/*filepath",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := newRouter(testLog)
+
+			pathRewriteCalled := false
+
+			r.StaticCustom(tt.args.url, &StaticFS{
+				Root:               tt.args.rootPath,
+				GenerateIndexPages: true,
+				AcceptByteRange:    true,
+				PathRewrite: func(ctx *RequestCtx) []byte {
+					pathRewriteCalled = true
+					return ctx.Path()
+				},
+			})
+
+			handler, _ := r.router.Lookup("GET", tt.want.routerPath, &fasthttp.RequestCtx{})
+			if handler == nil {
+				t.Fatal("Static files is not configured")
+			}
+
+			ctx := new(fasthttp.RequestCtx)
+			handler(ctx)
+
+			if !pathRewriteCalled {
+				t.Error("Custom path rewrite function is not called")
+			}
+
 		})
 	}
 }
@@ -561,7 +629,20 @@ func TestRouter_ServeFile(t *testing.T) {
 	if string(ctx.Response.Body()) != string(body) {
 		t.Fatal("Invalid response")
 	}
+}
 
+func TestRouter_ListPaths(t *testing.T) {
+	server := New(testAtreugoConfig)
+
+	server.Path("GET", "/foo", func(ctx *RequestCtx) error { return nil })
+	server.Path("GET", "/bar", func(ctx *RequestCtx) error { return nil })
+
+	static := server.NewGroupPath("/static")
+	static.Static("/buzz", "./docs")
+
+	if !reflect.DeepEqual(server.ListPaths(), server.router.List()) {
+		t.Errorf("Router.List() == %v, want %v", server.ListPaths(), server.router.List())
+	}
 }
 
 // Benchmarks

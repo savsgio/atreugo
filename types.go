@@ -247,6 +247,80 @@ type FasthttpConfig struct {
 	KeepHijackedConns bool
 }
 
+// StaticFS represents settings for serving static files
+// from the local filesystem.
+//
+// It is prohibited copying StaticFS values. Create new values instead.
+type StaticFS struct {
+	noCopy noCopy
+
+	// Path to the root directory to serve files from.
+	Root string
+
+	// List of index file names to try opening during directory access.
+	//
+	// For example:
+	//
+	//     * index.html
+	//     * index.htm
+	//     * my-super-index.xml
+	//
+	// By default the list is empty.
+	IndexNames []string
+
+	// Index pages for directories without files matching IndexNames
+	// are automatically generated if set.
+	//
+	// Directory index generation may be quite slow for directories
+	// with many files (more than 1K), so it is discouraged enabling
+	// index pages' generation for such directories.
+	//
+	// By default index pages aren't generated.
+	GenerateIndexPages bool
+
+	// Transparently compresses responses if set to true.
+	//
+	// The server tries minimizing CPU usage by caching compressed files.
+	// It adds CompressedFileSuffix suffix to the original file name and
+	// tries saving the resulting compressed file under the new file name.
+	// So it is advisable to give the server write access to Root
+	// and to all inner folders in order to minimize CPU usage when serving
+	// compressed responses.
+	//
+	// Transparent compression is disabled by default.
+	Compress bool
+
+	// Enables byte range requests if set to true.
+	//
+	// Byte range requests are disabled by default.
+	AcceptByteRange bool
+
+	// Path rewriting function.
+	//
+	// By default request path is not modified.
+	PathRewrite PathRewriteFunc
+
+	// PathNotFound fires when file is not found in filesystem
+	// this functions tries to replace "Cannot open requested path"
+	// server response giving to the programmer the control of server flow.
+	//
+	// By default PathNotFound returns
+	// "Cannot open requested path"
+	PathNotFound View
+
+	// Expiration duration for inactive file handlers.
+	//
+	// FSHandlerCacheDuration is used by default.
+	CacheDuration time.Duration
+
+	// Suffix to add to the name of cached compressed file.
+	//
+	// This value has sense only if Compress is set.
+	//
+	// FSCompressedFileSuffix is used by default.
+	CompressedFileSuffix string
+}
+
 // RequestCtx context wrapper of fasthttp.RequestCtx to adds extra funtionality
 type RequestCtx struct {
 	*fasthttp.RequestCtx
@@ -268,6 +342,18 @@ type Filters struct {
 	Before []Middleware
 	After  []Middleware
 }
+
+// PathRewriteFunc must return new request path based on arbitrary ctx
+// info such as ctx.Path().
+//
+// Path rewriter is used in StaticFS for translating the current request
+// to the local filesystem path relative to StaticFS.Root.
+//
+// The returned path must not contain '/../' substrings due to security reasons,
+// since such paths may refer files outside StaticFS.Root.
+//
+// The returned path may refer to ctx members. For example, ctx.Path().
+type PathRewriteFunc func(ctx *RequestCtx) []byte
 
 // JSON is a map whose key is a string and whose value an interface
 type JSON map[string]interface{}
