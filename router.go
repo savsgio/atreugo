@@ -224,7 +224,10 @@ func (r *Router) Static(url, rootPath string) {
 	r.router.ServeFiles(url+"/*filepath", rootPath)
 }
 
-// StaticCustom ...
+// StaticCustom serves static files from the given file system settings.
+//
+// Make sure your program has enough 'max open files' limit aka
+// 'ulimit -n' if root folder contains many files.
 func (r *Router) StaticCustom(url string, fs *StaticFS) {
 	if strings.HasSuffix(url, "/") {
 		url = url[:len(url)-1]
@@ -236,9 +239,12 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) {
 		GenerateIndexPages:   fs.GenerateIndexPages,
 		Compress:             fs.Compress,
 		AcceptByteRange:      fs.AcceptByteRange,
-		PathNotFound:         viewToHandler(fs.PathNotFound),
 		CacheDuration:        fs.CacheDuration,
 		CompressedFileSuffix: fs.CompressedFileSuffix,
+	}
+
+	if fs.PathNotFound != nil {
+		ffs.PathNotFound = viewToHandler(fs.PathNotFound)
 	}
 
 	if fs.PathRewrite != nil {

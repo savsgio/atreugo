@@ -610,6 +610,9 @@ func TestRouter_StaticCustom(t *testing.T) {
 					pathRewriteCalled = true
 					return ctx.Path()
 				},
+				PathNotFound: func(ctx *RequestCtx) error {
+					return ctx.TextResponse("File not found", 404)
+				},
 			})
 
 			handler, _ := r.router.Lookup("GET", tt.want.routerPath, &fasthttp.RequestCtx{})
