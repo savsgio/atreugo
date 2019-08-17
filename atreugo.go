@@ -100,6 +100,8 @@ func New(cfg *Config) *Atreugo {
 // If use a custom Listener, will be updated your atreugo configuration
 // with the Listener address automatically
 func (s *Atreugo) Serve(ln net.Listener) error {
+	defer ln.Close()
+
 	schema := "http"
 	if s.cfg.TLSEnable {
 		schema = "https"

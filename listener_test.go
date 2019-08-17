@@ -1,13 +1,18 @@
 package atreugo
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestAtreugo_getListener(t *testing.T) {
 	type args struct {
-		addr string
+		host      string
+		port      int
+		network   string
+		reuseport bool
 	}
 	type want struct {
-		addr    string
 		network string
 		err     bool
 	}
@@ -19,10 +24,23 @@ func TestAtreugo_getListener(t *testing.T) {
 		{
 			name: "Ok",
 			args: args{
-				addr: "127.0.0.1:8000",
+				host: "127.0.0.1",
+				port: 8000,
 			},
 			want: want{
-				addr:    "127.0.0.1:8000",
+				network: "tcp",
+				err:     false,
+			},
+		},
+		{
+			name: "Reuseport",
+			args: args{
+				host:      "127.0.0.1",
+				port:      8000,
+				network:   "tcp4",
+				reuseport: true,
+			},
+			want: want{
 				network: "tcp",
 				err:     false,
 			},
@@ -30,7 +48,7 @@ func TestAtreugo_getListener(t *testing.T) {
 		{
 			name: "Error",
 			args: args{
-				addr: "fake",
+				network: "fake",
 			},
 			want: want{
 				err: true,
@@ -39,8 +57,19 @@ func TestAtreugo_getListener(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(testAtreugoConfig)
-			s.lnAddr = tt.args.addr
+			cfg := &Config{
+				Host:      tt.args.host,
+				Port:      tt.args.port,
+				LogLevel:  "fatal",
+				Reuseport: tt.args.reuseport,
+			}
+			if tt.args.network != "" {
+				cfg.Network = tt.args.network
+			}
+
+			s := New(cfg)
+
+			s.lnAddr = fmt.Sprintf("%s:%d", tt.args.host, tt.args.port)
 
 			defer func() {
 				r := recover()
@@ -58,14 +87,16 @@ func TestAtreugo_getListener(t *testing.T) {
 			}
 
 			lnAddress := ln.Addr().String()
-			if lnAddress != tt.want.addr {
-				t.Errorf("Listener address: '%s', want '%s'", lnAddress, tt.want.addr)
+			if lnAddress != s.lnAddr {
+				t.Errorf("Listener address: '%s', want '%s'", lnAddress, s.lnAddr)
 			}
 
 			lnNetwork := ln.Addr().Network()
 			if lnNetwork != tt.want.network {
 				t.Errorf("Listener network: '%s', want '%s'", lnNetwork, tt.want.network)
 			}
+
+			ln.Close()
 		})
 	}
 }
