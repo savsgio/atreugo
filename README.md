@@ -36,7 +36,7 @@ See: [docs](https://github.com/savsgio/atreugo/tree/master/docs)
 
 * Easy 'Connection: Upgrade' support via RequestCtx.Hijack.
 
-* Server provides anti-DoS limits (via fasthttp configuration).
+* Server provides anti-DoS limits.
 
 * Middlewares support:
     * Before view execution.

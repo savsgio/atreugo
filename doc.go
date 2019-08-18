@@ -7,7 +7,7 @@ It's build on top of fasthttp and provides the following features:
       concurrent keep-alive connections on modern hardware.
     * Optimized for low memory usage.
     * Easy 'Connection: Upgrade' support via RequestCtx.Hijack.
-    * Server provides the following anti-DoS limits (via fasthttp configuration):
+    * Server provides the following anti-DoS limits:
 
         * The number of concurrent connections.
         * The number of concurrent connections per client IP.
