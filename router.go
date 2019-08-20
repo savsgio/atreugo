@@ -26,8 +26,26 @@ func (r *Router) NewGroupPath(path string) *Router {
 	g := new(Router)
 	g.log = r.log
 	g.router = r.router.Group(path)
+	g.parent = r
 
 	return g
+}
+
+func (r *Router) middlewares() middlewares {
+	mdlws := middlewares{}
+
+	var subMdlws middlewares
+	if r.parent != nil {
+		subMdlws = r.parent.middlewares()
+	}
+
+	mdlws.Before = append(mdlws.Before, subMdlws.Before...)
+	mdlws.Before = append(mdlws.Before, r.beforeMiddlewares...)
+
+	mdlws.After = append(mdlws.After, r.afterMiddlewares...)
+	mdlws.After = append(mdlws.After, subMdlws.After...)
+
+	return mdlws
 }
 
 func (r *Router) addRoute(httpMethod, url string, handler fasthttp.RequestHandler) {
@@ -39,8 +57,10 @@ func (r *Router) addRoute(httpMethod, url string, handler fasthttp.RequestHandle
 }
 
 func (r *Router) handler(viewFn View, filters Filters) fasthttp.RequestHandler {
-	before := append(r.beforeMiddlewares, filters.Before...)
-	after := append(filters.After, r.afterMiddlewares...)
+	mdlws := r.middlewares()
+
+	before := append(mdlws.Before, filters.Before...)
+	after := append(filters.After, mdlws.After...)
 
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := acquireRequestCtx(ctx)

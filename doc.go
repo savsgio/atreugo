@@ -32,13 +32,13 @@ It's build on top of fasthttp and provides the following features:
 	* Middlewares support:
 
 		* Before view execution.
-		* After view execution.
+        * After view execution.
 
 	* Easy routing:
 
 		* Path parameters (mandatories and optionals).
 		* Views with timeout.
-		* Group paths.
+        * Group paths and middlewares.
 		* Static files.
 		* Serve one file like pdf, etc.
 		* Filters (middlewares) to especific views.

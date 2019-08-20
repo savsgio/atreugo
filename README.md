@@ -45,7 +45,7 @@ See: [docs](https://github.com/savsgio/atreugo/tree/master/docs)
 * Easy routing:
     * Path parameters (mandatories and optionals).
     * Views with timeout.
-    * Group paths.
+    * Group paths and middlewares.
     * Static files.
     * Serve one file like pdf, etc.
     * Filters (middlewares) to especific views.

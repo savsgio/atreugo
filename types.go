@@ -34,6 +34,8 @@ type Router struct {
 	router *fastrouter.Router
 	log    *logger.Logger
 
+	parent *Router
+
 	beforeMiddlewares []Middleware
 	afterMiddlewares  []Middleware
 }
@@ -355,6 +357,8 @@ type Filters struct {
 	Before []Middleware
 	After  []Middleware
 }
+
+type middlewares Filters
 
 // PathRewriteFunc must return new request path based on arbitrary ctx
 // info such as ctx.Path().

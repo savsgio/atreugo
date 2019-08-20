@@ -40,6 +40,94 @@ func TestRouter_NewGroupPath(t *testing.T) {
 	}
 }
 
+func TestRouter_middlewares(t *testing.T) {
+	s := New(testAtreugoConfig)
+
+	method := "GET"
+	url := "/foo"
+
+	viewCalled := false
+
+	callOrder := map[string]int{
+		"globalBefore": 0,
+		"groupBefore":  0,
+		"filterBefore": 0,
+		"filterAfter":  0,
+		"groupAfter":   0,
+		"globalAfter":  0,
+	}
+
+	wantOrder := map[string]int{
+		"globalBefore": 1,
+		"groupBefore":  2,
+		"filterBefore": 3,
+		"filterAfter":  4,
+		"groupAfter":   5,
+		"globalAfter":  6,
+	}
+
+	index := 0
+
+	s.UseBefore(func(ctx *RequestCtx) (int, error) {
+		index++
+		callOrder["globalBefore"] = index
+		return 200, nil
+	})
+	s.UseAfter(func(ctx *RequestCtx) (int, error) {
+		index++
+		callOrder["globalAfter"] = index
+		return 200, nil
+	})
+
+	v1 := s.NewGroupPath("/v1")
+	v1.UseBefore(func(ctx *RequestCtx) (int, error) {
+		index++
+		callOrder["groupBefore"] = index
+		return 200, nil
+	})
+	v1.UseAfter(func(ctx *RequestCtx) (int, error) {
+		index++
+		callOrder["groupAfter"] = index
+		return 200, nil
+	})
+
+	filters := Filters{
+		Before: []Middleware{func(ctx *RequestCtx) (int, error) {
+			index++
+			callOrder["filterBefore"] = index
+			return 200, nil
+		}},
+		After: []Middleware{func(ctx *RequestCtx) (int, error) {
+			index++
+			callOrder["filterAfter"] = index
+			return 200, nil
+		}},
+	}
+
+	v1.PathWithFilters(method, url, func(ctx *RequestCtx) error {
+		viewCalled = true
+		return nil
+	}, filters)
+
+	ctx := new(fasthttp.RequestCtx)
+	h, _ := s.router.Lookup(method, "/v1"+url, ctx)
+	if h == nil {
+		t.Fatal("Registered handler is nil")
+	}
+	h(ctx)
+
+	for k, v := range wantOrder {
+		if callOrder[k] != v {
+			t.Errorf("%s executed at %d, want %d", k, callOrder[k], v)
+		}
+	}
+
+	if !viewCalled {
+		t.Error("View is not called")
+	}
+
+}
+
 func TestRouter_handler(t *testing.T) {
 	type counter struct {
 		viewCalled        bool
