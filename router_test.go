@@ -128,6 +128,34 @@ func TestRouter_middlewares(t *testing.T) {
 
 }
 
+func TestRouter_getGroupFullPath(t *testing.T) {
+	r := newRouter(testLog)
+	foo := r.NewGroupPath("/foo")
+	bar := foo.NewGroupPath("/bar")
+	buz := bar.NewGroupPath("/buz")
+
+	path := "/atreugo"
+
+	fullPath := buz.getGroupFullPath(path)
+	expected := "/foo/bar/buz/atreugo"
+	if fullPath != expected {
+		t.Errorf("Router.getGroupFullPath == %s, want %s", fullPath, expected)
+	}
+
+	fullPath = bar.getGroupFullPath(path)
+	expected = "/foo/bar/atreugo"
+	if fullPath != expected {
+		t.Errorf("Router.getGroupFullPath == %s, want %s", fullPath, expected)
+	}
+
+	fullPath = foo.getGroupFullPath(path)
+	expected = "/foo/atreugo"
+	if fullPath != expected {
+		t.Errorf("Router.getGroupFullPath == %s, want %s", fullPath, expected)
+	}
+
+}
+
 func TestRouter_handler(t *testing.T) {
 	type counter struct {
 		viewCalled        bool

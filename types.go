@@ -34,7 +34,8 @@ type Router struct {
 	router *fastrouter.Router
 	log    *logger.Logger
 
-	parent *Router
+	parent    *Router
+	beginPath string
 
 	beforeMiddlewares []Middleware
 	afterMiddlewares  []Middleware
@@ -264,6 +265,9 @@ type Config struct {
 // It is prohibited copying StaticFS values. Create new values instead.
 type StaticFS struct {
 	noCopy noCopy
+
+	// Filters to be executed before/after request a file.
+	Filters Filters
 
 	// Path to the root directory to serve files from.
 	Root string

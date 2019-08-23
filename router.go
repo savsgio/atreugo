@@ -17,6 +17,7 @@ func newRouter(log *logger.Logger) *Router {
 	r := new(Router)
 	r.log = log
 	r.router = fastrouter.New()
+	r.beginPath = "/"
 
 	return r
 }
@@ -27,6 +28,7 @@ func (r *Router) NewGroupPath(path string) *Router {
 	g.log = r.log
 	g.router = r.router.Group(path)
 	g.parent = r
+	g.beginPath = path
 
 	return g
 }
@@ -46,6 +48,18 @@ func (r *Router) middlewares() middlewares {
 	mdlws.After = append(mdlws.After, subMdlws.After...)
 
 	return mdlws
+}
+
+func (r *Router) getGroupFullPath(path string) string {
+	if r.beginPath != "/" {
+		path = r.beginPath + path
+	}
+
+	if r.parent != nil {
+		path = r.parent.getGroupFullPath(path)
+	}
+
+	return path
 }
 
 func (r *Router) addRoute(httpMethod, url string, handler fasthttp.RequestHandler) {
@@ -237,11 +251,22 @@ func (r *Router) NetHTTPPathWithFilters(httpMethod, url string, handler http.Han
 // Make sure your program has enough 'max open files' limit aka
 // 'ulimit -n' if root folder contains many files.
 func (r *Router) Static(url, rootPath string) {
-	if strings.HasSuffix(url, "/") {
-		url = url[:len(url)-1]
-	}
+	r.StaticWithFilters(url, rootPath, emptyFilters)
+}
 
-	r.router.ServeFiles(url+"/*filepath", rootPath)
+// StaticWithFilters serves static files from the given file system root,
+// and with filters that will execute before and after request a file.
+//
+// Make sure your program has enough 'max open files' limit aka
+// 'ulimit -n' if root folder contains many files.
+func (r *Router) StaticWithFilters(url, rootPath string, filters Filters) {
+	r.StaticCustom(url, &StaticFS{
+		Filters:            filters,
+		Root:               rootPath,
+		IndexNames:         []string{"index.html"},
+		GenerateIndexPages: true,
+		AcceptByteRange:    true,
+	})
 }
 
 // StaticCustom serves static files from the given file system settings.
@@ -277,7 +302,13 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) {
 		}
 	}
 
-	r.router.ServeFilesCustom(url+"/*filepath", ffs)
+	stripSlashes := strings.Count(r.getGroupFullPath(url), "/")
+
+	if ffs.PathRewrite == nil && stripSlashes > 0 {
+		ffs.PathRewrite = fasthttp.NewPathSlashesStripper(stripSlashes)
+	}
+
+	r.RequestHandlerPathWithFilters("GET", url+"/*filepath", ffs.NewRequestHandler(), fs.Filters)
 }
 
 // ServeFile returns HTTP response containing compressed file contents
@@ -290,9 +321,25 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) {
 //
 // Directory contents is returned if path points to directory.
 func (r *Router) ServeFile(url, filePath string) {
-	r.router.GET(url, func(ctx *fasthttp.RequestCtx) {
-		fasthttp.ServeFile(ctx, filePath)
-	})
+	r.ServeFileWithFilters(url, filePath, emptyFilters)
+}
+
+// ServeFileWithFilters returns HTTP response containing compressed file contents
+// from the given path, and with filters that will execute before and after request the file.
+//
+// HTTP response may contain uncompressed file contents in the following cases:
+//
+//   * Missing 'Accept-Encoding: gzip' request header.
+//   * No write access to directory containing the file.
+//
+// Directory contents is returned if path points to directory.
+func (r *Router) ServeFileWithFilters(url, filePath string, filters Filters) {
+	viewFn := func(ctx *RequestCtx) error {
+		fasthttp.ServeFile(ctx.RequestCtx, filePath)
+		return nil
+	}
+
+	r.addRoute("GET", url, r.handler(viewFn, filters))
 }
 
 // ListPaths returns all registered routes grouped by method
