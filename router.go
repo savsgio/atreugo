@@ -88,13 +88,17 @@ func (r *Router) handler(viewFn View, filters Filters) fasthttp.RequestHandler {
 
 		if statusCode, err = execMiddlewares(actx, before); err == nil {
 			if err = viewFn(actx); err != nil {
-				statusCode = fasthttp.StatusInternalServerError
+				statusCode = actx.Response.StatusCode()
 			} else {
 				statusCode, err = execMiddlewares(actx, after)
 			}
 		}
 
 		if err != nil {
+			if statusCode == fasthttp.StatusOK {
+				statusCode = fasthttp.StatusInternalServerError
+			}
+
 			r.log.Error(err)
 			actx.Error(err.Error(), statusCode)
 		}
