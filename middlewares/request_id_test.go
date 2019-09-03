@@ -55,8 +55,8 @@ func TestRequestIDMiddleware(t *testing.T) {
 				return
 			}
 
-			if statusCode != fasthttp.StatusOK {
-				t.Errorf("RequestIDMiddleware() = %v, want %v", statusCode, fasthttp.StatusOK)
+			if statusCode != 0 {
+				t.Errorf("RequestIDMiddleware() = %v, want %v", statusCode, 0)
 			}
 
 			value := ctx.Request.Header.Peek(atreugo.XRequestIDHeader)

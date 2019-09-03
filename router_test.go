@@ -71,36 +71,36 @@ func TestRouter_middlewares(t *testing.T) {
 	s.UseBefore(func(ctx *RequestCtx) (int, error) {
 		index++
 		callOrder["globalBefore"] = index
-		return 200, nil
+		return 0, nil
 	})
 	s.UseAfter(func(ctx *RequestCtx) (int, error) {
 		index++
 		callOrder["globalAfter"] = index
-		return 200, nil
+		return 0, nil
 	})
 
 	v1 := s.NewGroupPath("/v1")
 	v1.UseBefore(func(ctx *RequestCtx) (int, error) {
 		index++
 		callOrder["groupBefore"] = index
-		return 200, nil
+		return 0, nil
 	})
 	v1.UseAfter(func(ctx *RequestCtx) (int, error) {
 		index++
 		callOrder["groupAfter"] = index
-		return 200, nil
+		return 0, nil
 	})
 
 	filters := Filters{
 		Before: []Middleware{func(ctx *RequestCtx) (int, error) {
 			index++
 			callOrder["filterBefore"] = index
-			return 200, nil
+			return 0, nil
 		}},
 		After: []Middleware{func(ctx *RequestCtx) (int, error) {
 			index++
 			callOrder["filterAfter"] = index
-			return 200, nil
+			return 0, nil
 		}},
 	}
 
@@ -126,6 +126,64 @@ func TestRouter_middlewares(t *testing.T) {
 		t.Error("View is not called")
 	}
 
+}
+
+func TestRouter_middlewareStopAfter(t *testing.T) {
+	s := New(testAtreugoConfig)
+	s.UseAfter(func(ctx *RequestCtx) (int, error) {
+		return 0, nil
+	})
+	s.UseAfter(func(ctx *RequestCtx) (int, error) {
+		return 203, nil
+	})
+	s.UseAfter(func(ctx *RequestCtx) (int, error) {
+		return 403, errors.New("this middleware shouldn't be reached")
+	})
+
+	s.PathWithFilters("GET", "/", func(ctx *RequestCtx) error {
+		ctx.Response.SetStatusCode(500)
+		return nil
+	}, Filters{})
+
+	ctx := new(fasthttp.RequestCtx)
+	h, _ := s.router.Lookup("GET", "/", ctx)
+	if h == nil {
+		t.Fatal("Registered handler is nil")
+	}
+	h(ctx)
+
+	if status := ctx.Response.StatusCode(); status != 203 {
+		t.Errorf("Expected status 203, but received %v", status)
+	}
+}
+
+func TestRouter_middlewareStopBefore(t *testing.T) {
+	s := New(testAtreugoConfig)
+	s.UseBefore(func(ctx *RequestCtx) (int, error) {
+		return 0, nil
+	})
+	s.UseBefore(func(ctx *RequestCtx) (int, error) {
+		return 203, nil
+	})
+	s.UseBefore(func(ctx *RequestCtx) (int, error) {
+		return 403, errors.New("this middleware shouldn't be reached")
+	})
+
+	s.PathWithFilters("GET", "/", func(ctx *RequestCtx) error {
+		ctx.Response.SetStatusCode(500)
+		return errors.New("the handler shouldn't be reached")
+	}, Filters{})
+
+	ctx := new(fasthttp.RequestCtx)
+	h, _ := s.router.Lookup("GET", "/", ctx)
+	if h == nil {
+		t.Fatal("Registered handler is nil")
+	}
+	h(ctx)
+
+	if status := ctx.Response.StatusCode(); status != 203 {
+		t.Errorf("Expected status 203, but received %v", status)
+	}
 }
 
 func TestRouter_getGroupFullPath(t *testing.T) {
@@ -186,26 +244,26 @@ func TestRouter_handler(t *testing.T) {
 	before := []Middleware{
 		func(ctx *RequestCtx) (int, error) {
 			handlerCounter.beforeMiddlewares++
-			return fasthttp.StatusOK, nil
+			return 0, nil
 		},
 	}
 	after := []Middleware{
 		func(ctx *RequestCtx) (int, error) {
 			handlerCounter.afterMiddlewares++
-			return fasthttp.StatusOK, nil
+			return 0, nil
 		},
 	}
 	filters := Filters{
 		Before: []Middleware{
 			func(ctx *RequestCtx) (int, error) {
 				handlerCounter.beforeFilters++
-				return fasthttp.StatusOK, nil
+				return 0, nil
 			},
 		},
 		After: []Middleware{
 			func(ctx *RequestCtx) (int, error) {
 				handlerCounter.afterFilters++
-				return fasthttp.StatusOK, nil
+				return 0, nil
 			},
 		},
 	}
@@ -295,7 +353,7 @@ func TestRouter_handler(t *testing.T) {
 					After: []Middleware{
 						func(ctx *RequestCtx) (int, error) {
 							handlerCounter.afterFilters++
-							return fasthttp.StatusOK, nil
+							return 0, nil
 						},
 					},
 				},
@@ -321,7 +379,7 @@ func TestRouter_handler(t *testing.T) {
 					Before: []Middleware{
 						func(ctx *RequestCtx) (int, error) {
 							handlerCounter.beforeFilters++
-							return fasthttp.StatusOK, nil
+							return 0, nil
 						},
 					},
 					After: []Middleware{
@@ -391,30 +449,30 @@ func TestRouter_handler(t *testing.T) {
 			h(ctx)
 
 			if ctx.Response.StatusCode() != tt.want.statusCode {
-				t.Fatalf("Unexpected status code: '%d', want '%d'", ctx.Response.StatusCode(), tt.want.statusCode)
+				t.Fatalf("[test:%s] Unexpected status code: '%d', want '%d'", tt.name, ctx.Response.StatusCode(), tt.want.statusCode)
 			}
 
 			if handlerCounter.viewCalled != tt.want.counter.viewCalled {
-				t.Errorf("View called = %v, want %v", handlerCounter.viewCalled, tt.want.counter.viewCalled)
+				t.Errorf("[test:%s] View called = %v, want %v", tt.name, handlerCounter.viewCalled, tt.want.counter.viewCalled)
 			}
 
 			if handlerCounter.beforeMiddlewares != tt.want.counter.beforeMiddlewares {
-				t.Errorf("Before middlewares call counter = %v, want %v", handlerCounter.beforeMiddlewares,
+				t.Errorf("[test:%s] Before middlewares call counter = %v, want %v", tt.name, handlerCounter.beforeMiddlewares,
 					tt.want.counter.beforeMiddlewares)
 			}
 
 			if handlerCounter.beforeFilters != tt.want.counter.beforeFilters {
-				t.Errorf("Before filters call counter = %v, want %v", handlerCounter.beforeFilters,
+				t.Errorf("[test:%s] Before filters call counter = %v, want %v", tt.name, handlerCounter.beforeFilters,
 					tt.want.counter.beforeFilters)
 			}
 
 			if handlerCounter.afterMiddlewares != tt.want.counter.afterMiddlewares {
-				t.Errorf("After middlewares call counter = %v, want %v", handlerCounter.afterMiddlewares,
+				t.Errorf("[test:%s] After middlewares call counter = %v, want %v", tt.name, handlerCounter.afterMiddlewares,
 					tt.want.counter.afterMiddlewares)
 			}
 
 			if handlerCounter.afterFilters != tt.want.counter.afterFilters {
-				t.Errorf("After filters call counter = %v, want %v", handlerCounter.afterFilters,
+				t.Errorf("[test:%s] After filters call counter = %v, want %v", tt.name, handlerCounter.afterFilters,
 					tt.want.counter.afterFilters)
 			}
 

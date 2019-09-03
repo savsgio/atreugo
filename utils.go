@@ -22,12 +22,12 @@ func include(vs []string, t string) bool {
 // execMiddlewares execute all the middlewares functions with the request context given
 func execMiddlewares(ctx *RequestCtx, middlewares []Middleware) (int, error) {
 	for _, middlewareFn := range middlewares {
-		if statusCode, err := middlewareFn(ctx); err != nil {
+		if statusCode, err := middlewareFn(ctx); statusCode != 0 || err != nil {
 			return statusCode, err
 		}
 	}
 
-	return fasthttp.StatusOK, nil
+	return 0, nil
 }
 
 func viewToHandler(view View) fasthttp.RequestHandler {

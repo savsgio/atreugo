@@ -26,5 +26,5 @@ func authMiddleware(ctx *atreugo.RequestCtx) (int, error) {
 		return fasthttp.StatusForbidden, errors.New("your session is expired, login again please")
 	}
 
-	return fasthttp.StatusOK, err
+	return 0, err
 }

@@ -86,19 +86,28 @@ func (r *Router) handler(viewFn View, filters Filters) fasthttp.RequestHandler {
 		var err error
 		var statusCode int
 
-		if statusCode, err = execMiddlewares(actx, before); err == nil {
+		if statusCode, err = execMiddlewares(actx, before); statusCode == 0 && err == nil {
 			if err = viewFn(actx); err != nil {
 				statusCode = actx.Response.StatusCode()
+				if statusCode == fasthttp.StatusOK {
+					statusCode = fasthttp.StatusInternalServerError
+				}
 			} else {
-				statusCode, err = execMiddlewares(actx, after)
+				var newStatusCode int
+				newStatusCode, err = execMiddlewares(actx, after)
+				if newStatusCode != 0 {
+					statusCode = newStatusCode
+					actx.SetStatusCode(statusCode)
+				}
 			}
+		} else {
+			if statusCode == 0 {
+				statusCode = fasthttp.StatusInternalServerError
+			}
+			actx.SetStatusCode(statusCode)
 		}
 
 		if err != nil {
-			if statusCode == fasthttp.StatusOK {
-				statusCode = fasthttp.StatusInternalServerError
-			}
-
 			r.log.Error(err)
 			actx.Error(err.Error(), statusCode)
 		}

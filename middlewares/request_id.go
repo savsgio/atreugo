@@ -3,7 +3,6 @@ package middlewares
 import (
 	"github.com/google/uuid"
 	"github.com/savsgio/atreugo/v8"
-	"github.com/valyala/fasthttp"
 )
 
 // RequestIDMiddleware adds an identifier to the request
@@ -16,5 +15,5 @@ func RequestIDMiddleware(ctx *atreugo.RequestCtx) (int, error) {
 		ctx.Request.Header.Set(atreugo.XRequestIDHeader, uuid.New().String())
 	}
 
-	return fasthttp.StatusOK, nil
+	return 0, nil
 }

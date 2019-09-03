@@ -8,11 +8,11 @@ import (
 func beforeFilter(ctx *atreugo.RequestCtx) (int, error) {
 	logger.Info("Filter executed BEFORE view")
 
-	return 200, nil
+	return 0, nil
 }
 
 func afterFilter(ctx *atreugo.RequestCtx) (int, error) {
 	logger.Info("Filter executed AFTER view")
 
-	return 200, nil
+	return 0, nil
 }
