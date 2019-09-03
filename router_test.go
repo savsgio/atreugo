@@ -157,7 +157,7 @@ func TestRouter_middlewareStopAfter(t *testing.T) {
 	}
 }
 
-func TestRouter_middlewareStopBefore(t *testing.T) {
+func TestRouter_middlewareStopBefore_statusCode(t *testing.T) {
 	s := New(testAtreugoConfig)
 	s.UseBefore(func(ctx *RequestCtx) (int, error) {
 		return 0, nil
@@ -183,6 +183,35 @@ func TestRouter_middlewareStopBefore(t *testing.T) {
 
 	if status := ctx.Response.StatusCode(); status != 203 {
 		t.Errorf("Expected status 203, but received %v", status)
+	}
+}
+
+func TestRouter_middlewareStopBefore_error(t *testing.T) {
+	s := New(testAtreugoConfig)
+	s.UseBefore(func(ctx *RequestCtx) (int, error) {
+		return 0, nil
+	})
+	s.UseBefore(func(ctx *RequestCtx) (int, error) {
+		return 0, errors.New("stop here!")
+	})
+	s.UseBefore(func(ctx *RequestCtx) (int, error) {
+		return 403, errors.New("this middleware shouldn't be reached")
+	})
+
+	s.PathWithFilters("GET", "/", func(ctx *RequestCtx) error {
+		ctx.Response.SetStatusCode(203)
+		return errors.New("the handler shouldn't be reached")
+	}, Filters{})
+
+	ctx := new(fasthttp.RequestCtx)
+	h, _ := s.router.Lookup("GET", "/", ctx)
+	if h == nil {
+		t.Fatal("Registered handler is nil")
+	}
+	h(ctx)
+
+	if status := ctx.Response.StatusCode(); status != 500 {
+		t.Errorf("Expected status 500, but received %v", status)
 	}
 }
 
