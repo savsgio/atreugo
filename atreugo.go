@@ -19,6 +19,9 @@ func New(cfg *Config) *Atreugo {
 	if cfg.Name == "" {
 		cfg.Name = defaultServerName
 	}
+	if cfg.LogName == "" {
+		cfg.LogName = defaultLogName
+	}
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = logger.INFO
 	}
@@ -29,21 +32,16 @@ func New(cfg *Config) *Atreugo {
 		cfg.ReadTimeout = defaultReadTimeout
 	}
 
-	if cfg.LogName == "" {
-		cfg.LogName = defaultLogName
-	}
-
 	log := logger.New(cfg.LogName, cfg.LogLevel, os.Stderr)
 
-	r := newRouter(log)
+	r := newRouter(log, cfg.ErrorView)
+
 	if cfg.NotFoundView != nil {
-		r.router.NotFound = viewToHandler(cfg.NotFoundView)
+		r.router.NotFound = viewToHandler(cfg.NotFoundView, r.errorView)
 	}
-
 	if cfg.MethodNotAllowedView != nil {
-		r.router.MethodNotAllowed = viewToHandler(cfg.MethodNotAllowedView)
+		r.router.MethodNotAllowed = viewToHandler(cfg.MethodNotAllowedView, r.errorView)
 	}
-
 	if cfg.PanicView != nil {
 		r.router.PanicHandler = func(ctx *fasthttp.RequestCtx, err interface{}) {
 			actx := acquireRequestCtx(ctx)

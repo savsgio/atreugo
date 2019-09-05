@@ -146,7 +146,7 @@ func Test_viewToHandler(t *testing.T) {
 
 	ctx := new(fasthttp.RequestCtx)
 
-	handler := viewToHandler(view)
+	handler := viewToHandler(view, defaultErrorView)
 	handler(ctx)
 
 	if !called {

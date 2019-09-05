@@ -13,13 +13,22 @@ import (
 
 var emptyFilters = Filters{}
 
-func newRouter(log *logger.Logger) *Router {
+func newRouter(log *logger.Logger, errorView ErrorView) *Router {
 	r := new(Router)
 	r.log = log
 	r.router = fastrouter.New()
 	r.beginPath = "/"
 
+	if errorView == nil {
+		errorView = defaultErrorView
+	}
+	r.errorView = errorView
+
 	return r
+}
+
+func defaultErrorView(ctx *RequestCtx, err error, statusCode int) {
+	ctx.Error(err.Error(), statusCode)
 }
 
 // NewGroupPath returns a new router to group paths
@@ -100,7 +109,7 @@ func (r *Router) handler(viewFn View, filters Filters) fasthttp.RequestHandler {
 			}
 
 			r.log.Error(err)
-			actx.Error(err.Error(), statusCode)
+			r.errorView(actx, err, statusCode)
 		}
 
 		releaseRequestCtx(actx)
@@ -293,7 +302,7 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) {
 	}
 
 	if fs.PathNotFound != nil {
-		ffs.PathNotFound = viewToHandler(fs.PathNotFound)
+		ffs.PathNotFound = viewToHandler(fs.PathNotFound, r.errorView)
 	}
 
 	if fs.PathRewrite != nil {

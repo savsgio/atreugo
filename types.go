@@ -37,6 +37,8 @@ type Router struct {
 	parent    *Router
 	beginPath string
 
+	errorView ErrorView
+
 	beforeMiddlewares []Middleware
 	afterMiddlewares  []Middleware
 }
@@ -94,6 +96,11 @@ type Config struct {
 	// The "Allow" header with allowed request methods is set before the handler
 	// is called.
 	MethodNotAllowedView View
+
+	// Function to handle error returned by view.
+	// It should be used to generate a error page and return the http error code
+	// 500 (Internal Server Error).
+	ErrorView ErrorView
 
 	// Function to handle panics recovered from views.
 	// It should be used to generate a error page and return the http error code
@@ -347,6 +354,9 @@ type RequestCtx struct {
 
 // View must process incoming requests.
 type View func(*RequestCtx) error
+
+// ErrorView must process error returned by view.
+type ErrorView func(*RequestCtx, error, int)
 
 // PanicView must process panics recovered from views, if it's defined in configuration.
 type PanicView func(*RequestCtx, interface{})

@@ -16,7 +16,7 @@ import (
 var testLog = logger.New("test", "fatal", nil)
 
 func TestRouter_newRouter(t *testing.T) {
-	r := newRouter(testLog)
+	r := newRouter(testLog, nil)
 
 	if reflect.ValueOf(r.log).Pointer() != reflect.ValueOf(testLog).Pointer() {
 		t.Errorf("Router log == %p, want %p", r.log, testLog)
@@ -27,8 +27,24 @@ func TestRouter_newRouter(t *testing.T) {
 	}
 }
 
+func TestRouter_defaultErrorView(t *testing.T) {
+	err := errors.New("error")
+	statusCode := 500
+	ctx := acquireRequestCtx(new(fasthttp.RequestCtx))
+
+	defaultErrorView(ctx, err, statusCode)
+
+	if ctx.Response.StatusCode() != fasthttp.StatusInternalServerError {
+		t.Errorf("Status code == %d, want %d", ctx.Response.StatusCode(), fasthttp.StatusInternalServerError)
+	}
+
+	if string(ctx.Response.Body()) != err.Error() {
+		t.Errorf("Response body == %s, want %s", ctx.Response.Body(), err.Error())
+	}
+}
+
 func TestRouter_NewGroupPath(t *testing.T) {
-	r := newRouter(testLog)
+	r := newRouter(testLog, nil)
 	g := r.NewGroupPath("/fast")
 
 	if reflect.ValueOf(g.log).Pointer() != reflect.ValueOf(r.log).Pointer() {
@@ -129,7 +145,7 @@ func TestRouter_middlewares(t *testing.T) {
 }
 
 func TestRouter_getGroupFullPath(t *testing.T) {
-	r := newRouter(testLog)
+	r := newRouter(testLog, nil)
 	foo := r.NewGroupPath("/foo")
 	bar := foo.NewGroupPath("/bar")
 	buz := bar.NewGroupPath("/buz")
@@ -380,7 +396,7 @@ func TestRouter_handler(t *testing.T) {
 		handlerCounter.afterMiddlewares = 0
 
 		t.Run(tt.name, func(t *testing.T) {
-			r := newRouter(testLog)
+			r := newRouter(testLog, nil)
 			r.UseBefore(tt.args.before...)
 			r.UseAfter(tt.args.after...)
 			r.PathWithFilters(httpMethod, path, tt.args.viewFn, tt.args.filters)
@@ -432,7 +448,7 @@ func TestRouter_UseBefore(t *testing.T) {
 		},
 	}
 
-	r := newRouter(testLog)
+	r := newRouter(testLog, nil)
 	r.UseBefore(middlewareFns...)
 
 	if len(r.beforeMiddlewares) != len(middlewareFns) {
@@ -450,7 +466,7 @@ func TestRouter_UseAfter(t *testing.T) {
 		},
 	}
 
-	r := newRouter(testLog)
+	r := newRouter(testLog, nil)
 	r.UseAfter(middlewareFns...)
 
 	if len(r.afterMiddlewares) != len(middlewareFns) {
@@ -589,7 +605,7 @@ func TestRouter_Path(t *testing.T) {
 
 			ctx := new(fasthttp.RequestCtx)
 
-			r := newRouter(testLog)
+			r := newRouter(testLog, nil)
 			if tt.args.netHTTPHandler != nil {
 				r.NetHTTPPath(tt.args.method, tt.args.url, tt.args.netHTTPHandler)
 			} else if tt.args.handler != nil {
@@ -665,7 +681,7 @@ func TestRouter_Static(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newRouter(testLog)
+			r := newRouter(testLog, nil)
 			r.Static(tt.args.url, tt.args.rootPath)
 
 			handler, _ := r.router.Lookup("GET", tt.want.routerPath, &fasthttp.RequestCtx{})
@@ -714,7 +730,7 @@ func TestRouter_StaticCustom(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := newRouter(testLog)
+			r := newRouter(testLog, nil)
 
 			pathRewriteCalled := false
 
@@ -768,7 +784,7 @@ func TestRouter_ServeFile(t *testing.T) {
 		},
 	}
 
-	r := newRouter(testLog)
+	r := newRouter(testLog, nil)
 	r.ServeFile(test.args.url, test.args.filePath)
 	ctx := new(fasthttp.RequestCtx)
 
@@ -799,7 +815,7 @@ func TestRouter_ListPaths(t *testing.T) {
 
 // Benchmarks
 func Benchmark_handler(b *testing.B) {
-	r := newRouter(testLog)
+	r := newRouter(testLog, nil)
 	viewFn := func(ctx *RequestCtx) error {
 		return ctx.HTTPResponse("Hello world")
 	}

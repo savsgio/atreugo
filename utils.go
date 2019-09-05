@@ -30,12 +30,12 @@ func execMiddlewares(ctx *RequestCtx, middlewares []Middleware) (int, error) {
 	return fasthttp.StatusOK, nil
 }
 
-func viewToHandler(view View) fasthttp.RequestHandler {
+func viewToHandler(view View, errorView ErrorView) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := acquireRequestCtx(ctx)
 
 		if err := view(actx); err != nil {
-			ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+			errorView(actx, err, fasthttp.StatusInternalServerError)
 		}
 
 		releaseRequestCtx(actx)
