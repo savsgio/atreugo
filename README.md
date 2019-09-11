@@ -13,8 +13,16 @@ It's build on top of [fasthttp](https://github.com/valyala/fasthttp).
 
 ## Install
 
+- **WITH** Go modules:
+
 ```bash
 go get github.com/savsgio/atreugo/v8
+```
+
+- **WITHOUT** Go modules:
+
+```bash
+go get github.com/savsgio/atreugo
 ```
 
 ## Supported Go versions:
