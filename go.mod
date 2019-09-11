@@ -1,5 +1,7 @@
 module github.com/savsgio/atreugo/v8
 
+go 1.13
+
 require (
 	github.com/fasthttp/router v0.5.0
 	github.com/google/uuid v1.1.1
