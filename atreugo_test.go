@@ -144,6 +144,186 @@ func Test_New(t *testing.T) {
 	}
 }
 
+func TestAtreugo_RedirectTrailingSlash(t *testing.T) {
+	type args struct {
+		v bool
+	}
+	type want struct {
+		v bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Enable",
+			args: args{
+				v: true,
+			},
+			want: want{
+				v: true,
+			},
+		},
+		{
+			name: "Disable",
+			args: args{
+				v: false,
+			},
+			want: want{
+				v: false,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(testAtreugoConfig)
+			s.RedirectTrailingSlash(tt.args.v)
+
+			if s.router.RedirectTrailingSlash != tt.want.v {
+				t.Errorf("Router.RedirectTrailingSlash == %v, want %v", s.router.RedirectTrailingSlash, tt.want.v)
+			}
+		})
+	}
+}
+
+func TestAtreugo_RedirectFixedPath(t *testing.T) {
+	type args struct {
+		v bool
+	}
+	type want struct {
+		v bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Enable",
+			args: args{
+				v: true,
+			},
+			want: want{
+				v: true,
+			},
+		},
+		{
+			name: "Disable",
+			args: args{
+				v: false,
+			},
+			want: want{
+				v: false,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(testAtreugoConfig)
+			s.RedirectFixedPath(tt.args.v)
+
+			if s.router.RedirectFixedPath != tt.want.v {
+				t.Errorf("Router.RedirectFixedPath == %v, want %v", s.router.RedirectFixedPath, tt.want.v)
+			}
+		})
+	}
+}
+
+func TestAtreugo_HandleMethodNotAllowed(t *testing.T) {
+	type args struct {
+		v bool
+	}
+	type want struct {
+		v bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Enable",
+			args: args{
+				v: true,
+			},
+			want: want{
+				v: true,
+			},
+		},
+		{
+			name: "Disable",
+			args: args{
+				v: false,
+			},
+			want: want{
+				v: false,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(testAtreugoConfig)
+			s.HandleMethodNotAllowed(tt.args.v)
+
+			if s.router.HandleMethodNotAllowed != tt.want.v {
+				t.Errorf("Router.HandleMethodNotAllowed == %v, want %v", s.router.HandleMethodNotAllowed, tt.want.v)
+			}
+		})
+	}
+}
+
+func TestAtreugo_HandleOPTIONS(t *testing.T) {
+	type args struct {
+		v bool
+	}
+	type want struct {
+		v bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Enable",
+			args: args{
+				v: true,
+			},
+			want: want{
+				v: true,
+			},
+		},
+		{
+			name: "Disable",
+			args: args{
+				v: false,
+			},
+			want: want{
+				v: false,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := New(testAtreugoConfig)
+			s.HandleOPTIONS(tt.args.v)
+
+			if s.router.HandleOPTIONS != tt.want.v {
+				t.Errorf("Router.HandleOPTIONS == %v, want %v", s.router.HandleOPTIONS, tt.want.v)
+			}
+		})
+	}
+}
+
 func TestAtreugo_Serve(t *testing.T) {
 	cfg := &Config{LogLevel: "fatal"}
 	s := New(cfg)
