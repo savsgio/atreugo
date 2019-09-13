@@ -23,6 +23,7 @@ var random = func(min, max int) int {
 
 func Test_New(t *testing.T) {
 	type args struct {
+		network              string
 		logLevel             string
 		notFoundView         View
 		methodNotAllowedView View
@@ -33,6 +34,7 @@ func Test_New(t *testing.T) {
 		notFoundView         bool
 		methodNotAllowedView bool
 		panicView            bool
+		err                  bool
 	}
 
 	notFoundView := func(ctx *RequestCtx) error {
@@ -65,6 +67,7 @@ func Test_New(t *testing.T) {
 		{
 			name: "Custom",
 			args: args{
+				network:              "unix",
 				logLevel:             logger.WARNING,
 				notFoundView:         notFoundView,
 				methodNotAllowedView: methodNotAllowedView,
@@ -77,10 +80,30 @@ func Test_New(t *testing.T) {
 				panicView:            true,
 			},
 		},
+		{
+			name: "InvalidNetwork",
+			args: args{
+				network: "fake",
+			},
+			want: want{
+				err: true,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				r := recover()
+
+				if tt.want.err && r == nil {
+					t.Errorf("Panic expected")
+				} else if !tt.want.err && r != nil {
+					t.Errorf("Unexpected panic")
+				}
+			}()
+
 			cfg := &Config{
+				Network:              tt.args.network,
 				LogLevel:             tt.args.logLevel,
 				NotFoundView:         tt.args.notFoundView,
 				MethodNotAllowedView: tt.args.methodNotAllowedView,
@@ -125,10 +148,6 @@ func TestAtreugo_Serve(t *testing.T) {
 	cfg := &Config{LogLevel: "fatal"}
 	s := New(cfg)
 
-	host := "InmemoryListener"
-	port := 0
-	lnAddr := "InmemoryListener"
-
 	ln := fasthttputil.NewInmemoryListener()
 
 	errCh := make(chan error, 1)
@@ -142,16 +161,14 @@ func TestAtreugo_Serve(t *testing.T) {
 			t.Fatalf("Unexpected error: %v", err)
 		}
 	case <-time.After(100 * time.Millisecond):
-		if cfg.Host != host {
-			t.Errorf("Config.Host = %s, want %s", cfg.Host, host)
+		lnAddr := ln.Addr().String()
+		if s.cfg.Addr != lnAddr {
+			t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
 		}
 
-		if cfg.Port != port {
-			t.Errorf("Config.Port = %d, want %d", cfg.Port, port)
-		}
-
-		if s.lnAddr != lnAddr {
-			t.Errorf("Atreugo.lnAddr = %s, want %s", s.lnAddr, lnAddr)
+		lnNetwork := ln.Addr().Network()
+		if s.cfg.Network != lnNetwork {
+			t.Errorf("Atreugo.Config.Network = %s, want %s", s.cfg.Network, lnNetwork)
 		}
 	}
 }
@@ -159,10 +176,6 @@ func TestAtreugo_Serve(t *testing.T) {
 func TestAtreugo_ServeGracefully(t *testing.T) {
 	cfg := &Config{LogLevel: "fatal"}
 	s := New(cfg)
-
-	host := "InmemoryListener"
-	port := 0
-	lnAddr := "InmemoryListener"
 
 	ln := fasthttputil.NewInmemoryListener()
 
@@ -178,25 +191,21 @@ func TestAtreugo_ServeGracefully(t *testing.T) {
 		if !cfg.GracefulShutdown {
 			t.Errorf("Config.GracefulShutdown = %v, want %v", cfg.GracefulShutdown, true)
 		}
-
+		if s.server.ReadTimeout != defaultReadTimeout {
+			t.Errorf("fasthttp.Server.ReadTimeout = %v, want %v", s.server.ReadTimeout, defaultReadTimeout)
+		}
 		if s.cfg.ReadTimeout != defaultReadTimeout {
 			t.Errorf("Config.ReadTimeout = %v, want %v", s.cfg.ReadTimeout, defaultReadTimeout)
 		}
 
-		if s.server.ReadTimeout != defaultReadTimeout {
-			t.Errorf("fasthttp.Server.ReadTimeout = %v, want %v", s.server.ReadTimeout, defaultReadTimeout)
+		lnAddr := ln.Addr().String()
+		if s.cfg.Addr != lnAddr {
+			t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
 		}
 
-		if cfg.Host != host {
-			t.Errorf("Config.Host = %s, want %s", cfg.Host, host)
-		}
-
-		if cfg.Port != port {
-			t.Errorf("Config.Port = %d, want %d", cfg.Port, port)
-		}
-
-		if s.lnAddr != lnAddr {
-			t.Errorf("Atreugo.lnAddr = %s, want %s", s.lnAddr, lnAddr)
+		lnNetwork := ln.Addr().Network()
+		if s.cfg.Network != lnNetwork {
+			t.Errorf("Atreugo.Config.Network = %s, want %s", s.cfg.Network, lnNetwork)
 		}
 	}
 }
@@ -215,8 +224,7 @@ func TestAtreugo_SetLogOutput(t *testing.T) {
 
 func TestAtreugo_ListenAndServe(t *testing.T) {
 	type args struct {
-		host      string
-		port      int
+		addr      string
 		graceful  bool
 		tlsEnable bool
 	}
@@ -231,8 +239,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 		{
 			name: "NormalOk",
 			args: args{
-				host:      "localhost",
-				port:      random(8000, 9000),
+				addr:      "localhost:8081",
 				graceful:  false,
 				tlsEnable: false,
 			},
@@ -243,8 +250,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 		{
 			name: "GracefulOk",
 			args: args{
-				host:      "localhost",
-				port:      random(8000, 9000),
+				addr:      "localhost:8081",
 				graceful:  true,
 				tlsEnable: false,
 			},
@@ -255,8 +261,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 		{
 			name: "TLSError",
 			args: args{
-				host:      "localhost",
-				port:      random(8000, 9000),
+				addr:      "localhost:8081",
 				tlsEnable: true,
 			},
 			want: want{
@@ -266,8 +271,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 		{
 			name: "InvalidAddr",
 			args: args{
-				host: "0101",
-				port: 999999999999999999,
+				addr: "0101:999999999999999999",
 			},
 			want: want{
 				getErr: true,
@@ -277,8 +281,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(&Config{
-				Host:             tt.args.host,
-				Port:             tt.args.port,
+				Addr:             tt.args.addr,
 				LogLevel:         "error",
 				TLSEnable:        tt.args.tlsEnable,
 				GracefulShutdown: tt.args.graceful,

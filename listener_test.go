@@ -1,18 +1,17 @@
 package atreugo
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestAtreugo_getListener(t *testing.T) {
 	type args struct {
-		host      string
-		port      int
+		addr      string
 		network   string
 		reuseport bool
 	}
 	type want struct {
+		addr    string
 		network string
 		err     bool
 	}
@@ -24,10 +23,10 @@ func TestAtreugo_getListener(t *testing.T) {
 		{
 			name: "Ok",
 			args: args{
-				host: "127.0.0.1",
-				port: 8000,
+				addr: "127.0.0.1:8000",
 			},
 			want: want{
+				addr:    "127.0.0.1:8000",
 				network: "tcp",
 				err:     false,
 			},
@@ -35,12 +34,12 @@ func TestAtreugo_getListener(t *testing.T) {
 		{
 			name: "Reuseport",
 			args: args{
-				host:      "127.0.0.1",
-				port:      8000,
+				addr:      "127.0.0.1:8000",
 				network:   "tcp4",
 				reuseport: true,
 			},
 			want: want{
+				addr:    "127.0.0.1:8000",
 				network: "tcp",
 				err:     false,
 			},
@@ -58,18 +57,13 @@ func TestAtreugo_getListener(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &Config{
-				Host:      tt.args.host,
-				Port:      tt.args.port,
+				Addr:      tt.args.addr,
 				LogLevel:  "fatal",
 				Reuseport: tt.args.reuseport,
 			}
 			if tt.args.network != "" {
 				cfg.Network = tt.args.network
 			}
-
-			s := New(cfg)
-
-			s.lnAddr = fmt.Sprintf("%s:%d", tt.args.host, tt.args.port)
 
 			defer func() {
 				r := recover()
@@ -81,14 +75,16 @@ func TestAtreugo_getListener(t *testing.T) {
 				}
 			}()
 
+			s := New(cfg)
+
 			ln, err := s.getListener()
 			if err != nil {
 				panic(err)
 			}
 
 			lnAddress := ln.Addr().String()
-			if lnAddress != s.lnAddr {
-				t.Errorf("Listener address: '%s', want '%s'", lnAddress, s.lnAddr)
+			if lnAddress != tt.want.addr {
+				t.Errorf("Listener address: '%s', want '%s'", lnAddress, tt.want.addr)
 			}
 
 			lnNetwork := ln.Addr().Network()

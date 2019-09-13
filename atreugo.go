@@ -1,21 +1,29 @@
 package atreugo
 
 import (
-	"fmt"
 	"io"
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
-	"strings"
 	"syscall"
 
 	logger "github.com/savsgio/go-logger"
+	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
 )
 
+var tcpNetworks = []string{"tcp", "tcp4", "tcp6"}
+var validNetworks = append(tcpNetworks, []string{"unix"}...)
+
 // New create a new instance of Atreugo Server
 func New(cfg *Config) *Atreugo {
+	if cfg.Network != "" && !gotils.StringSliceInclude(validNetworks, cfg.Network) {
+		panic("Invalid network: " + cfg.Network)
+	}
+	if cfg.Network == "" {
+		cfg.Network = defaultNetwork
+	}
+
 	if cfg.Name == "" {
 		cfg.Name = defaultServerName
 	}
@@ -24,9 +32,6 @@ func New(cfg *Config) *Atreugo {
 	}
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = logger.INFO
-	}
-	if cfg.Network == "" {
-		cfg.Network = defaultNetwork
 	}
 	if cfg.GracefulShutdown && cfg.ReadTimeout <= 0 {
 		cfg.ReadTimeout = defaultReadTimeout
@@ -100,25 +105,21 @@ func New(cfg *Config) *Atreugo {
 func (s *Atreugo) Serve(ln net.Listener) error {
 	defer ln.Close()
 
-	schema := "http"
-	if s.cfg.TLSEnable {
-		schema = "https"
-	}
+	s.cfg.Addr = ln.Addr().String()
+	s.cfg.Network = ln.Addr().Network()
 
-	addr := ln.Addr().String()
-	if addr != s.lnAddr {
-		s.log.Info("Updating address config with the new listener address")
-		sAddr := strings.Split(addr, ":")
-		s.cfg.Host = sAddr[0]
-		if len(sAddr) > 1 {
-			s.cfg.Port, _ = strconv.Atoi(sAddr[1])
-		} else {
-			s.cfg.Port = 0
+	if gotils.StringSliceInclude(tcpNetworks, s.cfg.Network) {
+		schema := "http"
+		if s.cfg.TLSEnable {
+			schema = "https"
 		}
-		s.lnAddr = addr
+
+		s.log.Infof("Listening on: %s://%s/", schema, s.cfg.Addr)
+
+	} else {
+		s.log.Infof("Listening on (network: %s): %s ", s.cfg.Network, s.cfg.Addr)
 	}
 
-	s.log.Infof("Listening on: %s://%s/", schema, s.lnAddr)
 	if s.cfg.TLSEnable {
 		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey)
 	}
@@ -129,19 +130,12 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 // ServeGracefully serves incoming connections from the given listener with graceful shutdown
 //
 // ServeGracefully blocks until the given listener returns permanent error.
-//
-// If use a custom Listener, will be updated your atreugo configuration
-// with the Listener address and setting GracefulShutdown to true automatically.
 func (s *Atreugo) ServeGracefully(ln net.Listener) error {
-	if !s.cfg.GracefulShutdown {
-		s.log.Info("Updating GracefulShutdown config to 'true'")
-		s.cfg.GracefulShutdown = true
+	s.cfg.GracefulShutdown = true
 
-		if s.server.ReadTimeout <= 0 {
-			s.log.Infof("Updating ReadTimeout config to '%v'", defaultReadTimeout)
-			s.server.ReadTimeout = defaultReadTimeout
-			s.cfg.ReadTimeout = defaultReadTimeout
-		}
+	if s.server.ReadTimeout <= 0 {
+		s.server.ReadTimeout = defaultReadTimeout
+		s.cfg.ReadTimeout = defaultReadTimeout
 	}
 
 	listenErr := make(chan error, 1)
@@ -174,12 +168,10 @@ func (s *Atreugo) SetLogOutput(output io.Writer) {
 	s.log.SetOutput(output)
 }
 
-// ListenAndServe serves HTTP/HTTPS requests from the given TCP4 addr in the atreugo configuration.
+// ListenAndServe serves requests from the given network and address in the atreugo configuration.
 //
-// Pass custom listener to Serve/ServeGracefully if you need listening on non-TCP4 media
-// such as IPv6.
+// Pass custom listener to Serve/ServeGracefully if you want to use it.
 func (s *Atreugo) ListenAndServe() error {
-	s.lnAddr = fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
 	ln, err := s.getListener()
 	if err != nil {
 		return err
