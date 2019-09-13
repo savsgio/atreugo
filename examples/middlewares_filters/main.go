@@ -6,8 +6,7 @@ import (
 
 func main() {
 	config := &atreugo.Config{
-		Host: "0.0.0.0",
-		Port: 8000,
+		Addr: "0.0.0.0:8000",
 	}
 	server := atreugo.New(config)
 
