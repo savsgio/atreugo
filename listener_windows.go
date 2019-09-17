@@ -7,5 +7,5 @@ import (
 )
 
 func (s *Atreugo) getListener() (net.Listener, error) {
-	return net.Listen(s.cfg.Network, s.lnAddr)
+	return net.Listen(s.cfg.Network, s.cfg.Addr)
 }
