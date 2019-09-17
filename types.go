@@ -19,8 +19,6 @@ type Atreugo struct {
 	log    *logger.Logger
 	cfg    *Config
 
-	lnAddr string
-
 	*Router
 }
 
