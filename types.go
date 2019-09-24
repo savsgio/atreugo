@@ -111,6 +111,11 @@ type Config struct {
 	// --- fasthttp server configuration ---
 	//
 
+	// HeaderReceived is called after receiving the header
+	//
+	// non zero RequestConfig field values will overwrite the default configs
+	HeaderReceived func(header *fasthttp.RequestHeader) fasthttp.RequestConfig
+
 	// The maximum number of concurrent connections the server may serve.
 	//
 	// DefaultConcurrency is used if not set.
