@@ -36,6 +36,7 @@ func New(cfg *Config) *Atreugo {
 	if cfg.GracefulShutdown && cfg.ReadTimeout <= 0 {
 		cfg.ReadTimeout = defaultReadTimeout
 	}
+	cfg.socketFileMode = 0666
 
 	log := logger.New(cfg.LogName, cfg.LogLevel, os.Stderr)
 

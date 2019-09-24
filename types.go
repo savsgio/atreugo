@@ -2,6 +2,7 @@ package atreugo
 
 import (
 	"net"
+	"os"
 	"time"
 
 	fastrouter "github.com/fasthttp/router"
@@ -261,6 +262,8 @@ type Config struct {
 	// http connections to WS and connection goes to another handler,
 	// which will close it when needed.
 	KeepHijackedConns bool
+
+	socketFileMode os.FileMode
 }
 
 // StaticFS represents settings for serving static files

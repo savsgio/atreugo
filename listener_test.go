@@ -45,6 +45,40 @@ func TestAtreugo_getListener(t *testing.T) {
 			},
 		},
 		{
+			name: "Unix",
+			args: args{
+				addr:    "/tmp/test.sock",
+				network: "unix",
+			},
+			want: want{
+				addr:    "/tmp/test.sock",
+				network: "unix",
+				err:     false,
+			},
+		},
+		{
+			name: "UnixRemoveError",
+			args: args{
+				addr:    "/tmp/data.sock",
+				network: "unix",
+			},
+			want: want{
+				addr:    "/tmp/data.sock",
+				network: "unix",
+				err:     true,
+			},
+		},
+		{
+			name: "UnixChmodError",
+			args: args{
+				addr:    "345&%·%&%&/%&(",
+				network: "unix",
+			},
+			want: want{
+				err: true,
+			},
+		},
+		{
 			name: "Error",
 			args: args{
 				network: "fake",
