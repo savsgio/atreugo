@@ -3,7 +3,7 @@ package middlewares
 import (
 	"testing"
 
-	"github.com/savsgio/atreugo/v8"
+	"github.com/savsgio/atreugo/v9"
 	"github.com/valyala/fasthttp"
 )
 

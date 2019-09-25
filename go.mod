@@ -1,8 +1,9 @@
-module github.com/savsgio/atreugo/v8
+module github.com/savsgio/atreugo/v9
 
 go 1.13
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fasthttp/router v0.5.1
 	github.com/google/uuid v1.1.1
 	github.com/json-iterator/go v1.1.7

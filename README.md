@@ -16,7 +16,7 @@ It's build on top of [fasthttp](https://github.com/valyala/fasthttp).
 - **WITH** Go modules:
 
 ```bash
-go get github.com/savsgio/atreugo/v8
+go get github.com/savsgio/atreugo/v9
 ```
 
 - **WITHOUT** Go modules:
