@@ -84,39 +84,39 @@ func TestRouter_middlewares(t *testing.T) {
 
 	index := 0
 
-	s.UseBefore(func(ctx *RequestCtx) (int, error) {
+	s.UseBefore(func(ctx *RequestCtx) error {
 		index++
 		callOrder["globalBefore"] = index
-		return 200, nil
+		return ctx.Next()
 	})
-	s.UseAfter(func(ctx *RequestCtx) (int, error) {
+	s.UseAfter(func(ctx *RequestCtx) error {
 		index++
 		callOrder["globalAfter"] = index
-		return 200, nil
+		return ctx.Next()
 	})
 
 	v1 := s.NewGroupPath("/v1")
-	v1.UseBefore(func(ctx *RequestCtx) (int, error) {
+	v1.UseBefore(func(ctx *RequestCtx) error {
 		index++
 		callOrder["groupBefore"] = index
-		return 200, nil
+		return ctx.Next()
 	})
-	v1.UseAfter(func(ctx *RequestCtx) (int, error) {
+	v1.UseAfter(func(ctx *RequestCtx) error {
 		index++
 		callOrder["groupAfter"] = index
-		return 200, nil
+		return ctx.Next()
 	})
 
 	filters := Filters{
-		Before: []Middleware{func(ctx *RequestCtx) (int, error) {
+		Before: []Middleware{func(ctx *RequestCtx) error {
 			index++
 			callOrder["filterBefore"] = index
-			return 200, nil
+			return ctx.Next()
 		}},
-		After: []Middleware{func(ctx *RequestCtx) (int, error) {
+		After: []Middleware{func(ctx *RequestCtx) error {
 			index++
 			callOrder["filterAfter"] = index
-			return 200, nil
+			return ctx.Next()
 		}},
 	}
 
@@ -197,31 +197,31 @@ func TestRouter_handler(t *testing.T) {
 
 	viewFn := func(ctx *RequestCtx) error {
 		handlerCounter.viewCalled = true
-		return nil
+		return ctx.TextResponse("Ok")
 	}
 	before := []Middleware{
-		func(ctx *RequestCtx) (int, error) {
+		func(ctx *RequestCtx) error {
 			handlerCounter.beforeMiddlewares++
-			return fasthttp.StatusOK, nil
+			return ctx.Next()
 		},
 	}
 	after := []Middleware{
-		func(ctx *RequestCtx) (int, error) {
+		func(ctx *RequestCtx) error {
 			handlerCounter.afterMiddlewares++
-			return fasthttp.StatusOK, nil
+			return ctx.Next()
 		},
 	}
 	filters := Filters{
 		Before: []Middleware{
-			func(ctx *RequestCtx) (int, error) {
+			func(ctx *RequestCtx) error {
 				handlerCounter.beforeFilters++
-				return fasthttp.StatusOK, nil
+				return ctx.Next()
 			},
 		},
 		After: []Middleware{
-			func(ctx *RequestCtx) (int, error) {
+			func(ctx *RequestCtx) error {
 				handlerCounter.afterFilters++
-				return fasthttp.StatusOK, nil
+				return ctx.Next()
 			},
 		},
 	}
@@ -243,6 +243,32 @@ func TestRouter_handler(t *testing.T) {
 				statusCode: fasthttp.StatusOK,
 				counter: counter{
 					viewCalled:        true,
+					beforeMiddlewares: len(before),
+					beforeFilters:     len(filters.Before),
+					afterFilters:      len(filters.After),
+					afterMiddlewares:  len(after),
+				},
+			},
+		},
+		{
+			name: "SkipView",
+			args: args{
+				viewFn: viewFn,
+				before: []Middleware{
+					func(ctx *RequestCtx) error {
+						handlerCounter.beforeMiddlewares++
+						ctx.SkipView()
+
+						return ctx.Next()
+					},
+				},
+				after:   after,
+				filters: filters,
+			},
+			want: want{
+				statusCode: fasthttp.StatusOK,
+				counter: counter{
+					viewCalled:        false,
 					beforeMiddlewares: len(before),
 					beforeFilters:     len(filters.Before),
 					afterFilters:      len(filters.After),
@@ -276,9 +302,9 @@ func TestRouter_handler(t *testing.T) {
 			args: args{
 				viewFn: viewFn,
 				before: []Middleware{
-					func(ctx *RequestCtx) (int, error) {
+					func(ctx *RequestCtx) error {
 						handlerCounter.beforeMiddlewares++
-						return fasthttp.StatusBadRequest, err
+						return ctx.ErrorResponse(err, fasthttp.StatusBadRequest)
 					},
 				},
 				after:   after,
@@ -303,15 +329,15 @@ func TestRouter_handler(t *testing.T) {
 				after:  after,
 				filters: Filters{
 					Before: []Middleware{
-						func(ctx *RequestCtx) (int, error) {
+						func(ctx *RequestCtx) error {
 							handlerCounter.beforeFilters++
-							return fasthttp.StatusBadRequest, err
+							return ctx.ErrorResponse(err, fasthttp.StatusBadRequest)
 						},
 					},
 					After: []Middleware{
-						func(ctx *RequestCtx) (int, error) {
+						func(ctx *RequestCtx) error {
 							handlerCounter.afterFilters++
-							return fasthttp.StatusOK, nil
+							return ctx.Next()
 						},
 					},
 				},
@@ -335,15 +361,15 @@ func TestRouter_handler(t *testing.T) {
 				after:  after,
 				filters: Filters{
 					Before: []Middleware{
-						func(ctx *RequestCtx) (int, error) {
+						func(ctx *RequestCtx) error {
 							handlerCounter.beforeFilters++
-							return fasthttp.StatusOK, nil
+							return ctx.Next()
 						},
 					},
 					After: []Middleware{
-						func(ctx *RequestCtx) (int, error) {
+						func(ctx *RequestCtx) error {
 							handlerCounter.afterFilters++
-							return fasthttp.StatusBadRequest, err
+							return ctx.ErrorResponse(err, fasthttp.StatusBadRequest)
 						},
 					},
 				},
@@ -365,9 +391,9 @@ func TestRouter_handler(t *testing.T) {
 				viewFn: viewFn,
 				before: before,
 				after: []Middleware{
-					func(ctx *RequestCtx) (int, error) {
+					func(ctx *RequestCtx) error {
 						handlerCounter.afterMiddlewares++
-						return fasthttp.StatusBadRequest, err
+						return ctx.ErrorResponse(err, fasthttp.StatusBadRequest)
 					},
 				},
 				filters: filters,
@@ -440,11 +466,11 @@ func TestRouter_handler(t *testing.T) {
 
 func TestRouter_UseBefore(t *testing.T) {
 	middlewareFns := []Middleware{
-		func(ctx *RequestCtx) (int, error) {
-			return 403, errors.New("Bad request")
+		func(ctx *RequestCtx) error {
+			return ctx.ErrorResponse(errors.New("Bad request"), fasthttp.StatusBadRequest)
 		},
-		func(ctx *RequestCtx) (int, error) {
-			return 0, nil
+		func(ctx *RequestCtx) error {
+			return ctx.Next()
 		},
 	}
 
@@ -458,11 +484,11 @@ func TestRouter_UseBefore(t *testing.T) {
 
 func TestRouter_UseAfter(t *testing.T) {
 	middlewareFns := []Middleware{
-		func(ctx *RequestCtx) (int, error) {
-			return 403, errors.New("Bad request")
+		func(ctx *RequestCtx) error {
+			return ctx.ErrorResponse(errors.New("Bad request"), fasthttp.StatusBadRequest)
 		},
-		func(ctx *RequestCtx) (int, error) {
-			return 0, nil
+		func(ctx *RequestCtx) error {
+			return ctx.Next()
 		},
 	}
 

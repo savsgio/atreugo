@@ -6,6 +6,26 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+func Test_acquireRequestCtx(t *testing.T) {
+	ctx := new(fasthttp.RequestCtx)
+	actx := acquireRequestCtx(ctx)
+
+	if actx.RequestCtx != ctx {
+		t.Errorf("acquireRequestCtx() = %p, want %p", actx.RequestCtx, ctx)
+	}
+}
+
+func Test_releaseRequestCtx(t *testing.T) {
+	ctx := new(fasthttp.RequestCtx)
+	actx := acquireRequestCtx(ctx)
+
+	releaseRequestCtx(actx)
+
+	if actx.RequestCtx != nil {
+		t.Errorf("releaseRequestCtx() *fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)
+	}
+}
+
 func TestRequestCtx_reset(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
 	actx := acquireRequestCtx(ctx)
@@ -30,22 +50,21 @@ func TestRequestCtx_RequestID(t *testing.T) {
 	}
 }
 
-func Test_acquireRequestCtx(t *testing.T) {
-	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+func Test_Next(t *testing.T) {
+	ctx := acquireRequestCtx(new(fasthttp.RequestCtx))
 
-	if actx.RequestCtx != ctx {
-		t.Errorf("acquireRequestCtx() = %p, want %p", actx.RequestCtx, ctx)
+	if err := ctx.Next(); err != nil {
+		t.Errorf("ctx.Next() unexpected error: %v", err)
 	}
 }
 
-func Test_releaseRequestCtx(t *testing.T) {
+func Test_SkipView(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
 	actx := acquireRequestCtx(ctx)
 
-	releaseRequestCtx(actx)
+	actx.SkipView()
 
-	if actx.RequestCtx != nil {
-		t.Errorf("releaseRequestCtx() *fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)
+	if !actx.skipView {
+		t.Error("ctx.SkipView() is not true")
 	}
 }

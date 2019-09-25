@@ -82,8 +82,17 @@ func (r *Router) addRoute(httpMethod, url string, handler fasthttp.RequestHandle
 func (r *Router) handler(viewFn View, filters Filters) fasthttp.RequestHandler {
 	mdlws := r.middlewares()
 
-	before := append(mdlws.Before, filters.Before...)
-	after := append(filters.After, mdlws.After...)
+	hs := append(mdlws.Before, filters.Before...)
+	hs = append(hs, func(ctx *RequestCtx) error {
+		if !ctx.skipView {
+			if err := viewFn(ctx); err != nil {
+				return err
+			}
+		}
+		return ctx.Next()
+	})
+	hs = append(hs, filters.After...)
+	hs = append(hs, mdlws.After...)
 
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := acquireRequestCtx(ctx)
@@ -92,18 +101,8 @@ func (r *Router) handler(viewFn View, filters Filters) fasthttp.RequestHandler {
 			r.log.Debugf("%s %s", actx.Method(), actx.URI())
 		}
 
-		var err error
-		var statusCode int
-
-		if statusCode, err = execMiddlewares(actx, before); err == nil {
-			if err = viewFn(actx); err != nil {
-				statusCode = actx.Response.StatusCode()
-			} else {
-				statusCode, err = execMiddlewares(actx, after)
-			}
-		}
-
-		if err != nil {
+		if err := execute(actx, hs); err != nil {
+			statusCode := actx.Response.StatusCode()
 			if statusCode == fasthttp.StatusOK {
 				statusCode = fasthttp.StatusInternalServerError
 			}

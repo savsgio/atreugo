@@ -8,23 +8,26 @@ import (
 )
 
 // checkTokenMiddleware middleware to check jwt token authorization
-func authMiddleware(ctx *atreugo.RequestCtx) (int, error) {
+func authMiddleware(ctx *atreugo.RequestCtx) error {
 	// Avoid middleware when you are going to login view
 	if string(ctx.Path()) == "/login" {
-		return fasthttp.StatusOK, nil
+		return ctx.Next()
 	}
 
 	jwtCookie := ctx.Request.Header.Cookie("atreugo_jwt")
 
 	if len(jwtCookie) == 0 {
-		return fasthttp.StatusForbidden, errors.New("login required")
+		return ctx.ErrorResponse(errors.New("login required"), fasthttp.StatusForbidden)
 	}
 
 	token, _, err := validateToken(string(jwtCookie))
-
-	if !token.Valid {
-		return fasthttp.StatusForbidden, errors.New("your session is expired, login again please")
+	if err != nil {
+		return err
 	}
 
-	return fasthttp.StatusOK, err
+	if !token.Valid {
+		return ctx.ErrorResponse(errors.New("your session is expired, login again please"), fasthttp.StatusForbidden)
+	}
+
+	return ctx.Next()
 }

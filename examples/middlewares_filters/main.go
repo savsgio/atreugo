@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/savsgio/atreugo/v8"
+	"github.com/savsgio/atreugo/v8/middlewares"
 )
 
 func main() {
@@ -11,7 +12,7 @@ func main() {
 	server := atreugo.New(config)
 
 	// Register before middlewares
-	server.UseBefore(beforeMiddleware)
+	server.UseBefore(middlewares.RequestIDMiddleware, beforeMiddleware)
 
 	// Register after middlewares
 	server.UseAfter(afterMiddleware)

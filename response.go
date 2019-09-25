@@ -99,3 +99,14 @@ func (ctx *RequestCtx) RedirectResponse(url string, statusCode int) error {
 
 	return nil
 }
+
+// ErrorResponse returns an error response.
+func (ctx *RequestCtx) ErrorResponse(err error, statusCode ...int) error {
+	if len(statusCode) > 0 {
+		ctx.SetStatusCode(statusCode[0])
+	} else {
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+	}
+
+	return err
+}

@@ -2,6 +2,7 @@ package atreugo
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -588,6 +589,57 @@ func TestRedirectResponse(t *testing.T) {
 			responseLocation := string(actx.Response.Header.Peek("Location"))
 			if responseLocation != tt.want.locationURL {
 				t.Errorf("Header content-disposition: '%v', want: '%v'", responseLocation, tt.want.locationURL)
+			}
+
+			responseStatusCode := actx.Response.StatusCode()
+			if responseStatusCode != tt.want.statusCode {
+				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
+			}
+		})
+	}
+}
+
+func Test_ErrorResponse(t *testing.T) {
+	type args struct {
+		statusCode []int
+	}
+	type want struct {
+		statusCode int
+	}
+
+	err := errors.New("test error")
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "WithStatusCode",
+			args: args{
+				statusCode: []int{fasthttp.StatusBadRequest},
+			},
+			want: want{
+				statusCode: fasthttp.StatusBadRequest,
+			},
+		},
+		{
+			name: "WithOutStatusCode",
+			args: args{
+				statusCode: make([]int, 0),
+			},
+			want: want{
+				statusCode: fasthttp.StatusInternalServerError,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := new(fasthttp.RequestCtx)
+			actx := acquireRequestCtx(ctx)
+
+			if actx.ErrorResponse(err, tt.args.statusCode...) != err {
+				t.Errorf("Unexpected error == %v", err)
 			}
 
 			responseStatusCode := actx.Response.StatusCode()

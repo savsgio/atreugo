@@ -19,15 +19,19 @@ func include(vs []string, t string) bool {
 	return indexOf(vs, t) >= 0
 }
 
-// execMiddlewares execute all the middlewares functions with the request context given
-func execMiddlewares(ctx *RequestCtx, middlewares []Middleware) (int, error) {
-	for _, middlewareFn := range middlewares {
-		if statusCode, err := middlewareFn(ctx); err != nil {
-			return statusCode, err
+// execute executes all middlewares + filters + view with the given request context
+func execute(ctx *RequestCtx, hs []Middleware) error {
+	for _, h := range hs {
+		if err := h(ctx); err != nil {
+			return err
 		}
+		if !ctx.next {
+			return nil
+		}
+		ctx.next = false
 	}
 
-	return fasthttp.StatusOK, nil
+	return nil
 }
 
 func viewToHandler(view View, errorView ErrorView) fasthttp.RequestHandler {

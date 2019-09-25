@@ -5,14 +5,14 @@ import (
 	"github.com/savsgio/go-logger"
 )
 
-func beforeFilter(ctx *atreugo.RequestCtx) (int, error) {
+func beforeFilter(ctx *atreugo.RequestCtx) error {
 	logger.Info("Filter executed BEFORE view")
 
-	return 200, nil
+	return ctx.Next()
 }
 
-func afterFilter(ctx *atreugo.RequestCtx) (int, error) {
+func afterFilter(ctx *atreugo.RequestCtx) error {
 	logger.Info("Filter executed AFTER view")
 
-	return 200, nil
+	return ctx.Next()
 }

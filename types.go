@@ -7,6 +7,7 @@ import (
 
 	fastrouter "github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger"
+	"github.com/savsgio/gotils/nocopy"
 	"github.com/valyala/fasthttp"
 )
 
@@ -14,7 +15,7 @@ import (
 //
 // It is prohibited copying Atreugo values. Create new values instead.
 type Atreugo struct {
-	noCopy noCopy
+	noCopy nocopy.NoCopy
 
 	server *fasthttp.Server
 	log    *logger.Logger
@@ -28,7 +29,7 @@ type Atreugo struct {
 //
 // It is prohibited copying Router values. Create new values instead.
 type Router struct {
-	noCopy noCopy
+	noCopy nocopy.NoCopy
 
 	router *fastrouter.Router
 	log    *logger.Logger
@@ -276,7 +277,7 @@ type Config struct {
 //
 // It is prohibited copying StaticFS values. Create new values instead.
 type StaticFS struct {
-	noCopy noCopy
+	noCopy nocopy.NoCopy
 
 	// Filters to be executed before/after request a file.
 	Filters Filters
@@ -352,7 +353,10 @@ type StaticFS struct {
 //
 // It is prohibited copying RequestCtx values. Create new values instead.
 type RequestCtx struct {
-	noCopy noCopy
+	noCopy nocopy.NoCopy
+
+	next     bool
+	skipView bool
 
 	*fasthttp.RequestCtx
 }
@@ -367,7 +371,7 @@ type ErrorView func(*RequestCtx, error, int)
 type PanicView func(*RequestCtx, interface{})
 
 // Middleware must process all incoming requests before/after defined views.
-type Middleware func(*RequestCtx) (int, error)
+type Middleware View
 
 // Filters like middlewares, but for specific paths.
 // It will be executed before and after the view defined in the path

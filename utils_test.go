@@ -79,14 +79,18 @@ func Test_include(t *testing.T) {
 	}
 }
 
-func Test_execMiddlewares(t *testing.T) {
+func Test_execute(t *testing.T) {
 	type args struct {
-		middlewares []Middleware
+		hs []Middleware
 	}
 	type want struct {
 		statusCode int
+		counter    int
 		err        bool
 	}
+
+	counter := 0
+
 	tests := []struct {
 		name string
 		args args
@@ -95,41 +99,74 @@ func Test_execMiddlewares(t *testing.T) {
 		{
 			name: "OK",
 			args: args{
-				middlewares: []Middleware{
-					func(ctx *RequestCtx) (int, error) {
-						return 200, nil
+				hs: []Middleware{
+					func(ctx *RequestCtx) error {
+						counter++
+						return ctx.Next()
+					},
+					func(ctx *RequestCtx) error {
+						counter++
+						return ctx.Next()
 					},
 				},
 			},
 			want: want{
-				statusCode: 200,
+				statusCode: fasthttp.StatusOK,
+				counter:    2,
+				err:        false,
+			},
+		},
+		{
+			name: "Response",
+			args: args{
+				hs: []Middleware{
+					func(ctx *RequestCtx) error {
+						counter++
+						return ctx.TextResponse("Go")
+					},
+					func(ctx *RequestCtx) error {
+						counter++
+						return ctx.Next()
+					},
+				},
+			},
+			want: want{
+				statusCode: fasthttp.StatusOK,
+				counter:    1,
 				err:        false,
 			},
 		},
 		{
 			name: "Error",
 			args: args{
-				middlewares: []Middleware{
-					func(ctx *RequestCtx) (int, error) {
-						return 500, errors.New("middleware error")
+				hs: []Middleware{
+					func(ctx *RequestCtx) error {
+						counter++
+						return errors.New("middleware error")
+					},
+					func(ctx *RequestCtx) error {
+						counter++
+						return ctx.Next()
 					},
 				},
 			},
 			want: want{
-				statusCode: 500,
+				statusCode: fasthttp.StatusInternalServerError,
+				counter:    1,
 				err:        true,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := new(RequestCtx)
+			counter = 0
+			ctx := acquireRequestCtx(new(fasthttp.RequestCtx))
 
-			statusCode, err := execMiddlewares(ctx, tt.args.middlewares)
+			err := execute(ctx, tt.args.hs)
 			if (err != nil) != tt.want.err {
-				t.Errorf("execMiddlewares() unexpected error: %v", err)
-			} else if statusCode != tt.want.statusCode {
-				t.Errorf("execMiddlewares() status code = %v, want %v", statusCode, tt.want)
+				t.Errorf("execute() unexpected error: %v", err)
+			} else if counter != tt.want.counter {
+				t.Errorf("execute() counter = %d, want %d", counter, tt.want.counter)
 			}
 		})
 	}

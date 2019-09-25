@@ -49,14 +49,10 @@ func TestRequestIDMiddleware(t *testing.T) {
 				ctx.Request.Header.SetBytesV(atreugo.XRequestIDHeader, tt.args.predefinedRequestID)
 			}
 
-			statusCode, err := RequestIDMiddleware(ctx)
+			err := RequestIDMiddleware(ctx)
 			if (err != nil) != tt.want.err {
 				t.Errorf("RequestIDMiddleware() unexpected error: %v", err)
 				return
-			}
-
-			if statusCode != fasthttp.StatusOK {
-				t.Errorf("RequestIDMiddleware() = %v, want %v", statusCode, fasthttp.StatusOK)
 			}
 
 			value := ctx.Request.Header.Peek(atreugo.XRequestIDHeader)

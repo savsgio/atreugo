@@ -24,10 +24,24 @@ func releaseRequestCtx(actx *RequestCtx) {
 }
 
 func (ctx *RequestCtx) reset() {
+	ctx.skipView = false
 	ctx.RequestCtx = nil
 }
 
 // RequestID returns the "X-Request-ID" header value
 func (ctx *RequestCtx) RequestID() []byte {
 	return ctx.Request.Header.Peek(XRequestIDHeader)
+}
+
+// Next pass control to the next middleware/filter/view function
+func (ctx *RequestCtx) Next() error {
+	ctx.next = true
+	return nil
+}
+
+// SkipView sets flag to skip view execution in the current request
+//
+// Use it in before middlewares
+func (ctx *RequestCtx) SkipView() {
+	ctx.skipView = true
 }
