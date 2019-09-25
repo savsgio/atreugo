@@ -65,6 +65,7 @@ func New(cfg *Config) *Atreugo {
 		server: &fasthttp.Server{
 			Name:                               cfg.Name,
 			Handler:                            handler,
+			HeaderReceived:                     cfg.HeaderReceived,
 			Concurrency:                        cfg.Concurrency,
 			DisableKeepalive:                   cfg.DisableKeepalive,
 			ReadBufferSize:                     cfg.ReadBufferSize,
