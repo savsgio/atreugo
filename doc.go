@@ -41,7 +41,7 @@ It's build on top of fasthttp and provides the following features:
         * Group paths and middlewares.
         * Static files.
         * Serve one file like pdf, etc.
-        * Filters (middlewares) to especific views.
+        * Filters (middlewares) to specific views.
         * net/http handlers support.
         * fasthttp handlers support
 
