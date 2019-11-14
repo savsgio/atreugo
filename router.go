@@ -35,6 +35,7 @@ func defaultErrorView(ctx *RequestCtx, err error, statusCode int) {
 func (r *Router) NewGroupPath(path string) *Router {
 	g := new(Router)
 	g.log = r.log
+	g.errorView = r.errorView
 	g.router = r.router.Group(path)
 	g.parent = r
 	g.beginPath = path
