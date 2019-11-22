@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/savsgio/atreugo/v9"
+	"github.com/savsgio/atreugo/v10"
 	"github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
 )

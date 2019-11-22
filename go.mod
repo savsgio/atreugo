@@ -1,4 +1,4 @@
-module github.com/savsgio/atreugo/v9
+module github.com/savsgio/atreugo/v10
 
 go 1.13
 

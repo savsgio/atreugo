@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"github.com/google/uuid"
-	"github.com/savsgio/atreugo/v9"
+	"github.com/savsgio/atreugo/v10"
 )
 
 // RequestIDMiddleware adds an identifier to the request

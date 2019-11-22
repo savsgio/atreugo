@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 
-	"github.com/savsgio/atreugo/v9"
+	"github.com/savsgio/atreugo/v10"
 	"github.com/valyala/fasthttp"
 )
 
