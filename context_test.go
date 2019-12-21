@@ -29,8 +29,18 @@ func Test_releaseRequestCtx(t *testing.T) {
 func TestRequestCtx_reset(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
 	actx := acquireRequestCtx(ctx)
+	actx.Next()
+	actx.SkipView()
 
 	actx.reset()
+
+	if actx.next {
+		t.Errorf("reset() next is not 'false'")
+	}
+
+	if actx.skipView {
+		t.Errorf("reset() skipView is not 'false'")
+	}
 
 	if actx.RequestCtx != nil {
 		t.Errorf("reset() *fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)

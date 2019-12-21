@@ -24,6 +24,7 @@ func releaseRequestCtx(actx *RequestCtx) {
 }
 
 func (ctx *RequestCtx) reset() {
+	ctx.next = false
 	ctx.skipView = false
 	ctx.RequestCtx = nil
 }
