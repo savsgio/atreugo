@@ -3,7 +3,6 @@ package atreugo
 import (
 	"bytes"
 	"errors"
-	"math/rand"
 	"testing"
 	"time"
 
@@ -14,11 +13,6 @@ import (
 
 var testAtreugoConfig = &Config{
 	LogLevel: "fatal",
-}
-
-var random = func(min, max int) int {
-	rand.Seed(time.Now().Unix())
-	return rand.Intn(max-min) + min
 }
 
 func Test_New(t *testing.T) {
