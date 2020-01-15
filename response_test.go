@@ -520,13 +520,17 @@ func TestFileResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ioutil.WriteFile(tt.args.filePath, testFileContent, 0644)
+			if err := ioutil.WriteFile(tt.args.filePath, testFileContent, 0644); err != nil {
+				t.Fatalf("Error writing file %s", tt.args.filePath)
+			}
 			defer os.Remove(tt.args.filePath)
 
 			ctx := new(fasthttp.RequestCtx)
 			actx := acquireRequestCtx(ctx)
 
-			actx.FileResponse(tt.args.fileName, tt.args.filePath, tt.args.mimeType)
+			if err := actx.FileResponse(tt.args.fileName, tt.args.filePath, tt.args.mimeType); err != nil {
+				t.Fatalf("Error creating FileResponse for %s", tt.args.fileName)
+			}
 
 			responseBody := string(bytes.TrimSpace(actx.Response.Body()))
 			if responseBody != tt.want.body {
@@ -660,7 +664,9 @@ func Benchmark_FileResponse(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i <= b.N; i++ {
-		actx.FileResponse("hola", path, "text/plain")
+		if err := actx.FileResponse("hola", path, "text/plain"); err != nil {
+			b.Fatalf("Error calling FileResponse. %+v", err)
+		}
 	}
 }
 
@@ -679,6 +685,8 @@ func Benchmark_JSONResponse(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i <= b.N; i++ {
-		actx.JSONResponse(body)
+		if err := actx.JSONResponse(body); err != nil {
+			b.Fatalf("Error calling JSONResponse. %+v", err)
+		}
 	}
 }

@@ -514,7 +514,9 @@ func TestRouter_Path(t *testing.T) {
 		getPanic bool
 	}
 	testViewFn := func(ctx *RequestCtx) error {
-		ctx.WriteString("Test")
+		if _, err := ctx.WriteString("Test"); err != nil {
+			t.Fatalf("Error calling WriteString. %+v", err)
+		}
 		return nil
 	}
 
@@ -525,7 +527,9 @@ func TestRouter_Path(t *testing.T) {
 	testMuxHandler.HandleFunc("/", testNetHTTPHandler)
 
 	testHandler := func(ctx *fasthttp.RequestCtx) {
-		ctx.WriteString("Test")
+		if _, err := ctx.WriteString("Test"); err != nil {
+			t.Fatalf("Error in WriteString. %+v", err)
+		}
 	}
 
 	tests := []struct {

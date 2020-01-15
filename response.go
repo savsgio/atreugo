@@ -83,7 +83,9 @@ func (ctx *RequestCtx) FileResponse(fileName, filePath, mimeType string) error {
 
 	buff := bytebufferpool.Get()
 	buff.SetString("attachment; filename=")
-	buff.WriteString(fileName)
+	if _, err := buff.WriteString(fileName); err != nil {
+		return err
+	}
 
 	ctx.Response.Header.Set("Content-Disposition", buff.String())
 	ctx.SetContentType(mimeType)

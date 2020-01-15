@@ -478,7 +478,9 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 					t.Errorf("Unexpected error: %v", err)
 				}
 			case <-time.After(200 * time.Millisecond):
-				s.server.Shutdown()
+				if err := s.server.Shutdown(); err != nil {
+					t.Errorf("Error shutting down the server %+v", err)
+				}
 				if tt.want.getErr {
 					t.Error("Error expected")
 				}
