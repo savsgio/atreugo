@@ -1,0 +1,11 @@
+linters:
+  enable:
+    - megacheck
+    - govet
+    - errcheck
+    - unused
+    - structcheck
+  disable-all: false
+  fast: false
+
+
