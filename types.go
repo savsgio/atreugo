@@ -15,7 +15,7 @@ import (
 //
 // It is prohibited copying Atreugo values. Create new values instead.
 type Atreugo struct {
-	noCopy nocopy.NoCopy
+	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
 	server *fasthttp.Server
 	log    *logger.Logger
@@ -29,7 +29,7 @@ type Atreugo struct {
 //
 // It is prohibited copying Router values. Create new values instead.
 type Router struct {
-	noCopy nocopy.NoCopy
+	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
 	router *fastrouter.Router
 	log    *logger.Logger
@@ -277,7 +277,7 @@ type Config struct {
 //
 // It is prohibited copying StaticFS values. Create new values instead.
 type StaticFS struct {
-	noCopy nocopy.NoCopy
+	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
 	// Filters to be executed before/after request a file.
 	Filters Filters
@@ -353,7 +353,7 @@ type StaticFS struct {
 //
 // It is prohibited copying RequestCtx values. Create new values instead.
 type RequestCtx struct {
-	noCopy nocopy.NoCopy
+	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
 	next     bool
 	skipView bool

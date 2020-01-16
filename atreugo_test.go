@@ -3,7 +3,6 @@ package atreugo
 import (
 	"bytes"
 	"errors"
-	"math/rand"
 	"testing"
 	"time"
 
@@ -14,11 +13,6 @@ import (
 
 var testAtreugoConfig = &Config{
 	LogLevel: "fatal",
-}
-
-var random = func(min, max int) int {
-	rand.Seed(time.Now().Unix())
-	return rand.Intn(max-min) + min
 }
 
 func Test_New(t *testing.T) {
@@ -478,7 +472,9 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 					t.Errorf("Unexpected error: %v", err)
 				}
 			case <-time.After(200 * time.Millisecond):
-				s.server.Shutdown()
+				if err := s.server.Shutdown(); err != nil {
+					t.Errorf("Error shutting down the server %+v", err)
+				}
 				if tt.want.getErr {
 					t.Error("Error expected")
 				}
