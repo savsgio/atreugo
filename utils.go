@@ -8,9 +8,11 @@ func execute(ctx *RequestCtx, hs []Middleware) error {
 		if err := h(ctx); err != nil {
 			return err
 		}
+
 		if !ctx.next {
 			return nil
 		}
+
 		ctx.next = false
 	}
 

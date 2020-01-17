@@ -47,7 +47,7 @@ type Router struct {
 //
 // Default settings should satisfy the majority of Server users.
 // Adjust Server settings only if you really understand the consequences.
-type Config struct {
+type Config struct { // nolint:maligned
 	Addr string
 
 	// TLS/SSL options
@@ -82,7 +82,8 @@ type Config struct {
 	Reuseport bool
 
 	// Shutdown gracefully shuts down the server without interrupting any active connections.
-	// Shutdown works by first closing all open listeners and then waiting indefinitely for all connections to return to idle and then shut down.
+	// Shutdown works by first closing all open listeners and then waiting indefinitely for all connections
+	// to return to idle and then shut down.
 	GracefulShutdown bool
 
 	// Configurable view which is called when no matching route is

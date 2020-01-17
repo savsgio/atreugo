@@ -15,7 +15,7 @@ var testAtreugoConfig = &Config{
 	LogLevel: "fatal",
 }
 
-func Test_New(t *testing.T) {
+func Test_New(t *testing.T) { //nolint:funlen,gocognit
 	type args struct {
 		network              string
 		logLevel             string
@@ -23,6 +23,7 @@ func Test_New(t *testing.T) {
 		methodNotAllowedView View
 		panicView            PanicView
 	}
+
 	type want struct {
 		logLevel             string
 		notFoundView         bool
@@ -84,14 +85,18 @@ func Test_New(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
+
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			defer func() {
 				r := recover()
 
-				if tt.want.err && r == nil {
+				switch {
+				case tt.want.err && r == nil:
 					t.Errorf("Panic expected")
-				} else if !tt.want.err && r != nil {
+				case !tt.want.err && r != nil:
 					t.Errorf("Unexpected panic")
 				}
 			}()
@@ -133,15 +138,15 @@ func Test_New(t *testing.T) {
 					t.Errorf("Panic handler response == %s, want %s", ctx.Response.Body(), panicErr.Error())
 				}
 			}
-
 		})
 	}
 }
 
-func TestAtreugo_RedirectTrailingSlash(t *testing.T) {
+func TestAtreugo_RouterConfiguration(t *testing.T) {
 	type args struct {
 		v bool
 	}
+
 	type want struct {
 		v bool
 	}
@@ -171,145 +176,27 @@ func TestAtreugo_RedirectTrailingSlash(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(testAtreugoConfig)
 			s.RedirectTrailingSlash(tt.args.v)
+			s.RedirectFixedPath(tt.args.v)
+			s.HandleMethodNotAllowed(tt.args.v)
+			s.HandleOPTIONS(tt.args.v)
 
 			if s.router.RedirectTrailingSlash != tt.want.v {
 				t.Errorf("Router.RedirectTrailingSlash == %v, want %v", s.router.RedirectTrailingSlash, tt.want.v)
 			}
-		})
-	}
-}
-
-func TestAtreugo_RedirectFixedPath(t *testing.T) {
-	type args struct {
-		v bool
-	}
-	type want struct {
-		v bool
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "Enable",
-			args: args{
-				v: true,
-			},
-			want: want{
-				v: true,
-			},
-		},
-		{
-			name: "Disable",
-			args: args{
-				v: false,
-			},
-			want: want{
-				v: false,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(testAtreugoConfig)
-			s.RedirectFixedPath(tt.args.v)
 
 			if s.router.RedirectFixedPath != tt.want.v {
 				t.Errorf("Router.RedirectFixedPath == %v, want %v", s.router.RedirectFixedPath, tt.want.v)
 			}
-		})
-	}
-}
-
-func TestAtreugo_HandleMethodNotAllowed(t *testing.T) {
-	type args struct {
-		v bool
-	}
-	type want struct {
-		v bool
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "Enable",
-			args: args{
-				v: true,
-			},
-			want: want{
-				v: true,
-			},
-		},
-		{
-			name: "Disable",
-			args: args{
-				v: false,
-			},
-			want: want{
-				v: false,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(testAtreugoConfig)
-			s.HandleMethodNotAllowed(tt.args.v)
 
 			if s.router.HandleMethodNotAllowed != tt.want.v {
 				t.Errorf("Router.HandleMethodNotAllowed == %v, want %v", s.router.HandleMethodNotAllowed, tt.want.v)
 			}
-		})
-	}
-}
-
-func TestAtreugo_HandleOPTIONS(t *testing.T) {
-	type args struct {
-		v bool
-	}
-	type want struct {
-		v bool
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "Enable",
-			args: args{
-				v: true,
-			},
-			want: want{
-				v: true,
-			},
-		},
-		{
-			name: "Disable",
-			args: args{
-				v: false,
-			},
-			want: want{
-				v: false,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New(testAtreugoConfig)
-			s.HandleOPTIONS(tt.args.v)
 
 			if s.router.HandleOPTIONS != tt.want.v {
 				t.Errorf("Router.HandleOPTIONS == %v, want %v", s.router.HandleOPTIONS, tt.want.v)
@@ -323,8 +210,8 @@ func TestAtreugo_Serve(t *testing.T) {
 	s := New(cfg)
 
 	ln := fasthttputil.NewInmemoryListener()
-
 	errCh := make(chan error, 1)
+
 	go func() {
 		errCh <- s.Serve(ln)
 	}()
@@ -352,8 +239,8 @@ func TestAtreugo_ServeGracefully(t *testing.T) {
 	s := New(cfg)
 
 	ln := fasthttputil.NewInmemoryListener()
-
 	errCh := make(chan error, 1)
+
 	go func() {
 		errCh <- s.ServeGracefully(ln)
 	}()
@@ -365,9 +252,11 @@ func TestAtreugo_ServeGracefully(t *testing.T) {
 		if !cfg.GracefulShutdown {
 			t.Errorf("Config.GracefulShutdown = %v, want %v", cfg.GracefulShutdown, true)
 		}
+
 		if s.server.ReadTimeout != defaultReadTimeout {
 			t.Errorf("fasthttp.Server.ReadTimeout = %v, want %v", s.server.ReadTimeout, defaultReadTimeout)
 		}
+
 		if s.cfg.ReadTimeout != defaultReadTimeout {
 			t.Errorf("Config.ReadTimeout = %v, want %v", s.cfg.ReadTimeout, defaultReadTimeout)
 		}
@@ -391,20 +280,22 @@ func TestAtreugo_SetLogOutput(t *testing.T) {
 	s.SetLogOutput(output)
 	s.log.Info("Test")
 
-	if len(output.Bytes()) <= 0 {
+	if len(output.Bytes()) == 0 {
 		t.Error("SetLogOutput() log output was not changed")
 	}
 }
 
-func TestAtreugo_ListenAndServe(t *testing.T) {
+func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 	type args struct {
 		addr      string
 		graceful  bool
 		tlsEnable bool
 	}
+
 	type want struct {
 		getErr bool
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -452,7 +343,9 @@ func TestAtreugo_ListenAndServe(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(&Config{
 				Addr:             tt.args.addr,

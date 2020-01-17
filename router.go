@@ -22,6 +22,7 @@ func newRouter(log *logger.Logger, errorView ErrorView) *Router {
 	if errorView == nil {
 		errorView = defaultErrorView
 	}
+
 	r.errorView = errorView
 
 	return r

@@ -7,14 +7,16 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func TestRequestIDMiddleware(t *testing.T) {
+func TestRequestIDMiddleware(t *testing.T) { //nolint:funlen
 	type args struct {
 		predefinedRequestID []byte
 	}
+
 	type want struct {
 		newValue bool
 		err      bool
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -41,10 +43,14 @@ func TestRequestIDMiddleware(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
+
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := new(atreugo.RequestCtx)
 			ctx.RequestCtx = new(fasthttp.RequestCtx)
+
 			if tt.args.predefinedRequestID != nil {
 				ctx.Request.Header.SetBytesV(atreugo.XRequestIDHeader, tt.args.predefinedRequestID)
 			}

@@ -20,6 +20,7 @@ func New(cfg *Config) *Atreugo {
 	if cfg.Network != "" && !gotils.StringSliceInclude(validNetworks, cfg.Network) {
 		panic("Invalid network: " + cfg.Network)
 	}
+
 	if cfg.Network == "" {
 		cfg.Network = defaultNetwork
 	}
@@ -27,17 +28,20 @@ func New(cfg *Config) *Atreugo {
 	if cfg.Name == "" {
 		cfg.Name = defaultServerName
 	}
+
 	if cfg.LogName == "" {
 		cfg.LogName = defaultLogName
 	}
+
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = logger.INFO
 	}
+
 	if cfg.GracefulShutdown && cfg.ReadTimeout <= 0 {
 		cfg.ReadTimeout = defaultReadTimeout
 	}
-	cfg.socketFileMode = 0666
 
+	cfg.socketFileMode = 0666
 	log := logger.New(cfg.LogName, cfg.LogLevel, os.Stderr)
 
 	r := newRouter(log, cfg.ErrorView)
@@ -45,9 +49,11 @@ func New(cfg *Config) *Atreugo {
 	if cfg.NotFoundView != nil {
 		r.router.NotFound = viewToHandler(cfg.NotFoundView, r.errorView)
 	}
+
 	if cfg.MethodNotAllowedView != nil {
 		r.router.MethodNotAllowed = viewToHandler(cfg.MethodNotAllowedView, r.errorView)
 	}
+
 	if cfg.PanicView != nil {
 		r.router.PanicHandler = func(ctx *fasthttp.RequestCtx, err interface{}) {
 			actx := acquireRequestCtx(ctx)
@@ -62,40 +68,42 @@ func New(cfg *Config) *Atreugo {
 	}
 
 	server := &Atreugo{
-		server: &fasthttp.Server{
-			Name:                               cfg.Name,
-			Handler:                            handler,
-			HeaderReceived:                     cfg.HeaderReceived,
-			Concurrency:                        cfg.Concurrency,
-			DisableKeepalive:                   cfg.DisableKeepalive,
-			ReadBufferSize:                     cfg.ReadBufferSize,
-			WriteBufferSize:                    cfg.WriteBufferSize,
-			ReadTimeout:                        cfg.ReadTimeout,
-			WriteTimeout:                       cfg.WriteTimeout,
-			IdleTimeout:                        cfg.IdleTimeout,
-			MaxConnsPerIP:                      cfg.MaxConnsPerIP,
-			MaxRequestsPerConn:                 cfg.MaxRequestsPerConn,
-			MaxKeepaliveDuration:               cfg.MaxKeepaliveDuration,
-			MaxRequestBodySize:                 cfg.MaxRequestBodySize,
-			ReduceMemoryUsage:                  cfg.ReduceMemoryUsage,
-			GetOnly:                            cfg.GetOnly,
-			LogAllErrors:                       cfg.LogAllErrors,
-			DisableHeaderNamesNormalizing:      cfg.DisableHeaderNamesNormalizing,
-			SleepWhenConcurrencyLimitsExceeded: cfg.SleepWhenConcurrencyLimitsExceeded,
-			NoDefaultServerHeader:              cfg.NoDefaultServerHeader,
-			NoDefaultContentType:               cfg.NoDefaultContentType,
-			ConnState:                          cfg.ConnState,
-			KeepHijackedConns:                  cfg.KeepHijackedConns,
-			Logger:                             log,
-		},
-
-		log: log,
-		cfg: cfg,
-
+		server: fasthttpServer(cfg, handler, log),
+		log:    log,
+		cfg:    cfg,
 		Router: r,
 	}
 
 	return server
+}
+
+func fasthttpServer(cfg *Config, handler fasthttp.RequestHandler, log fasthttp.Logger) *fasthttp.Server {
+	return &fasthttp.Server{
+		Name:                               cfg.Name,
+		Handler:                            handler,
+		HeaderReceived:                     cfg.HeaderReceived,
+		Concurrency:                        cfg.Concurrency,
+		DisableKeepalive:                   cfg.DisableKeepalive,
+		ReadBufferSize:                     cfg.ReadBufferSize,
+		WriteBufferSize:                    cfg.WriteBufferSize,
+		ReadTimeout:                        cfg.ReadTimeout,
+		WriteTimeout:                       cfg.WriteTimeout,
+		IdleTimeout:                        cfg.IdleTimeout,
+		MaxConnsPerIP:                      cfg.MaxConnsPerIP,
+		MaxRequestsPerConn:                 cfg.MaxRequestsPerConn,
+		MaxKeepaliveDuration:               cfg.MaxKeepaliveDuration,
+		MaxRequestBodySize:                 cfg.MaxRequestBodySize,
+		ReduceMemoryUsage:                  cfg.ReduceMemoryUsage,
+		GetOnly:                            cfg.GetOnly,
+		LogAllErrors:                       cfg.LogAllErrors,
+		DisableHeaderNamesNormalizing:      cfg.DisableHeaderNamesNormalizing,
+		SleepWhenConcurrencyLimitsExceeded: cfg.SleepWhenConcurrencyLimitsExceeded,
+		NoDefaultServerHeader:              cfg.NoDefaultServerHeader,
+		NoDefaultContentType:               cfg.NoDefaultContentType,
+		ConnState:                          cfg.ConnState,
+		KeepHijackedConns:                  cfg.KeepHijackedConns,
+		Logger:                             log,
+	}
 }
 
 // RedirectTrailingSlash enables/disables automatic redirection if the current route
@@ -163,7 +171,6 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 		}
 
 		s.log.Infof("Listening on: %s://%s/", schema, s.cfg.Addr)
-
 	} else {
 		s.log.Infof("Listening on (network: %s): %s ", s.cfg.Network, s.cfg.Addr)
 	}

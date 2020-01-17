@@ -8,7 +8,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func init() {
+func init() { //nolint:gochecknoinits
 	logger.SetLevel(logger.DEBUG)
 }
 

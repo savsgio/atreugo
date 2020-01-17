@@ -20,6 +20,7 @@ var requestCtxPool = sync.Pool{
 func acquireRequestCtx(ctx *fasthttp.RequestCtx) *RequestCtx {
 	actx := requestCtxPool.Get().(*RequestCtx)
 	actx.RequestCtx = ctx
+
 	return actx
 }
 

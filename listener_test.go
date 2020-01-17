@@ -4,17 +4,19 @@ import (
 	"testing"
 )
 
-func TestAtreugo_getListener(t *testing.T) {
+func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 	type args struct {
 		addr      string
 		network   string
 		reuseport bool
 	}
+
 	type want struct {
 		addr    string
 		network string
 		err     bool
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -88,7 +90,9 @@ func TestAtreugo_getListener(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &Config{
 				Addr:      tt.args.addr,

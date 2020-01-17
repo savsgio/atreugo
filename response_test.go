@@ -15,10 +15,12 @@ func Test_newResponse(t *testing.T) {
 		contentType string
 		statusCode  []int
 	}
+
 	type want struct {
 		contentType string
 		statusCode  int
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -48,7 +50,9 @@ func Test_newResponse(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
 			actx := acquireRequestCtx(ctx)
@@ -68,17 +72,19 @@ func Test_newResponse(t *testing.T) {
 	}
 }
 
-func TestJSONResponse(t *testing.T) {
+func TestJSONResponse(t *testing.T) { //nolint:funlen
 	type args struct {
 		body       interface{}
 		statusCode int
 	}
+
 	type want struct {
 		body        string
 		statusCode  int
 		contentType string
 		err         bool
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -112,7 +118,9 @@ func TestJSONResponse(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
 			actx := acquireRequestCtx(ctx)
@@ -140,348 +148,112 @@ func TestJSONResponse(t *testing.T) {
 	}
 }
 
-func TestHTTPResponse(t *testing.T) {
+func TestResponses(t *testing.T) { // nolint:funlen
 	type args struct {
-		body       string
-		statusCode int
+		fn      func(string, ...int) error
+		fnBytes func([]byte, ...int) error
 	}
+
 	type want struct {
 		body        string
 		statusCode  int
 		contentType string
 	}
+
+	ctx := new(fasthttp.RequestCtx)
+	actx := acquireRequestCtx(ctx)
+	body := "<h1>Test</h1>"
+	statusCode := 403
+
 	tests := []struct {
 		name string
 		args args
 		want want
 	}{
 		{
-			name: "Test",
+			name: "HTTP",
 			args: args{
-				body:       "<h1>Test</h1>",
-				statusCode: 200,
+				fn:      actx.HTTPResponse,
+				fnBytes: actx.HTTPResponseBytes,
 			},
 			want: want{
-				body:        "<h1>Test</h1>",
-				statusCode:  200,
+				body:        body,
+				statusCode:  statusCode,
 				contentType: "text/html; charset=utf-8",
 			},
 		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
-
-			if err := actx.HTTPResponse(tt.args.body, tt.args.statusCode); err != nil {
-				t.Errorf("HTTPResponse() error: %v", err)
-			}
-
-			responseBody := string(bytes.TrimSpace(actx.Response.Body()))
-			if responseBody != tt.want.body {
-				t.Errorf("body: '%v', want: '%v'", responseBody, tt.want.body)
-			}
-
-			responseStatusCode := actx.Response.StatusCode()
-			if responseStatusCode != tt.want.statusCode {
-				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
-			}
-
-			responseContentType := string(actx.Response.Header.ContentType())
-			if responseContentType != tt.want.contentType {
-				t.Errorf("content-type: '%v', want: '%v'", responseContentType, tt.want.contentType)
-			}
-		})
-	}
-}
-
-func TestHTTPResponseBytes(t *testing.T) {
-	type args struct {
-		body       []byte
-		statusCode int
-	}
-	type want struct {
-		body        string
-		statusCode  int
-		contentType string
-	}
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
 		{
-			name: "Test",
+			name: "Text",
 			args: args{
-				body:       []byte("<h1>Test</h1>"),
-				statusCode: 200,
+				fn:      actx.TextResponse,
+				fnBytes: actx.TextResponseBytes,
 			},
 			want: want{
-				body:        "<h1>Test</h1>",
-				statusCode:  200,
-				contentType: "text/html; charset=utf-8",
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
-
-			if err := actx.HTTPResponseBytes(tt.args.body, tt.args.statusCode); err != nil {
-				t.Errorf("HTTPResponse() error: %v", err)
-			}
-
-			responseBody := string(bytes.TrimSpace(actx.Response.Body()))
-			if responseBody != tt.want.body {
-				t.Errorf("body: '%v', want: '%v'", responseBody, tt.want.body)
-			}
-
-			responseStatusCode := actx.Response.StatusCode()
-			if responseStatusCode != tt.want.statusCode {
-				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
-			}
-
-			responseContentType := string(actx.Response.Header.ContentType())
-			if responseContentType != tt.want.contentType {
-				t.Errorf("content-type: '%v', want: '%v'", responseContentType, tt.want.contentType)
-			}
-		})
-	}
-}
-
-func TestTextResponse(t *testing.T) {
-	type args struct {
-		body       string
-		statusCode int
-	}
-	type want struct {
-		body        string
-		statusCode  int
-		contentType string
-	}
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "Test",
-			args: args{
-				body:       "<h1>Test</h1>",
-				statusCode: 200,
-			},
-			want: want{
-				body:        "<h1>Test</h1>",
-				statusCode:  200,
+				body:        body,
+				statusCode:  statusCode,
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
-
-			if err := actx.TextResponse(tt.args.body, tt.args.statusCode); err != nil {
-				t.Errorf("TextResponse() error: %v", err)
-			}
-
-			responseBody := string(bytes.TrimSpace(actx.Response.Body()))
-			if responseBody != tt.want.body {
-				t.Errorf("body: '%v', want: '%v'", responseBody, tt.want.body)
-			}
-
-			responseStatusCode := actx.Response.StatusCode()
-			if responseStatusCode != tt.want.statusCode {
-				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
-			}
-
-			responseContentType := string(actx.Response.Header.ContentType())
-			if responseContentType != tt.want.contentType {
-				t.Errorf("content-type: '%v', want: '%v'", responseContentType, tt.want.contentType)
-			}
-		})
-	}
-}
-
-func TestTextResponseBytes(t *testing.T) {
-	type args struct {
-		body       []byte
-		statusCode int
-	}
-	type want struct {
-		body        string
-		statusCode  int
-		contentType string
-	}
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
 		{
-			name: "Test",
+			name: "Raw",
 			args: args{
-				body:       []byte("<h1>Test</h1>"),
-				statusCode: 200,
+				fn:      actx.RawResponse,
+				fnBytes: actx.RawResponseBytes,
 			},
 			want: want{
-				body:        "<h1>Test</h1>",
-				statusCode:  200,
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
-
-			if err := actx.TextResponseBytes(tt.args.body, tt.args.statusCode); err != nil {
-				t.Errorf("TextResponse() error: %v", err)
-			}
-
-			responseBody := string(bytes.TrimSpace(actx.Response.Body()))
-			if responseBody != tt.want.body {
-				t.Errorf("body: '%v', want: '%v'", responseBody, tt.want.body)
-			}
-
-			responseStatusCode := actx.Response.StatusCode()
-			if responseStatusCode != tt.want.statusCode {
-				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
-			}
-
-			responseContentType := string(actx.Response.Header.ContentType())
-			if responseContentType != tt.want.contentType {
-				t.Errorf("content-type: '%v', want: '%v'", responseContentType, tt.want.contentType)
-			}
-		})
-	}
-}
-
-func TestRawResponse(t *testing.T) {
-	type args struct {
-		body       string
-		statusCode int
-	}
-	type want struct {
-		body        string
-		statusCode  int
-		contentType string
-	}
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "Test",
-			args: args{
-				body:       "<h1>Test</h1>",
-				statusCode: 200,
-			},
-			want: want{
-				body:        "<h1>Test</h1>",
-				statusCode:  200,
+				body:        body,
+				statusCode:  statusCode,
 				contentType: "application/octet-stream",
 			},
 		},
 	}
 
-	for _, tt := range tests {
+	var checkResponse = func(wantBody, wantContentType string, wantStatusCode int) {
+		responseBody := string(bytes.TrimSpace(actx.Response.Body()))
+		if responseBody != wantBody {
+			t.Errorf("body: '%v', want: '%v'", responseBody, wantBody)
+		}
+
+		responseStatusCode := actx.Response.StatusCode()
+		if responseStatusCode != wantStatusCode {
+			t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, wantStatusCode)
+		}
+
+		responseContentType := string(actx.Response.Header.ContentType())
+		if responseContentType != wantContentType {
+			t.Errorf("content-type: '%v', want: '%v'", responseContentType, wantContentType)
+		}
+
+		ctx.Request.Reset()
+		ctx.Response.Reset()
+	}
+
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
-
-			if err := actx.RawResponse(tt.args.body, tt.args.statusCode); err != nil {
-				t.Errorf("RawResponse() error: %v", err)
+			if err := tt.args.fn(body, statusCode); err != nil {
+				t.Errorf("%sResponse() error: %v", tt.name, err)
 			}
 
-			responseBody := string(bytes.TrimSpace(actx.Response.Body()))
-			if responseBody != tt.want.body {
-				t.Errorf("body: '%v', want: '%v'", responseBody, tt.want.body)
+			checkResponse(tt.want.body, tt.want.contentType, tt.want.statusCode)
+
+			if err := tt.args.fnBytes([]byte(body), statusCode); err != nil {
+				t.Errorf("%sResponse() error: %v", tt.name, err)
 			}
 
-			responseStatusCode := actx.Response.StatusCode()
-			if responseStatusCode != tt.want.statusCode {
-				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
-			}
-
-			responseContentType := string(actx.Response.Header.ContentType())
-			if responseContentType != tt.want.contentType {
-				t.Errorf("content-type: '%v', want: '%v'", responseContentType, tt.want.contentType)
-			}
+			checkResponse(tt.want.body, tt.want.contentType, tt.want.statusCode)
 		})
 	}
 }
 
-func TestRawResponseBytes(t *testing.T) {
-	type args struct {
-		body       []byte
-		statusCode int
-	}
-	type want struct {
-		body        string
-		statusCode  int
-		contentType string
-	}
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "Test",
-			args: args{
-				body:       []byte("<h1>Test</h1>"),
-				statusCode: 200,
-			},
-			want: want{
-				body:        "<h1>Test</h1>",
-				statusCode:  200,
-				contentType: "application/octet-stream",
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
-
-			if err := actx.RawResponseBytes(tt.args.body, tt.args.statusCode); err != nil {
-				t.Errorf("RawResponse() error: %v", err)
-			}
-
-			responseBody := string(bytes.TrimSpace(actx.Response.Body()))
-			if responseBody != tt.want.body {
-				t.Errorf("body: '%v', want: '%v'", responseBody, tt.want.body)
-			}
-
-			responseStatusCode := actx.Response.StatusCode()
-			if responseStatusCode != tt.want.statusCode {
-				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
-			}
-
-			responseContentType := string(actx.Response.Header.ContentType())
-			if responseContentType != tt.want.contentType {
-				t.Errorf("content-type: '%v', want: '%v'", responseContentType, tt.want.contentType)
-			}
-		})
-	}
-}
-
-func TestFileResponse(t *testing.T) {
+func TestFileResponse(t *testing.T) { // nolint:funlen
 	type args struct {
 		fileName string
 		filePath string
 		mimeType string
 	}
+
 	type want struct {
 		body               string
 		statusCode         int
@@ -511,7 +283,9 @@ func TestFileResponse(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			if err := ioutil.WriteFile(tt.args.filePath, testFileContent, 0644); err != nil {
 				t.Fatalf("Error writing file %s", tt.args.filePath)
@@ -553,10 +327,12 @@ func TestRedirectResponse(t *testing.T) {
 		url        string
 		statusCode int
 	}
+
 	type want struct {
 		locationURL string
 		statusCode  int
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -574,7 +350,10 @@ func TestRedirectResponse(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
+
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
 			actx := acquireRequestCtx(ctx)
@@ -600,6 +379,7 @@ func Test_ErrorResponse(t *testing.T) {
 	type args struct {
 		statusCode []int
 	}
+
 	type want struct {
 		statusCode int
 	}
@@ -630,7 +410,9 @@ func Test_ErrorResponse(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
 			actx := acquireRequestCtx(ctx)
@@ -656,6 +438,7 @@ func Benchmark_FileResponse(b *testing.B) {
 	actx := acquireRequestCtx(ctx)
 
 	b.ResetTimer()
+
 	for i := 0; i <= b.N; i++ {
 		if err := actx.FileResponse("hola", path, "text/plain"); err != nil {
 			b.Fatalf("Error calling FileResponse. %+v", err)
@@ -677,6 +460,7 @@ func Benchmark_JSONResponse(b *testing.B) {
 	}
 
 	b.ResetTimer()
+
 	for i := 0; i <= b.N; i++ {
 		if err := actx.JSONResponse(body); err != nil {
 			b.Fatalf("Error calling JSONResponse. %+v", err)

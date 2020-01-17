@@ -1,11 +1,8 @@
 linters:
-  enable:
-    - megacheck
-    - govet
-    - errcheck
-    - unused
-    - structcheck
-  disable-all: false
   fast: false
+  enable-all: true
+  disable:
+    - gomnd
+    - gochecknoglobals
 
 

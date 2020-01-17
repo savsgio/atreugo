@@ -7,10 +7,11 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func Test_execute(t *testing.T) {
+func Test_execute(t *testing.T) { //nolint:funlen
 	type args struct {
 		hs []Middleware
 	}
+
 	type want struct {
 		statusCode int
 		counter    int
@@ -85,7 +86,9 @@ func Test_execute(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
+	for _, test := range tests {
+		tt := test
+
 		t.Run(tt.name, func(t *testing.T) {
 			counter = 0
 			ctx := acquireRequestCtx(new(fasthttp.RequestCtx))

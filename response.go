@@ -24,6 +24,7 @@ func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
 	if err != nil {
 		return err
 	}
+
 	ctx.SetBody(data)
 
 	return nil

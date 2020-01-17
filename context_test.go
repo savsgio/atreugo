@@ -31,11 +31,12 @@ func Test_releaseRequestCtx(t *testing.T) {
 func TestRequestCtx_reset(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
 	actx := acquireRequestCtx(ctx)
+
 	if err := actx.Next(); err != nil {
 		t.Fatalf("Error calling next. %+v", err)
 	}
-	actx.SkipView()
 
+	actx.SkipView()
 	actx.reset()
 
 	if actx.next {
