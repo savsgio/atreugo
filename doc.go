@@ -42,8 +42,8 @@ It's build on top of fasthttp and provides the following features:
         * Static files.
         * Serve one file like pdf, etc.
         * Filters (middlewares) to specific views.
-        * net/http handlers support.
         * fasthttp handlers support
+        * net/http handlers support.
 
     * Common responses (also you could use your own responses):
 

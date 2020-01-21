@@ -23,7 +23,7 @@ The parameters could be optional, adding at the end `?` to it `:<param_name>?`, 
 To recover these parameters, just call to `ctx.UserValue("<param_name>")`
 
 ```go
-myserver.Path("GET", "/users/:name/:surname?", func(ctx *atreugo.RequestCtx) error {
+myserver.GET("/users/:name/:surname?", func(ctx *atreugo.RequestCtx) error {
   name := ctx.UserValue("name")
   surname := ctx.UserValue("surname") // Could be nil
 
