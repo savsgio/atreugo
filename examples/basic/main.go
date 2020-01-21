@@ -11,12 +11,11 @@ func main() {
 	server := atreugo.New(config)
 
 	// Register a route
-	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
+	server.GET("/", func(ctx *atreugo.RequestCtx) error {
 		return ctx.TextResponse("Hello World")
 	})
 
-	err := server.ListenAndServe()
-	if err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		panic(err)
 	}
 }

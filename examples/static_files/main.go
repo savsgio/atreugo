@@ -56,8 +56,7 @@ func main() {
 	static.ServeFileWithFilters("/license", "LICENSE", filters)
 
 	// Run
-	err := server.ListenAndServe()
-	if err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		panic(err)
 	}
 }

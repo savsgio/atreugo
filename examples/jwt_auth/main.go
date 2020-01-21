@@ -22,13 +22,13 @@ func main() {
 	server.UseBefore(authMiddleware)
 
 	// Register index route
-	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
+	server.GET("/", func(ctx *atreugo.RequestCtx) error {
 		return ctx.HTTPResponse(fmt.Sprintf(`<h1>You are login with JWT</h1>
 				JWT cookie value: %s`, ctx.Request.Header.Cookie("atreugo_jwt")))
 	})
 
 	// Register login route
-	server.Path("GET", "/login", func(ctx *atreugo.RequestCtx) error {
+	server.GET("/login", func(ctx *atreugo.RequestCtx) error {
 		qUser := []byte("savsgio")
 		qPasswd := []byte("mypasswd")
 
@@ -51,8 +51,7 @@ func main() {
 	})
 
 	// Run
-	err := server.ListenAndServe()
-	if err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		panic(err)
 	}
 }

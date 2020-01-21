@@ -127,6 +127,41 @@ func (r *Router) UseAfter(fns ...Middleware) {
 	r.afterMiddlewares = append(r.afterMiddlewares, fns...)
 }
 
+// GET is a shortcut for router.Path("GET", url, viewFn)
+func (r *Router) GET(url string, viewFn View) {
+	r.Path(fasthttp.MethodGet, url, viewFn)
+}
+
+// HEAD is a shortcut for router.Path("HEAD", url, viewFn)
+func (r *Router) HEAD(url string, viewFn View) {
+	r.Path(fasthttp.MethodHead, url, viewFn)
+}
+
+// OPTIONS is a shortcut for router.Path("OPTIONS", url, viewFn)
+func (r *Router) OPTIONS(url string, viewFn View) {
+	r.Path(fasthttp.MethodOptions, url, viewFn)
+}
+
+// POST is a shortcut for router.Path("POST", url, viewFn)
+func (r *Router) POST(url string, viewFn View) {
+	r.Path(fasthttp.MethodPost, url, viewFn)
+}
+
+// PUT is a shortcut for router.Path("PUT", url, viewFn)
+func (r *Router) PUT(url string, viewFn View) {
+	r.Path(fasthttp.MethodPut, url, viewFn)
+}
+
+// PATCH is a shortcut for router.Path("PATCH", url, viewFn)
+func (r *Router) PATCH(url string, viewFn View) {
+	r.Path(fasthttp.MethodPatch, url, viewFn)
+}
+
+// DELETE is a shortcut for router.Path("DELETE", url, viewFn)
+func (r *Router) DELETE(url string, viewFn View) {
+	r.Path(fasthttp.MethodDelete, url, viewFn)
+}
+
 // Path registers a new view with the given path and method.
 //
 // This function is intended for bulk loading and to allow the usage of less

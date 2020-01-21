@@ -505,6 +505,67 @@ func TestRouter_UseAfter(t *testing.T) {
 	}
 }
 
+func TestRouter_Path_Shortcuts(t *testing.T) {
+	path := "/"
+	viewFn := func(ctx *RequestCtx) error { return nil }
+
+	r := newRouter(testLog, nil)
+
+	type args struct {
+		method string
+		fn     func(url string, viewFn View)
+	}
+
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: fasthttp.MethodGet,
+			args: args{method: fasthttp.MethodGet, fn: r.GET},
+		},
+		{
+			name: fasthttp.MethodHead,
+			args: args{method: fasthttp.MethodHead, fn: r.HEAD},
+		},
+		{
+			name: fasthttp.MethodOptions,
+			args: args{method: fasthttp.MethodOptions, fn: r.OPTIONS},
+		},
+		{
+			name: fasthttp.MethodPost,
+			args: args{method: fasthttp.MethodPost, fn: r.POST},
+		},
+		{
+			name: fasthttp.MethodPut,
+			args: args{method: fasthttp.MethodHead, fn: r.PUT},
+		},
+		{
+			name: fasthttp.MethodPatch,
+			args: args{method: fasthttp.MethodPatch, fn: r.PATCH},
+		},
+		{
+			name: fasthttp.MethodDelete,
+			args: args{method: fasthttp.MethodDelete, fn: r.DELETE},
+		},
+	}
+
+	for _, test := range tests {
+		tt := test
+
+		t.Run(tt.name, func(t *testing.T) {
+			tt.args.fn(path, viewFn)
+
+			ctx := new(fasthttp.RequestCtx)
+			h, _ := r.router.Lookup(tt.args.method, path, ctx)
+
+			if h == nil {
+				t.Errorf("The path is not registered with method %s", tt.args.method)
+			}
+		})
+	}
+}
+
 func TestRouter_Path(t *testing.T) { //nolint:funlen
 	type args struct {
 		method         string
