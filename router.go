@@ -251,13 +251,7 @@ func (r *Router) NetHTTPPath(httpMethod, url string, handler http.Handler) {
 // according to https://github.com/valyala/fasthttp#switching-from-nethttp-to-fasthttp .
 func (r *Router) NetHTTPPathWithFilters(httpMethod, url string, handler http.Handler, filters Filters) {
 	h := fasthttpadaptor.NewFastHTTPHandler(handler)
-
-	aHandler := func(ctx *RequestCtx) error {
-		h(ctx.RequestCtx)
-		return nil
-	}
-
-	r.addRoute(httpMethod, url, r.handler(aHandler, filters))
+	r.RequestHandlerPathWithFilters(httpMethod, url, h, filters)
 }
 
 // Static serves static files from the given file system root.
@@ -322,7 +316,7 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) {
 		ffs.PathRewrite = fasthttp.NewPathSlashesStripper(stripSlashes)
 	}
 
-	r.RequestHandlerPathWithFilters("GET", url+"/*filepath", ffs.NewRequestHandler(), fs.Filters)
+	r.RequestHandlerPathWithFilters(fasthttp.MethodGet, url+"/*filepath", ffs.NewRequestHandler(), fs.Filters)
 }
 
 // ServeFile returns HTTP response containing compressed file contents
@@ -353,7 +347,7 @@ func (r *Router) ServeFileWithFilters(url, filePath string, filters Filters) {
 		return nil
 	}
 
-	r.addRoute("GET", url, r.handler(viewFn, filters))
+	r.addRoute(fasthttp.MethodGet, url, r.handler(viewFn, filters))
 }
 
 // ListPaths returns all registered routes grouped by method
