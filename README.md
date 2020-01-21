@@ -58,8 +58,8 @@ See: [docs](https://github.com/savsgio/atreugo/tree/master/docs)
     * Static files.
     * Serve one file like pdf, etc.
     * Filters (middlewares) to especific views.
+    * fasthttp handlers support.
     * net/http handlers support.
-    * fasthttp handlers support
 
 * Common responses (also you could use your own responses):
     * JSON
