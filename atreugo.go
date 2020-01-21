@@ -46,6 +46,10 @@ func New(cfg *Config) *Atreugo {
 
 	r := newRouter(log, cfg.ErrorView)
 
+	if cfg.GlobalOPTIONS != nil {
+		r.router.GlobalOPTIONS = viewToHandler(cfg.GlobalOPTIONS, r.errorView)
+	}
+
 	if cfg.NotFoundView != nil {
 		r.router.NotFound = viewToHandler(cfg.NotFoundView, r.errorView)
 	}
@@ -62,13 +66,8 @@ func New(cfg *Config) *Atreugo {
 		}
 	}
 
-	handler := r.router.Handler
-	if cfg.Compress {
-		handler = fasthttp.CompressHandler(handler)
-	}
-
 	server := &Atreugo{
-		server: fasthttpServer(cfg, handler, log),
+		server: fasthttpServer(cfg, r.router.Handler, log),
 		log:    log,
 		cfg:    cfg,
 		Router: r,
@@ -78,6 +77,10 @@ func New(cfg *Config) *Atreugo {
 }
 
 func fasthttpServer(cfg *Config, handler fasthttp.RequestHandler, log fasthttp.Logger) *fasthttp.Server {
+	if cfg.Compress {
+		handler = fasthttp.CompressHandler(handler)
+	}
+
 	return &fasthttp.Server{
 		Name:                               cfg.Name,
 		Handler:                            handler,
@@ -104,6 +107,16 @@ func fasthttpServer(cfg *Config, handler fasthttp.RequestHandler, log fasthttp.L
 		KeepHijackedConns:                  cfg.KeepHijackedConns,
 		Logger:                             log,
 	}
+}
+
+// If enabled, adds the matched route path onto the ctx.UserValue context
+// before invoking the handler.
+// The matched route path is only added to handlers of routes that were
+// registered when this option was enabled.
+//
+// It's deactivated by default
+func (s *Atreugo) SaveMatchedRoutePath(v bool) {
+	s.router.SaveMatchedRoutePath = v
 }
 
 // RedirectTrailingSlash enables/disables automatic redirection if the current route

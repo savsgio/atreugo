@@ -19,6 +19,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 	type args struct {
 		network              string
 		logLevel             string
+		globalOPTIONSView    View
 		notFoundView         View
 		methodNotAllowedView View
 		panicView            PanicView
@@ -26,12 +27,16 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 
 	type want struct {
 		logLevel             string
+		globalOPTIONSView    bool
 		notFoundView         bool
 		methodNotAllowedView bool
 		panicView            bool
 		err                  bool
 	}
 
+	globalOPTIONSView := func(ctx *RequestCtx) error {
+		return nil
+	}
 	notFoundView := func(ctx *RequestCtx) error {
 		return nil
 	}
@@ -54,6 +59,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			args: args{},
 			want: want{
 				logLevel:             logger.INFO,
+				globalOPTIONSView:    false,
 				notFoundView:         false,
 				methodNotAllowedView: false,
 				panicView:            false,
@@ -64,12 +70,14 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			args: args{
 				network:              "unix",
 				logLevel:             logger.WARNING,
+				globalOPTIONSView:    globalOPTIONSView,
 				notFoundView:         notFoundView,
 				methodNotAllowedView: methodNotAllowedView,
 				panicView:            panicView,
 			},
 			want: want{
 				logLevel:             logger.WARNING,
+				globalOPTIONSView:    true,
 				notFoundView:         true,
 				methodNotAllowedView: true,
 				panicView:            true,
@@ -104,6 +112,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			cfg := &Config{
 				Network:              tt.args.network,
 				LogLevel:             tt.args.logLevel,
+				GlobalOPTIONS:        tt.args.globalOPTIONSView,
 				NotFoundView:         tt.args.notFoundView,
 				MethodNotAllowedView: tt.args.methodNotAllowedView,
 				PanicView:            tt.args.panicView,
@@ -116,6 +125,10 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 
 			if s.router == nil {
 				t.Fatal("Atreugo router instance is nil")
+			}
+
+			if tt.want.globalOPTIONSView != (s.router.GlobalOPTIONS != nil) {
+				t.Error("GlobalOPTIONS handler is not setted")
 			}
 
 			if tt.want.notFoundView != (s.router.NotFound != nil) {
@@ -142,7 +155,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 	}
 }
 
-func TestAtreugo_RouterConfiguration(t *testing.T) {
+func TestAtreugo_RouterConfiguration(t *testing.T) { //nolint:funlen
 	type args struct {
 		v bool
 	}
@@ -181,10 +194,15 @@ func TestAtreugo_RouterConfiguration(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(testAtreugoConfig)
+			s.SaveMatchedRoutePath(tt.args.v)
 			s.RedirectTrailingSlash(tt.args.v)
 			s.RedirectFixedPath(tt.args.v)
 			s.HandleMethodNotAllowed(tt.args.v)
 			s.HandleOPTIONS(tt.args.v)
+
+			if s.router.SaveMatchedRoutePath != tt.want.v {
+				t.Errorf("Router.SaveMatchedRoutePath == %v, want %v", s.router.SaveMatchedRoutePath, tt.want.v)
+			}
 
 			if s.router.RedirectTrailingSlash != tt.want.v {
 				t.Errorf("Router.RedirectTrailingSlash == %v, want %v", s.router.RedirectTrailingSlash, tt.want.v)
