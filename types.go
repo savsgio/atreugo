@@ -359,11 +359,25 @@ type StaticFS struct {
 // RequestCtx context wrapper of fasthttp.RequestCtx to adds extra funtionality
 //
 // It is prohibited copying RequestCtx values. Create new values instead.
+//
+// View should avoid holding references to incoming RequestCtx and/or
+// its' members after the return.
+// If holding RequestCtx references after the return is unavoidable
+// (for instance, ctx is passed to a separate goroutine and ctx lifetime cannot
+// be controlled), then the View MUST call ctx.TimeoutError()
+// before return.
+//
+// It is unsafe modifying/reading RequestCtx instance from concurrently
+// running goroutines. The only exception is TimeoutError*, which may be called
+// while other goroutines accessing RequestCtx.
 type RequestCtx struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
 	next     bool
 	skipView bool
+
+	// Flag to avoid stack overflow when this context has been embedded in the attached context
+	searchingOnAttachedCtx bool
 
 	*fasthttp.RequestCtx
 }

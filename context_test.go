@@ -132,7 +132,7 @@ func Test_Value(t *testing.T) {
 		t.Errorf("Value() of key '%v' == %s, want %v", "fake", v, nil)
 	}
 
-	actx.AttachContext(context.WithValue(ctx, structKey, value))
+	actx.AttachContext(context.WithValue(actx, structKey, value))
 	actx.SetUserValue(stringKey, value)
 
 	if v := actx.Value(structKey); v != value {
