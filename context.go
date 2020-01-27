@@ -88,7 +88,7 @@ func (ctx *RequestCtx) AttachedContext() context.Context {
 //
 // instead of:
 // 		ctx.AttachContext(context.WithValue(context.Background(), "myKey", "myValue"))
-//		ctx.UserValue("myKey")
+//		ctx.Value("myKey")
 //
 // to avoid extra allocation
 func (ctx *RequestCtx) Value(key interface{}) interface{} {
