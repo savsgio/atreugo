@@ -109,7 +109,7 @@ func fasthttpServer(cfg *Config, handler fasthttp.RequestHandler, log fasthttp.L
 	}
 }
 
-// If enabled, adds the matched route path onto the ctx.UserValue context
+// SaveMatchedRoutePath if enabled, adds the matched route path onto the ctx.UserValue context
 // before invoking the handler.
 // The matched route path is only added to handlers of routes that were
 // registered when this option was enabled.
