@@ -95,6 +95,15 @@ func Test_AttachContext(t *testing.T) {
 	if actx.UserValue(attachedCtxKey) == nil {
 		t.Error("ctx.AttachContext() the context is not attached")
 	}
+
+	defer func() {
+		err := recover()
+		if err == nil {
+			t.Error("Panic expected when attachs to itself")
+		}
+	}()
+
+	actx.AttachContext(actx)
 }
 
 func Test_AttachedContext(t *testing.T) {
