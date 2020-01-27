@@ -73,12 +73,12 @@ func (r *Router) getGroupFullPath(path string) string {
 	return path
 }
 
-func (r *Router) addRoute(httpMethod, url string, handler fasthttp.RequestHandler) {
-	if httpMethod != strings.ToUpper(httpMethod) {
-		panic("The http method '" + httpMethod + "' must be in uppercase")
+func (r *Router) addRoute(method, url string, handler fasthttp.RequestHandler) {
+	if method != strings.ToUpper(method) {
+		panic("The http method '" + method + "' must be in uppercase")
 	}
 
-	r.router.Handle(httpMethod, url, handler)
+	r.router.Handle(method, url, handler)
 }
 
 func (r *Router) handler(viewFn View, filters Filters) fasthttp.RequestHandler {
@@ -167,8 +167,8 @@ func (r *Router) DELETE(url string, viewFn View) {
 // This function is intended for bulk loading and to allow the usage of less
 // frequently used, non-standardized or custom methods (e.g. for internal
 // communication with a proxy).
-func (r *Router) Path(httpMethod, url string, viewFn View) {
-	r.PathWithFilters(httpMethod, url, viewFn, emptyFilters)
+func (r *Router) Path(method, url string, viewFn View) {
+	r.PathWithFilters(method, url, viewFn, emptyFilters)
 }
 
 // PathWithFilters registers a new view with the given path and method,
@@ -177,26 +177,26 @@ func (r *Router) Path(httpMethod, url string, viewFn View) {
 // This function is intended for bulk loading and to allow the usage of less
 // frequently used, non-standardized or custom methods (e.g. for internal
 // communication with a proxy).
-func (r *Router) PathWithFilters(httpMethod, url string, viewFn View, filters Filters) {
-	r.addRoute(httpMethod, url, r.handler(viewFn, filters))
+func (r *Router) PathWithFilters(method, url string, viewFn View, filters Filters) {
+	r.addRoute(method, url, r.handler(viewFn, filters))
 }
 
 // RequestHandlerPath wraps fasthttp request handler to atreugo view and registers it to
 // the given path and method.
-func (r *Router) RequestHandlerPath(httpMethod, url string, handler fasthttp.RequestHandler) {
-	r.RequestHandlerPathWithFilters(httpMethod, url, handler, emptyFilters)
+func (r *Router) RequestHandlerPath(method, url string, handler fasthttp.RequestHandler) {
+	r.RequestHandlerPathWithFilters(method, url, handler, emptyFilters)
 }
 
 // RequestHandlerPathWithFilters wraps fasthttp request handler to atreugo view and registers it to
 // the given path and method, and with filters that will execute before and after.
-func (r *Router) RequestHandlerPathWithFilters(httpMethod, url string, handler fasthttp.RequestHandler,
+func (r *Router) RequestHandlerPathWithFilters(method, url string, handler fasthttp.RequestHandler,
 	filters Filters) {
 	viewFn := func(ctx *RequestCtx) error {
 		handler(ctx.RequestCtx)
 		return nil
 	}
 
-	r.addRoute(httpMethod, url, r.handler(viewFn, filters))
+	r.addRoute(method, url, r.handler(viewFn, filters))
 }
 
 // TimeoutPath registers a new view with the given path and method,
@@ -206,8 +206,8 @@ func (r *Router) RequestHandlerPathWithFilters(httpMethod, url string, handler f
 // The returned handler may return StatusTooManyRequests error with the given
 // msg to the client if there are more than Server.Concurrency concurrent
 // handlers view are running at the moment.
-func (r *Router) TimeoutPath(httpMethod, url string, viewFn View, timeout time.Duration, msg string) {
-	r.TimeoutPathWithFilters(httpMethod, url, viewFn, emptyFilters, timeout, msg)
+func (r *Router) TimeoutPath(method, url string, viewFn View, timeout time.Duration, msg string) {
+	r.TimeoutPathWithFilters(method, url, viewFn, emptyFilters, timeout, msg)
 }
 
 // TimeoutPathWithFilters registers a new view with the given path and method,
@@ -217,10 +217,10 @@ func (r *Router) TimeoutPath(httpMethod, url string, viewFn View, timeout time.D
 // The returned handler may return StatusTooManyRequests error with the given
 // msg to the client if there are more than Server.Concurrency concurrent
 // handlers view/filters are running at the moment.
-func (r *Router) TimeoutPathWithFilters(httpMethod, url string, viewFn View, filters Filters,
+func (r *Router) TimeoutPathWithFilters(method, url string, viewFn View, filters Filters,
 	timeout time.Duration, msg string) {
 	handler := r.handler(viewFn, filters)
-	r.addRoute(httpMethod, url, fasthttp.TimeoutHandler(handler, timeout, msg))
+	r.addRoute(method, url, fasthttp.TimeoutHandler(handler, timeout, msg))
 }
 
 // TimeoutWithCodePath registers a new view with the given path and method,
@@ -230,9 +230,9 @@ func (r *Router) TimeoutPathWithFilters(httpMethod, url string, viewFn View, fil
 // The returned handler may return StatusTooManyRequests error with the given
 // msg to the client if there are more than Server.Concurrency concurrent
 // handlers view/filters are running at the moment.
-func (r *Router) TimeoutWithCodePath(httpMethod, url string, viewFn View,
+func (r *Router) TimeoutWithCodePath(method, url string, viewFn View,
 	timeout time.Duration, msg string, statusCode int) {
-	r.TimeoutWithCodePathWithFilters(httpMethod, url, viewFn, emptyFilters, timeout, msg, statusCode)
+	r.TimeoutWithCodePathWithFilters(method, url, viewFn, emptyFilters, timeout, msg, statusCode)
 }
 
 // TimeoutWithCodePathWithFilters registers a new view with the given path and method,
@@ -243,10 +243,10 @@ func (r *Router) TimeoutWithCodePath(httpMethod, url string, viewFn View,
 // The returned handler may return StatusTooManyRequests error with the given
 // msg to the client if there are more than Server.Concurrency concurrent
 // handlers view/filters are running at the moment.
-func (r *Router) TimeoutWithCodePathWithFilters(httpMethod, url string, viewFn View, filters Filters,
+func (r *Router) TimeoutWithCodePathWithFilters(method, url string, viewFn View, filters Filters,
 	timeout time.Duration, msg string, statusCode int) {
 	handler := r.handler(viewFn, filters)
-	r.addRoute(httpMethod, url, fasthttp.TimeoutWithCodeHandler(handler, timeout, msg, statusCode))
+	r.addRoute(method, url, fasthttp.TimeoutWithCodeHandler(handler, timeout, msg, statusCode))
 }
 
 // NetHTTPPath wraps net/http handler to atreugo view and registers it with the given path and method
@@ -264,8 +264,8 @@ func (r *Router) TimeoutWithCodePathWithFilters(httpMethod, url string, viewFn V
 // So it is advisable using this function only for quick net/http -> fasthttp
 // switching. Then manually convert net/http handlers to fasthttp handlers
 // according to https://github.com/valyala/fasthttp#switching-from-nethttp-to-fasthttp .
-func (r *Router) NetHTTPPath(httpMethod, url string, handler http.Handler) {
-	r.NetHTTPPathWithFilters(httpMethod, url, handler, emptyFilters)
+func (r *Router) NetHTTPPath(method, url string, handler http.Handler) {
+	r.NetHTTPPathWithFilters(method, url, handler, emptyFilters)
 }
 
 // NetHTTPPathWithFilters wraps net/http handler to atreugo view and registers it to
@@ -284,9 +284,9 @@ func (r *Router) NetHTTPPath(httpMethod, url string, handler http.Handler) {
 // So it is advisable using this function only for quick net/http -> fasthttp
 // switching. Then manually convert net/http handlers to fasthttp handlers
 // according to https://github.com/valyala/fasthttp#switching-from-nethttp-to-fasthttp .
-func (r *Router) NetHTTPPathWithFilters(httpMethod, url string, handler http.Handler, filters Filters) {
+func (r *Router) NetHTTPPathWithFilters(method, url string, handler http.Handler, filters Filters) {
 	h := fasthttpadaptor.NewFastHTTPHandler(handler)
-	r.RequestHandlerPathWithFilters(httpMethod, url, h, filters)
+	r.RequestHandlerPathWithFilters(method, url, h, filters)
 }
 
 // Static serves static files from the given file system root.

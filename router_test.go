@@ -415,7 +415,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 		},
 	}
 
-	httpMethod := "GET"
+	method := "GET"
 	path := "/"
 
 	for _, test := range tests {
@@ -431,11 +431,11 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 			r := newRouter(testLog, nil)
 			r.UseBefore(tt.args.before...)
 			r.UseAfter(tt.args.after...)
-			r.PathWithFilters(httpMethod, path, tt.args.viewFn, tt.args.filters)
+			r.PathWithFilters(method, path, tt.args.viewFn, tt.args.filters)
 
 			ctx := new(fasthttp.RequestCtx)
 
-			h, _ := r.router.Lookup(httpMethod, path, ctx)
+			h, _ := r.router.Lookup(method, path, ctx)
 			h(ctx)
 
 			if ctx.Response.StatusCode() != tt.want.statusCode {
@@ -924,15 +924,17 @@ func TestRouter_ListPaths(t *testing.T) {
 // Benchmarks
 func Benchmark_handler(b *testing.B) {
 	r := newRouter(testLog, nil)
-	viewFn := func(ctx *RequestCtx) error {
+	r.GET("/", func(ctx *RequestCtx) error {
 		return ctx.HTTPResponse("Hello world")
-	}
+	})
+
 	ctx := new(fasthttp.RequestCtx)
-	h := r.handler(viewFn, emptyFilters)
+	ctx.Request.Header.SetMethod("GET")
+	ctx.Request.SetRequestURI("/")
 
 	b.ResetTimer()
 
 	for i := 0; i <= b.N; i++ {
-		h(ctx)
+		r.router.Handler(ctx)
 	}
 }
