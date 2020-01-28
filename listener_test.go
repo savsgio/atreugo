@@ -58,18 +58,18 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 				err:     false,
 			},
 		},
-		// {
-		// 	name: "UnixRemoveError",
-		// 	args: args{
-		// 		addr:    "/tmp/data.sock",
-		// 		network: "unix",
-		// 	},
-		// 	want: want{
-		// 		addr:    "/tmp/data.sock",
-		// 		network: "unix",
-		// 		err:     true,
-		// 	},
-		// },
+		{
+			name: "UnixRemoveError",
+			args: args{
+				addr:    "/bin/sh",
+				network: "unix",
+			},
+			want: want{
+				addr:    "/bin/sh",
+				network: "unix",
+				err:     true,
+			},
+		},
 		{
 			name: "UnixChmodError",
 			args: args{

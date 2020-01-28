@@ -1,6 +1,7 @@
 package atreugo
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -428,7 +429,10 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 		handlerCounter.afterMiddlewares = 0
 
 		t.Run(tt.name, func(t *testing.T) {
-			r := newRouter(testLog, nil)
+			logOutput := &bytes.Buffer{}
+			log := logger.New(tt.name, "debug", logOutput)
+
+			r := newRouter(log, nil)
 			r.UseBefore(tt.args.before...)
 			r.UseAfter(tt.args.after...)
 			r.PathWithFilters(method, path, tt.args.viewFn, tt.args.filters)
@@ -464,6 +468,10 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 			if handlerCounter.afterFilters != tt.want.counter.afterFilters {
 				t.Errorf("After filters call counter = %v, want %v", handlerCounter.afterFilters,
 					tt.want.counter.afterFilters)
+			}
+
+			if logOutput.Len() == 0 {
+				t.Errorf("Debug trace has not been write in log when logger 'debug' is enabled")
 			}
 		})
 	}

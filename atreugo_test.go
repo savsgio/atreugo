@@ -3,16 +3,63 @@ package atreugo
 import (
 	"bytes"
 	"errors"
+	"net"
+	"reflect"
+	"syscall"
 	"testing"
 	"time"
+	"unicode"
 
 	logger "github.com/savsgio/go-logger"
+	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttputil"
 )
 
 var testAtreugoConfig = &Config{
 	LogLevel: "fatal",
+}
+
+var notConfigFasthttpFields = []string{"Handler", "ErrorHandler", "TCPKeepalive", "TCPKeepalivePeriod", "Logger"}
+
+type mockListener struct {
+	ln net.Listener
+
+	acceptError error
+	closeError  error
+
+	acceptCalled bool
+	closeCalled  bool
+	addrCalled   bool
+}
+
+func (m *mockListener) Accept() (net.Conn, error) {
+	m.acceptCalled = true
+
+	if m.acceptError != nil {
+		return nil, m.acceptError
+	}
+
+	return m.ln.Accept()
+}
+
+func (m *mockListener) Close() error {
+	m.closeCalled = true
+
+	if m.closeError != nil {
+		return m.closeError
+	}
+
+	return m.ln.Close()
+}
+
+func (m *mockListener) Addr() net.Addr {
+	m.addrCalled = true
+	return m.ln.Addr()
+}
+
+func newMockListener(ln net.Listener, acceptError, closeError error) *mockListener {
+	return &mockListener{ln: ln, acceptError: acceptError, closeError: closeError}
 }
 
 func Test_New(t *testing.T) { //nolint:funlen,gocognit
@@ -155,6 +202,79 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 	}
 }
 
+func Test_fasthttpServer(t *testing.T) { //nolint:funlen
+	type args struct {
+		compress bool
+	}
+
+	type want struct {
+		compress bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "NotCompress",
+			args: args{
+				compress: false,
+			},
+			want: want{
+				compress: false,
+			},
+		},
+		{
+			name: "Compress",
+			args: args{
+				compress: true,
+			},
+			want: want{
+				compress: true,
+			},
+		},
+	}
+
+	handler := func(ctx *fasthttp.RequestCtx) {}
+
+	for _, test := range tests {
+		tt := test
+
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{
+				LogLevel: "fatal",
+				Compress: tt.args.compress,
+			}
+			srv := fasthttpServer(cfg, handler, testLog)
+
+			if (reflect.ValueOf(handler).Pointer() == reflect.ValueOf(srv.Handler).Pointer()) == tt.want.compress {
+				t.Error("The handler has not been wrapped by compression handler")
+			}
+		})
+	}
+}
+
+func TestAtreugo_ConfigFasthttpFields(t *testing.T) {
+	fasthttpServerType := reflect.TypeOf(fasthttp.Server{})
+	configType := reflect.TypeOf(Config{})
+
+	for i := 0; i < fasthttpServerType.NumField(); i++ {
+		field := fasthttpServerType.Field(i)
+
+		if !unicode.IsUpper(rune(field.Name[0])) { // Check if the field is public
+			continue
+		} else if gotils.StringSliceInclude(notConfigFasthttpFields, field.Name) {
+			continue
+		}
+
+		_, exist := configType.FieldByName(field.Name)
+		if !exist {
+			t.Errorf("The field '%s' does not exist in atreugo.Config", field.Name)
+		}
+	}
+}
+
 func TestAtreugo_RouterConfiguration(t *testing.T) { //nolint:funlen
 	type args struct {
 		v bool
@@ -252,42 +372,106 @@ func TestAtreugo_Serve(t *testing.T) {
 	}
 }
 
-func TestAtreugo_ServeGracefully(t *testing.T) {
-	cfg := &Config{LogLevel: "fatal"}
-	s := New(cfg)
+func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
+	type args struct {
+		lnAcceptError error
+		lnCloseError  error
+	}
 
-	ln := fasthttputil.NewInmemoryListener()
-	errCh := make(chan error, 1)
+	type want struct {
+		err bool
+	}
 
-	go func() {
-		errCh <- s.ServeGracefully(ln)
-	}()
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Ok",
+			args: args{
+				lnAcceptError: nil,
+				lnCloseError:  nil,
+			},
+			want: want{
+				err: false,
+			},
+		},
+		{
+			name: "ServeError",
+			args: args{
+				lnAcceptError: errors.New("listener accept error"),
+				lnCloseError:  nil,
+			},
+			want: want{
+				err: true,
+			},
+		},
+		{
+			name: "ShutdownError",
+			args: args{
+				lnAcceptError: nil,
+				lnCloseError:  errors.New("listener close error"),
+			},
+			want: want{
+				err: true,
+			},
+		},
+	}
 
-	select {
-	case err := <-errCh:
-		t.Fatalf("Unexpected error: %v", err)
-	case <-time.After(100 * time.Millisecond):
-		if !cfg.GracefulShutdown {
-			t.Errorf("Config.GracefulShutdown = %v, want %v", cfg.GracefulShutdown, true)
-		}
+	for _, test := range tests {
+		tt := test
 
-		if s.server.ReadTimeout != defaultReadTimeout {
-			t.Errorf("fasthttp.Server.ReadTimeout = %v, want %v", s.server.ReadTimeout, defaultReadTimeout)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			ln := newMockListener(
+				fasthttputil.NewInmemoryListener(), tt.args.lnAcceptError, tt.args.lnCloseError,
+			)
+			defer ln.ln.Close()
 
-		if s.cfg.ReadTimeout != defaultReadTimeout {
-			t.Errorf("Config.ReadTimeout = %v, want %v", s.cfg.ReadTimeout, defaultReadTimeout)
-		}
+			logOutput := &bytes.Buffer{}
 
-		lnAddr := ln.Addr().String()
-		if s.cfg.Addr != lnAddr {
-			t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
-		}
+			cfg := &Config{LogLevel: "fatal"}
+			s := New(cfg)
+			s.SetLogOutput(logOutput)
 
-		lnNetwork := ln.Addr().Network()
-		if s.cfg.Network != lnNetwork {
-			t.Errorf("Atreugo.Config.Network = %s, want %s", s.cfg.Network, lnNetwork)
-		}
+			errCh := make(chan error, 1)
+
+			go func() {
+				errCh <- s.ServeGracefully(ln)
+			}()
+
+			time.Sleep(100 * time.Millisecond)
+
+			if err := syscall.Kill(syscall.Getpid(), syscall.SIGINT); err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+
+			if err := <-errCh; (err == nil) == tt.want.err {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+
+			if !cfg.GracefulShutdown {
+				t.Errorf("Config.GracefulShutdown = %v, want %v", cfg.GracefulShutdown, true)
+			}
+
+			if s.server.ReadTimeout != defaultReadTimeout {
+				t.Errorf("fasthttp.Server.ReadTimeout = %v, want %v", s.server.ReadTimeout, defaultReadTimeout)
+			}
+
+			if s.cfg.ReadTimeout != defaultReadTimeout {
+				t.Errorf("Config.ReadTimeout = %v, want %v", s.cfg.ReadTimeout, defaultReadTimeout)
+			}
+
+			lnAddr := ln.Addr().String()
+			if s.cfg.Addr != lnAddr {
+				t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
+			}
+
+			lnNetwork := ln.Addr().Network()
+			if s.cfg.Network != lnNetwork {
+				t.Errorf("Atreugo.Config.Network = %s, want %s", s.cfg.Network, lnNetwork)
+			}
+		})
 	}
 }
 
