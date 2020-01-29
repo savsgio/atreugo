@@ -17,15 +17,9 @@ func main() {
 	// Register after middlewares
 	server.UseAfter(afterMiddleware)
 
-	// Register a route with filters
-	filters := atreugo.Filters{
-		Before: []atreugo.Middleware{beforeFilter},
-		After:  []atreugo.Middleware{afterFilter},
-	}
-
-	server.PathWithFilters("GET", "/", func(ctx *atreugo.RequestCtx) error {
+	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
 		return ctx.TextResponse("Middlewares and view filters")
-	}, filters)
+	}).UseBefore(beforeFilter).UseAfter(afterFilter)
 
 	// Run
 	if err := server.ListenAndServe(); err != nil {

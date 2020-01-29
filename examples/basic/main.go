@@ -15,6 +15,16 @@ func main() {
 		return ctx.TextResponse("Hello World")
 	})
 
+	v1 := server.NewGroupPath("/v1")
+	v1.GET("/", func(ctx *atreugo.RequestCtx) error {
+		return ctx.TextResponse("V!")
+	})
+
+	v2 := v1.NewGroupPath("/v2")
+	v2.GET("/", func(ctx *atreugo.RequestCtx) error {
+		return ctx.TextResponse("V2")
+	})
+
 	if err := server.ListenAndServe(); err != nil {
 		panic(err)
 	}

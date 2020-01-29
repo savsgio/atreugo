@@ -39,8 +39,25 @@ type Router struct {
 
 	errorView ErrorView
 
-	beforeMiddlewares []Middleware
-	afterMiddlewares  []Middleware
+	middlewares Middlewares
+
+	paths []*Path
+}
+
+type Path struct {
+	noCopy nocopy.NoCopy // nolint:structcheck,unused
+
+	handlerBuilder func(View, Middlewares) fasthttp.RequestHandler
+
+	method      string
+	url         string
+	view        View
+	middlewares Middlewares
+
+	withTimeout bool
+	timeout     time.Duration
+	timeoutMsg  string
+	timeoutCode int
 }
 
 // Config configuration to run server
@@ -286,9 +303,6 @@ type Config struct { // nolint:maligned
 type StaticFS struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
-	// Filters to be executed before/after request a file.
-	Filters Filters
-
 	// Path to the root directory to serve files from.
 	Root string
 
@@ -397,12 +411,11 @@ type Middleware View
 // Filters like middlewares, but for specific paths.
 // It will be executed before and after the view defined in the path
 // in addition of the general middlewares
-type Filters struct {
+type Middlewares struct {
 	Before []Middleware
 	After  []Middleware
+	Skip   []Middleware
 }
-
-type middlewares Filters
 
 // PathRewriteFunc must return new request path based on arbitrary ctx
 // info such as ctx.Path().
