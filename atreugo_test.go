@@ -354,21 +354,24 @@ func TestAtreugo_Serve(t *testing.T) {
 		errCh <- s.Serve(ln)
 	}()
 
-	select {
-	case err := <-errCh:
-		if err != nil {
-			t.Fatalf("Unexpected error: %v", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		lnAddr := ln.Addr().String()
-		if s.cfg.Addr != lnAddr {
-			t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
-		}
+	time.Sleep(100 * time.Millisecond)
 
-		lnNetwork := ln.Addr().Network()
-		if s.cfg.Network != lnNetwork {
-			t.Errorf("Atreugo.Config.Network = %s, want %s", s.cfg.Network, lnNetwork)
-		}
+	if err := s.server.Shutdown(); err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if err := <-errCh; err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	lnAddr := ln.Addr().String()
+	if s.cfg.Addr != lnAddr {
+		t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
+	}
+
+	lnNetwork := ln.Addr().Network()
+	if s.cfg.Network != lnNetwork {
+		t.Errorf("Atreugo.Config.Network = %s, want %s", s.cfg.Network, lnNetwork)
 	}
 }
 
