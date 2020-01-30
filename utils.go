@@ -6,7 +6,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-// execute executes all middlewares + filters + view with the given request context
+// execute executes all middlewares + view with the given request context
 func execute(ctx *RequestCtx, hs []Middleware) error {
 	for _, h := range hs {
 		if err := h(ctx); err != nil {

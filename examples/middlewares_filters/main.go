@@ -12,14 +12,14 @@ func main() {
 	server := atreugo.New(config)
 
 	// Register before middlewares
-	server.UseBefore(middlewares.RequestIDMiddleware, beforeMiddleware)
+	server.UseBefore(middlewares.RequestIDMiddleware, beforeGlobal)
 
 	// Register after middlewares
-	server.UseAfter(afterMiddleware)
+	server.UseAfter(afterGlobal)
 
 	server.GET("/", func(ctx *atreugo.RequestCtx) error {
-		return ctx.TextResponse("Middlewares and view filters")
-	}).UseBefore(beforeFilter).UseAfter(afterFilter)
+		return ctx.TextResponse("Middlewares example")
+	}).UseBefore(beforeView).UseAfter(afterView)
 
 	// Run
 	if err := server.ListenAndServe(); err != nil {

@@ -212,7 +212,7 @@ func (r *Router) RequestHandlerPath(method, url string, handler fasthttp.Request
 	return r.addPath(method, url, viewFn)
 }
 
-// NetHTTPPathWithFilters wraps net/http handler to atreugo view and registers it to
+// NetHTTPPath wraps net/http handler to atreugo view and registers it to
 // the given path and method.
 //
 // While this function may be used for easy switching from net/http to fasthttp/atreugo,

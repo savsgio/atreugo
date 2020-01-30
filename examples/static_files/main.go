@@ -11,15 +11,15 @@ func main() {
 	server := atreugo.New(config)
 
 	// Register before middlewares
-	server.UseBefore(beforeMiddleware)
+	server.UseBefore(beforeGlobal)
 
 	// Register after middlewares
-	server.UseAfter(afterMiddleware)
+	server.UseAfter(afterGlobal)
 
-	// Register a route with filters
+	// Middlewares collection
 	middlewares := atreugo.Middlewares{
-		Before: []atreugo.Middleware{beforeFilter},
-		After:  []atreugo.Middleware{afterFilter},
+		Before: []atreugo.Middleware{beforeView},
+		After:  []atreugo.Middleware{afterView},
 	}
 
 	// Serve files with default configuration
@@ -28,7 +28,7 @@ func main() {
 	// Serve just one file
 	server.ServeFile("/readme", "README.md")
 
-	// Serve just one file with filters
+	// Serve just one file with middlewares
 	server.ServeFile("/license", "LICENSE").Middlewares(middlewares)
 
 	// Creates a new group to serve static files
@@ -37,8 +37,8 @@ func main() {
 	// Serves files with default configuration
 	static.Static("/default", "./")
 
-	// Serves files with default configuration and filters
-	static.Static("/filters", "./").Middlewares(middlewares)
+	// Serves files with default configuration and middlewares
+	static.Static("/middlewares", "./").Middlewares(middlewares)
 
 	// Serves files with your own custom configuration
 	static.StaticCustom("/custom", &atreugo.StaticFS{
@@ -46,12 +46,12 @@ func main() {
 		GenerateIndexPages: false,
 		AcceptByteRange:    false,
 		Compress:           true,
-	}).SkipMiddlewares(beforeMiddleware)
+	}).SkipMiddlewares(beforeGlobal)
 
 	// Serve just one file
-	static.ServeFile("/readme", "README.md").UseBefore(beforeFilter)
+	static.ServeFile("/readme", "README.md").UseBefore(beforeView)
 
-	// Serve just one file with filters
+	// Serve just one file with middlewares
 	static.ServeFile("/license", "LICENSE").Middlewares(middlewares)
 
 	// Run

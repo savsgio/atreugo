@@ -147,8 +147,8 @@ func TestRouter_buildMiddlewaresChain(t *testing.T) { //nolint:funlen
 	callOrder := map[string]int{
 		"globalBefore": 0,
 		"groupBefore":  0,
-		"filterBefore": 0,
-		"filterAfter":  0,
+		"viewBefore":   0,
+		"viewAfter":    0,
 		"groupAfter":   0,
 		"globalAfter":  0,
 	}
@@ -156,8 +156,8 @@ func TestRouter_buildMiddlewaresChain(t *testing.T) { //nolint:funlen
 	wantOrder := map[string]int{
 		"globalBefore": 1,
 		"groupBefore":  2,
-		"filterBefore": 3,
-		"filterAfter":  4,
+		"viewBefore":   3,
+		"viewAfter":    4,
 		"groupAfter":   5,
 		"globalAfter":  6,
 	}
@@ -203,11 +203,11 @@ func TestRouter_buildMiddlewaresChain(t *testing.T) { //nolint:funlen
 		return nil
 	}).UseBefore(func(ctx *RequestCtx) error {
 		index++
-		callOrder["filterBefore"] = index
+		callOrder["viewBefore"] = index
 		return ctx.Next()
 	}).UseAfter(func(ctx *RequestCtx) error {
 		index++
-		callOrder["filterAfter"] = index
+		callOrder["viewAfter"] = index
 		return ctx.Next()
 	}).SkipMiddlewares(skipMiddlewareGroup)
 
@@ -456,7 +456,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			name: "BeforeFiltersError",
+			name: "BeforeViewError",
 			args: args{
 				viewFn: viewFn,
 				before: before,
@@ -488,7 +488,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			name: "AfterFiltersError",
+			name: "AfterViewError",
 			args: args{
 				viewFn: viewFn,
 				before: before,
@@ -586,7 +586,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 			}
 
 			if handlerCounter.beforeViewMiddlewares != tt.want.counter.beforeViewMiddlewares {
-				t.Errorf("Before filters call counter = %v, want %v", handlerCounter.beforeViewMiddlewares,
+				t.Errorf("Before view call counter = %v, want %v", handlerCounter.beforeViewMiddlewares,
 					tt.want.counter.beforeViewMiddlewares)
 			}
 
@@ -596,7 +596,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 			}
 
 			if handlerCounter.afterViewMiddlewares != tt.want.counter.afterViewMiddlewares {
-				t.Errorf("After filters call counter = %v, want %v", handlerCounter.afterViewMiddlewares,
+				t.Errorf("After view call counter = %v, want %v", handlerCounter.afterViewMiddlewares,
 					tt.want.counter.afterViewMiddlewares)
 			}
 

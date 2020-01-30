@@ -408,9 +408,7 @@ type PanicView func(*RequestCtx, interface{})
 // Middleware must process all incoming requests before/after defined views.
 type Middleware View
 
-// Filters like middlewares, but for specific paths.
-// It will be executed before and after the view defined in the path
-// in addition of the general middlewares
+// Middlewares is a collection of middlewares with the order of execution and which to skip
 type Middlewares struct {
 	Before []Middleware
 	After  []Middleware

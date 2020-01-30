@@ -40,7 +40,7 @@ func (ctx *RequestCtx) RequestID() []byte {
 	return ctx.Request.Header.Peek(XRequestIDHeader)
 }
 
-// Next pass control to the next middleware/filter/view function
+// Next pass control to the next middleware/view function
 func (ctx *RequestCtx) Next() error {
 	ctx.next = true
 	return nil

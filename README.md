@@ -1,5 +1,4 @@
-Atreugo
-=======
+# Atreugo
 
 [![Build Status](https://travis-ci.org/savsgio/atreugo.svg?branch=master)](https://travis-ci.org/savsgio/atreugo)
 [![Coverage Status](https://coveralls.io/repos/github/savsgio/atreugo/badge.svg?branch=master)](https://coveralls.io/github/savsgio/atreugo?branch=master)
@@ -39,46 +38,46 @@ See: [docs](https://github.com/savsgio/atreugo/tree/master/docs)
 
 ## Feature Overview
 
-* Optimized for speed. Easily handles more than 100K qps and more than 1M concurrent keep-alive connections on modern hardware.
+- Optimized for speed. Easily handles more than 100K qps and more than 1M concurrent keep-alive connections on modern hardware.
 
-* Optimized for low memory usage.
+- Optimized for low memory usage.
 
-* Easy 'Connection: Upgrade' support via RequestCtx.Hijack.
+- Easy 'Connection: Upgrade' support via RequestCtx.Hijack.
 
-* Server provides anti-DoS limits.
+- Server provides anti-DoS limits.
 
-* Middlewares support:
-    * Before view execution.
-    * After view execution.
+- Middlewares support:
 
-* Easy routing:
-    * Path parameters (mandatories and optionals).
-    * Views with timeout.
-    * Group paths and middlewares.
-    * Static files.
-    * Serve one file like pdf, etc.
-    * Filters (middlewares) to especific views.
-    * fasthttp handlers support.
-    * net/http handlers support.
+  - Before view execution.
+  - After view execution.
 
-* Common responses (also you could use your own responses):
-    * JSON
-    * HTTP
-    * Text
-    * Raw
-    * File
-    * Redirect
+- Easy routing:
 
+  - Path parameters (mandatories and optionals).
+  - Views with timeout.
+  - Group paths and middlewares.
+  - Static files.
+  - Serve one file like pdf, etc.
+  - Middlewares for especific views.
+  - fasthttp handlers support.
+  - net/http handlers support.
+
+- Common responses (also you could use your own responses):
+  - JSON
+  - HTTP
+  - Text
+  - Raw
+  - File
+  - Redirect
 
 ## Examples:
 
 Go to [examples](https://github.com/savsgio/atreugo/tree/master/examples) directory to see how to use Atreugo.
 
-
 ## Note:
+
 `*atreugo.RequestCtx` is equal than `*fasthttp.RequestCtx`, but adding extra funtionality, so you can use
 the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
-
 
 ## Benchmark
 
@@ -90,17 +89,15 @@ the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
 
 - Concurrency Test (allocations): In 30 ms processing time, the tets result for 100, 1000, 5000 clients is:
 
-\* *Smaller is better*
+\* _Smaller is better_
 
 ![](https://raw.githubusercontent.com/smallnest/go-web-framework-benchmark/master/concurrency_alloc.png)
-
 
 ## Useful third-party libraries
 
 - [session](https://github.com/fasthttp/session)
 - [websocket](https://github.com/fasthttp/websocket)
 
-Contributing
-============
+# Contributing
 
 **Feel free to contribute it or fork me...** :wink:
