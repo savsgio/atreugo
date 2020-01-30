@@ -17,7 +17,7 @@ func main() {
 	// Register after middlewares
 	server.UseAfter(afterMiddleware)
 
-	server.Path("GET", "/", func(ctx *atreugo.RequestCtx) error {
+	server.GET("/", func(ctx *atreugo.RequestCtx) error {
 		return ctx.TextResponse("Middlewares and view filters")
 	}).UseBefore(beforeFilter).UseAfter(afterFilter)
 
