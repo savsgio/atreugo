@@ -1,6 +1,5 @@
-Middlewares and view filters
-============================
+# Middlewares
 
-Example to creates an atreugo server with middlewares and view filters.
+Example to creates an atreugo server with middlewares.
 
 - Route: `/`

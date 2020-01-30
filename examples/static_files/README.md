@@ -1,5 +1,4 @@
-Static Files
-============
+# Static Files
 
 Example to creates an atreugo static files server.
 
@@ -8,10 +7,9 @@ Example to creates an atreugo static files server.
 - `/main`
 - `/readme`
 - `/license`
-  
+
 - `/static/default`
-- `/static/filters`
+- `/static/middlewares`
 - `/static/custom`
 - `/static/readme`
 - `/static/license`
-

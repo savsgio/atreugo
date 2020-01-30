@@ -11,15 +11,15 @@ func main() {
 	server := atreugo.New(config)
 
 	// Register before middlewares
-	server.UseBefore(beforeMiddleware)
+	server.UseBefore(beforeGlobal)
 
 	// Register after middlewares
-	server.UseAfter(afterMiddleware)
+	server.UseAfter(afterGlobal)
 
-	// Register a route with filters
-	filters := atreugo.Filters{
-		Before: []atreugo.Middleware{beforeFilter},
-		After:  []atreugo.Middleware{afterFilter},
+	// Middlewares collection
+	middlewares := atreugo.Middlewares{
+		Before: []atreugo.Middleware{beforeView},
+		After:  []atreugo.Middleware{afterView},
 	}
 
 	// Serve files with default configuration
@@ -28,8 +28,8 @@ func main() {
 	// Serve just one file
 	server.ServeFile("/readme", "README.md")
 
-	// Serve just one file with filters
-	server.ServeFileWithFilters("/license", "LICENSE", filters)
+	// Serve just one file with middlewares
+	server.ServeFile("/license", "LICENSE").Middlewares(middlewares)
 
 	// Creates a new group to serve static files
 	static := server.NewGroupPath("/static")
@@ -37,23 +37,22 @@ func main() {
 	// Serves files with default configuration
 	static.Static("/default", "./")
 
-	// Serves files with default configuration and filters
-	static.StaticWithFilters("/filters", "./", filters)
+	// Serves files with default configuration and middlewares
+	static.Static("/middlewares", "./").Middlewares(middlewares)
 
 	// Serves files with your own custom configuration
 	static.StaticCustom("/custom", &atreugo.StaticFS{
-		Filters:            filters,
 		Root:               "./",
 		GenerateIndexPages: false,
 		AcceptByteRange:    false,
 		Compress:           true,
-	})
+	}).SkipMiddlewares(beforeGlobal)
 
 	// Serve just one file
-	static.ServeFile("/readme", "README.md")
+	static.ServeFile("/readme", "README.md").UseBefore(beforeView)
 
-	// Serve just one file with filters
-	static.ServeFileWithFilters("/license", "LICENSE", filters)
+	// Serve just one file with middlewares
+	static.ServeFile("/license", "LICENSE").Middlewares(middlewares)
 
 	// Run
 	if err := server.ListenAndServe(); err != nil {

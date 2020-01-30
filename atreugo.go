@@ -174,6 +174,8 @@ func (s *Atreugo) HandleOPTIONS(v bool) {
 func (s *Atreugo) Serve(ln net.Listener) error {
 	defer ln.Close()
 
+	s.init()
+
 	s.cfg.Addr = ln.Addr().String()
 	s.cfg.Network = ln.Addr().Network()
 

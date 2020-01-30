@@ -31,16 +31,35 @@ type Atreugo struct {
 type Router struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
-	router *fastrouter.Router
-	log    *logger.Logger
-
+	router    *fastrouter.Router
 	parent    *Router
 	beginPath string
 
 	errorView ErrorView
 
-	beforeMiddlewares []Middleware
-	afterMiddlewares  []Middleware
+	paths       []*Path
+	middlewares Middlewares
+
+	log *logger.Logger
+}
+
+// Path configuration of the registered view
+//
+// It is prohibited copying Path values.
+type Path struct {
+	noCopy nocopy.NoCopy // nolint:structcheck,unused
+
+	handlerBuilder func(View, Middlewares) fasthttp.RequestHandler
+
+	method      string
+	url         string
+	view        View
+	middlewares Middlewares
+
+	withTimeout bool
+	timeout     time.Duration
+	timeoutMsg  string
+	timeoutCode int
 }
 
 // Config configuration to run server
@@ -287,6 +306,10 @@ type StaticFS struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
 	// Filters to be executed before/after request a file.
+	//
+	// WARNING: It's deprecated, will be remove in version v11.0.0.
+	// Use instead:
+	// 		r.StaticCustom(url, fs).Middlewares(middlewares)
 	Filters Filters
 
 	// Path to the root directory to serve files from.
@@ -394,15 +417,12 @@ type PanicView func(*RequestCtx, interface{})
 // Middleware must process all incoming requests before/after defined views.
 type Middleware View
 
-// Filters like middlewares, but for specific paths.
-// It will be executed before and after the view defined in the path
-// in addition of the general middlewares
-type Filters struct {
+// Middlewares is a collection of middlewares with the order of execution and which to skip
+type Middlewares struct {
 	Before []Middleware
 	After  []Middleware
+	Skip   []Middleware
 }
-
-type middlewares Filters
 
 // PathRewriteFunc must return new request path based on arbitrary ctx
 // info such as ctx.Path().
@@ -418,3 +438,16 @@ type PathRewriteFunc func(ctx *RequestCtx) []byte
 
 // JSON is a map whose key is a string and whose value an interface
 type JSON map[string]interface{}
+
+//
+// DEPRECATED
+//
+
+// Filters like middlewares, but for specific paths.
+// It will be executed before and after the view defined in the path
+// in addition of the general middlewares
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+//		Middlewares type
+type Filters Middlewares

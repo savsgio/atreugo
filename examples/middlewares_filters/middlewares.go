@@ -5,14 +5,26 @@ import (
 	"github.com/savsgio/go-logger"
 )
 
-func beforeMiddleware(ctx *atreugo.RequestCtx) error {
-	logger.Info("Middleware executed BEFORE view")
+func beforeGlobal(ctx *atreugo.RequestCtx) error {
+	logger.Info("Middleware executed BEFORE GLOBAL")
 
 	return ctx.Next()
 }
 
-func afterMiddleware(ctx *atreugo.RequestCtx) error {
-	logger.Info("Middleware executed AFTER view")
+func afterGlobal(ctx *atreugo.RequestCtx) error {
+	logger.Info("Middleware executed AFTER GLOBAL")
+
+	return ctx.Next()
+}
+
+func beforeView(ctx *atreugo.RequestCtx) error {
+	logger.Info("Middleware executed BEFORE VIEW")
+
+	return ctx.Next()
+}
+
+func afterView(ctx *atreugo.RequestCtx) error {
+	logger.Info("Middleware executed AFTER VIEW")
 
 	return ctx.Next()
 }
