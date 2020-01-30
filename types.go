@@ -31,19 +31,21 @@ type Atreugo struct {
 type Router struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
-	router *fastrouter.Router
-	log    *logger.Logger
-
+	router    *fastrouter.Router
 	parent    *Router
 	beginPath string
 
 	errorView ErrorView
 
+	paths       []*Path
 	middlewares Middlewares
 
-	paths []*Path
+	log *logger.Logger
 }
 
+// Path configuration of the registered view
+//
+// It is prohibited copying Path values.
 type Path struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 

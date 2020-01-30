@@ -143,51 +143,70 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 	}
 }
 
-// UseBefore register middleware functions in the order you want to execute them before the view execution
-func (r *Router) UseBefore(fns ...Middleware) {
+// Middlewares defines the middlewares (before, after and skip) in the order in which you want to execute them
+// for the view or group
+//
+// ** The previous middlewares configuration could be overridden
+func (r *Router) Middlewares(middlewares Middlewares) *Router {
+	r.middlewares = middlewares
+
+	return r
+}
+
+// UseBefore registers the middlewares in the order in which you want to execute them
+// before the execution of the view or group
+func (r *Router) UseBefore(fns ...Middleware) *Router {
 	r.middlewares.Before = append(r.middlewares.Before, fns...)
+
+	return r
 }
 
-// UseAfter register middleware functions in the order you want to execute them after the view execution
-func (r *Router) UseAfter(fns ...Middleware) {
+// UseAfter registers the middlewares in the order in which you want to execute them
+// after the execution of the view or group
+func (r *Router) UseAfter(fns ...Middleware) *Router {
 	r.middlewares.After = append(r.middlewares.After, fns...)
+
+	return r
 }
 
-func (r *Router) SkipMiddlewares(fns ...Middleware) {
+// SkipMiddlewares registers the middlewares that you want to skip when executing the view or group
+func (r *Router) SkipMiddlewares(fns ...Middleware) *Router {
 	r.middlewares.Skip = append(r.middlewares.Skip, fns...)
+
+	return r
 }
 
-// GET is a shortcut for router.Path("GET", url, viewFn)
+// GET shortcut for router.Path("GET", url, viewFn)
 func (r *Router) GET(url string, viewFn View) *Path {
 	return r.Path(fasthttp.MethodGet, url, viewFn)
 }
 
-// HEAD is a shortcut for router.Path("HEAD", url, viewFn)
+// HEAD shortcut for router.Path("HEAD", url, viewFn)
 func (r *Router) HEAD(url string, viewFn View) *Path {
 	return r.Path(fasthttp.MethodHead, url, viewFn)
 }
 
-// OPTIONS is a shortcut for router.Path("OPTIONS", url, viewFn)
+// OPTIONS shortcut for router.Path("OPTIONS", url, viewFn)
 func (r *Router) OPTIONS(url string, viewFn View) *Path {
 	return r.Path(fasthttp.MethodOptions, url, viewFn)
 }
 
-// POST is a shortcut for router.Path("POST", url, viewFn)
+// POST shortcut for router.Path("POST", url, viewFn)
 func (r *Router) POST(url string, viewFn View) *Path {
 	return r.Path(fasthttp.MethodPost, url, viewFn)
 }
 
-// PUT is a shortcut for router.Path("PUT", url, viewFn)
+// PUT shortcut for router.Path("PUT", url, viewFn)
 func (r *Router) PUT(url string, viewFn View) *Path {
 	return r.Path(fasthttp.MethodPut, url, viewFn)
 }
 
-// PATCH is a shortcut for router.Path("PATCH", url, viewFn)
+// PATCH shortcut for router.Path("PATCH", url, viewFn)
 func (r *Router) PATCH(url string, viewFn View) *Path {
 	return r.Path(fasthttp.MethodPatch, url, viewFn)
 }
 
-// DELETE is a shortcut for router.Path("DELETE", url, viewFn)
+// DELETE shortcut for router.Path("DELETE", url, viewFn)
 func (r *Router) DELETE(url string, viewFn View) *Path {
 	return r.Path(fasthttp.MethodDelete, url, viewFn)
 }
