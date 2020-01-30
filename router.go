@@ -308,7 +308,8 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 
 	p := r.RequestHandlerPath(fasthttp.MethodGet, url+"/*filepath", ffs.NewRequestHandler())
 
-	// nolint:godox - TODO: Remove in version v11.0.0
+	// nolint:godox
+	// TODO: Remove in version v11.0.0
 	if len(fs.Filters.Before) > 0 || len(fs.Filters.After) > 0 || len(fs.Filters.Skip) > 0 {
 		p.Middlewares(Middlewares(fs.Filters))
 	}

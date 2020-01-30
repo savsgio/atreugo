@@ -950,7 +950,8 @@ func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
 		url      string
 		rootPath string
 
-		// nolint:godox - TODO: Remove in version v11.0.0
+		// nolint:godox
+		// TODO: Remove in version v11.0.0
 		filters Filters
 	}
 
@@ -1035,7 +1036,8 @@ func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
 				t.Error("Custom path rewrite function is not called")
 			}
 
-			// nolint:godox - TODO: Remove in version v11.0.0
+			// nolint:godox
+			// TODO: Remove in version v11.0.0
 			if len(tt.args.filters.Before) > 0 && (reflect.DeepEqual(tt.args.filters, p.Middlewares)) {
 				t.Error("Deprecated filters are not set")
 			}
@@ -1136,7 +1138,7 @@ func Benchmark_RouterHandler(b *testing.B) {
 // DEPRECATED
 //
 
-func TestRouter_DeprecatedPaths(t *testing.T) {
+func TestRouter_DeprecatedPaths(t *testing.T) { //nolint:funlen
 	type args struct {
 		method         string
 		url            string
@@ -1347,12 +1349,12 @@ func TestRouter_DeprecatedPaths(t *testing.T) {
 
 			r.init()
 
-			wantUrl := tt.args.url
+			wantURL := tt.args.url
 			if tt.name == "StaticWithFilters" {
-				wantUrl += "/*filepath"
+				wantURL += "/*filepath"
 			}
 
-			handler, _ := r.router.Lookup("GET", wantUrl, ctx)
+			handler, _ := r.router.Lookup("GET", wantURL, ctx)
 			if handler == nil {
 				t.Fatal("Route is not configured")
 			}
