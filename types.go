@@ -305,6 +305,13 @@ type Config struct { // nolint:maligned
 type StaticFS struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
+	// Filters to be executed before/after request a file.
+	//
+	// WARNING: It's deprecated, will be remove in version v11.0.0.
+	// Use instead:
+	// 		r.StaticCustom(url, fs).Middlewares(middlewares)
+	Filters Filters
+
 	// Path to the root directory to serve files from.
 	Root string
 
@@ -431,3 +438,16 @@ type PathRewriteFunc func(ctx *RequestCtx) []byte
 
 // JSON is a map whose key is a string and whose value an interface
 type JSON map[string]interface{}
+
+//
+// DEPRECATED
+//
+
+// Filters like middlewares, but for specific paths.
+// It will be executed before and after the view defined in the path
+// in addition of the general middlewares
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+//		Middlewares type
+type Filters Middlewares

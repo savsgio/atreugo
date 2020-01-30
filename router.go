@@ -3,6 +3,7 @@ package atreugo
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	fastrouter "github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger"
@@ -305,7 +306,14 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 		ffs.PathRewrite = fasthttp.NewPathSlashesStripper(stripSlashes)
 	}
 
-	return r.RequestHandlerPath(fasthttp.MethodGet, url+"/*filepath", ffs.NewRequestHandler())
+	p := r.RequestHandlerPath(fasthttp.MethodGet, url+"/*filepath", ffs.NewRequestHandler())
+
+	// nolint:godox - TODO: Remove in version v11.0.0
+	if len(fs.Filters.Before) > 0 || len(fs.Filters.After) > 0 || len(fs.Filters.Skip) > 0 {
+		p.Middlewares(Middlewares(fs.Filters))
+	}
+
+	return p
 }
 
 // ServeFile returns HTTP response containing compressed file contents
@@ -329,4 +337,151 @@ func (r *Router) ServeFile(url, filePath string) *Path {
 // ListPaths returns all registered routes grouped by method
 func (r *Router) ListPaths() map[string][]string {
 	return r.router.List()
+}
+
+//
+// DEPRECATED
+//
+
+// PathWithFilters registers a new view with the given path and method,
+// and with filters that will execute before and after.
+//
+// This function is intended for bulk loading and to allow the usage of less
+// frequently used, non-standardized or custom methods (e.g. for internal
+// communication with a proxy).
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+// 		r.Path(method, url, viewFn).Middlewares(middlewares)
+func (r *Router) PathWithFilters(method, url string, viewFn View, filters Filters) {
+	r.Path(method, url, viewFn).Middlewares(Middlewares(filters))
+}
+
+// RequestHandlerPathWithFilters wraps fasthttp request handler to atreugo view and registers it to
+// the given path and method, and with filters that will execute before and after.
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+// 		r.RequestHandlerPath(method, url, handler).Middlewares(middlewares)
+func (r *Router) RequestHandlerPathWithFilters(method, url string, handler fasthttp.RequestHandler,
+	filters Filters) {
+	r.RequestHandlerPath(method, url, handler).Middlewares(Middlewares(filters))
+}
+
+// TimeoutPath registers a new view with the given path and method,
+// which returns StatusRequestTimeout error with the given msg to the client
+// if view didn't return during the given duration.
+//
+// The returned handler may return StatusTooManyRequests error with the given
+// msg to the client if there are more than Server.Concurrency concurrent
+// handlers view are running at the moment.
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+// 		r.Path(method, url, viewFn).Timeout(timeout, msg)
+func (r *Router) TimeoutPath(method, url string, viewFn View, timeout time.Duration, msg string) {
+	r.TimeoutPathWithFilters(method, url, viewFn, Filters{}, timeout, msg)
+}
+
+// TimeoutPathWithFilters registers a new view with the given path and method,
+// and with filters that will execute before and after, which returns StatusRequestTimeout
+// error with the given msg to the client if view/filters didn't return during the given duration.
+//
+// The returned handler may return StatusTooManyRequests error with the given
+// msg to the client if there are more than Server.Concurrency concurrent
+// handlers view/filters are running at the moment.
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+// 		r.Path(method, url, viewFn).Timeout(timeout, msg).Middlewares(middlewares)
+func (r *Router) TimeoutPathWithFilters(method, url string, viewFn View, filters Filters,
+	timeout time.Duration, msg string) {
+	r.Path(method, url, viewFn).Timeout(timeout, msg).Middlewares(Middlewares(filters))
+}
+
+// TimeoutWithCodePath registers a new view with the given path and method,
+// which returns an error with the given msg and status code to the client
+// if view/filters didn't return during the given duration.
+//
+// The returned handler may return StatusTooManyRequests error with the given
+// msg to the client if there are more than Server.Concurrency concurrent
+// handlers view/filters are running at the moment.
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+// 		r.Path(method, url, viewFn).TimeoutCode(timeout, msg, statusCode)
+func (r *Router) TimeoutWithCodePath(method, url string, viewFn View,
+	timeout time.Duration, msg string, statusCode int) {
+	r.TimeoutWithCodePathWithFilters(method, url, viewFn, Filters{}, timeout, msg, statusCode)
+}
+
+// TimeoutWithCodePathWithFilters registers a new view with the given path and method,
+// and with filters that will execute before and after, which returns an error
+// with the given msg and status code to the client if view/filters didn't return during
+// the given duration.
+//
+// The returned handler may return StatusTooManyRequests error with the given
+// msg to the client if there are more than Server.Concurrency concurrent
+// handlers view/filters are running at the moment.
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+// 		r.Path(method, url, viewFn).TimeoutCode(timeout, msg, statusCode).Middlewares(middlewares)
+func (r *Router) TimeoutWithCodePathWithFilters(method, url string, viewFn View, filters Filters,
+	timeout time.Duration, msg string, statusCode int) {
+	r.Path(method, url, viewFn).TimeoutCode(timeout, msg, statusCode).Middlewares(Middlewares(filters))
+}
+
+// NetHTTPPathWithFilters wraps net/http handler to atreugo view and registers it to
+// the given path and method, and with filters that will execute before and after
+//
+// While this function may be used for easy switching from net/http to fasthttp/atreugo,
+// it has the following drawbacks comparing to using manually written fasthttp/atreugo,
+// request handler:
+//
+//     * A lot of useful functionality provided by fasthttp/atreugo is missing
+//       from net/http handler.
+//     * net/http -> fasthttp/atreugo handler conversion has some overhead,
+//       so the returned handler will be always slower than manually written
+//       fasthttp/atreugo handler.
+//
+// So it is advisable using this function only for quick net/http -> fasthttp
+// switching. Then manually convert net/http handlers to fasthttp handlers
+// according to https://github.com/valyala/fasthttp#switching-from-nethttp-to-fasthttp.
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+// 		r.NetHTTPPath(method, url, handler).Middlewares(middlewares)
+func (r *Router) NetHTTPPathWithFilters(method, url string, handler http.Handler, filters Filters) {
+	r.NetHTTPPath(method, url, handler).Middlewares(Middlewares(filters))
+}
+
+// StaticWithFilters serves static files from the given file system root,
+// and with filters that will execute before and after request a file.
+//
+// Make sure your program has enough 'max open files' limit aka
+// 'ulimit -n' if root folder contains many files.
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+// 		r.Static(url, rootPath).Middlewares(middlewares)
+func (r *Router) StaticWithFilters(url, rootPath string, filters Filters) {
+	r.Static(url, rootPath).Middlewares(Middlewares(filters))
+}
+
+// ServeFileWithFilters returns HTTP response containing compressed file contents
+// from the given path, and with filters that will execute before and after request the file.
+//
+// HTTP response may contain uncompressed file contents in the following cases:
+//
+//   * Missing 'Accept-Encoding: gzip' request header.
+//   * No write access to directory containing the file.
+//
+// Directory contents is returned if path points to directory.
+//
+// WARNING: It's deprecated, will be remove in version v11.0.0.
+// Use instead:
+// 		r.ServeFile(url, filePath).Middlewares(middlewares)
+func (r *Router) ServeFileWithFilters(url, filePath string, filters Filters) {
+	r.ServeFile(url, filePath).Middlewares(Middlewares(filters))
 }
