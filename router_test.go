@@ -137,7 +137,7 @@ func TestRouter_init(t *testing.T) {
 func TestRouter_buildMiddlewaresChain(t *testing.T) { //nolint:funlen
 	s := New(testAtreugoConfig)
 
-	method := "GET"
+	method := "POST"
 	url := "/foo"
 
 	skipMiddlewareGlobalCalled := false

@@ -11,8 +11,6 @@ func (ctx *RequestCtx) newResponse(contentType string, statusCode ...int) {
 
 	if len(statusCode) > 0 {
 		ctx.SetStatusCode(statusCode[0])
-	} else {
-		ctx.SetStatusCode(fasthttp.StatusOK)
 	}
 }
 
