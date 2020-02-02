@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
@@ -61,6 +62,10 @@ func (ctx *RequestCtx) AttachContext(extraCtx context.Context) {
 		panic("could not attach to itself")
 	}
 
+	if previousCtx := ctx.AttachedContext(); previousCtx != nil {
+		extraCtx = combinedContext{extraCtx, previousCtx}
+	}
+
 	ctx.SetUserValue(attachedCtxKey, extraCtx)
 }
 
@@ -103,4 +108,31 @@ func (ctx *RequestCtx) Value(key interface{}) interface{} {
 	}
 
 	return ctx.RequestCtx.Value(key)
+}
+
+// combinedContext combines the values of two contexts by first looking the Value in top, then in bottom.
+// The rest of the methods (Deadline etc) are simply delegated to top
+type combinedContext struct {
+	top    context.Context
+	bottom context.Context
+}
+
+func (c combinedContext) Deadline() (deadline time.Time, ok bool) {
+	return c.top.Deadline()
+}
+
+func (c combinedContext) Done() <-chan struct{} {
+	return c.top.Done()
+}
+
+func (c combinedContext) Err() error {
+	return c.top.Err()
+}
+
+// First look the key in top and if nil, look in bottom
+func (c combinedContext) Value(key interface{}) interface{} {
+	if value := c.top.Value(key); value != nil {
+		return value
+	}
+	return c.bottom.Value(key)
 }

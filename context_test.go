@@ -156,3 +156,23 @@ func Test_Value(t *testing.T) {
 		t.Errorf("Value() key '%s' == %v, want %v", "fake", v, nil)
 	}
 }
+
+func Test_ValueTransitive(t *testing.T) {
+	ctx := acquireRequestCtx(new(fasthttp.RequestCtx))
+
+	ctx2 := context.WithValue(ctx, "k2", "v2")
+	ctx.AttachContext(ctx2)
+	if v := ctx.Value("k2"); v != "v2" {
+		t.Errorf("Value() key '%s' == %v, want %v", "k2", v, "v2")
+	}
+
+	ctx3 := context.WithValue(ctx, "k3", "v3")
+	ctx.AttachContext(ctx3)
+	// Should remember *both* k2 and k3
+	if v := ctx.Value("k2"); v != "v2" {
+		t.Errorf("Value() key '%s' == %v, want %v", "k2", v, "v2")
+	}
+	if v := ctx.Value("k3"); v != "v3" {
+		t.Errorf("Value() key '%s' == %v, want %v", "k3", v, "v3")
+	}
+}
