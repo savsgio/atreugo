@@ -19,7 +19,7 @@ type Atreugo struct {
 
 	server *fasthttp.Server
 	log    *logger.Logger
-	cfg    *Config
+	cfg    Config
 
 	*Router
 }

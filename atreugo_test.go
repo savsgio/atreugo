@@ -16,7 +16,7 @@ import (
 	"github.com/valyala/fasthttp/fasthttputil"
 )
 
-var testAtreugoConfig = &Config{
+var testAtreugoConfig = Config{
 	LogLevel: "fatal",
 }
 
@@ -156,7 +156,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 				}
 			}()
 
-			cfg := &Config{
+			cfg := Config{
 				Network:              tt.args.network,
 				LogLevel:             tt.args.logLevel,
 				GlobalOPTIONS:        tt.args.globalOPTIONSView,
@@ -166,7 +166,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			}
 			s := New(cfg)
 
-			if cfg.LogLevel != tt.want.logLevel {
+			if s.cfg.LogLevel != tt.want.logLevel {
 				t.Errorf("Log level = %v, want %v", cfg.LogLevel, tt.want.logLevel)
 			}
 
@@ -242,7 +242,7 @@ func Test_fasthttpServer(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := &Config{
+			cfg := Config{
 				LogLevel: "fatal",
 				Compress: tt.args.compress,
 			}
@@ -344,7 +344,7 @@ func TestAtreugo_RouterConfiguration(t *testing.T) { //nolint:funlen
 }
 
 func TestAtreugo_Serve(t *testing.T) {
-	cfg := &Config{LogLevel: "fatal"}
+	cfg := Config{LogLevel: "fatal"}
 	s := New(cfg)
 
 	ln := fasthttputil.NewInmemoryListener()
@@ -433,7 +433,7 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 
 			logOutput := &bytes.Buffer{}
 
-			cfg := &Config{LogLevel: "fatal"}
+			cfg := Config{LogLevel: "fatal"}
 			s := New(cfg)
 			s.SetLogOutput(logOutput)
 
@@ -453,7 +453,7 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 				t.Fatalf("Unexpected error: %v", err)
 			}
 
-			if !cfg.GracefulShutdown {
+			if !s.cfg.GracefulShutdown {
 				t.Errorf("Config.GracefulShutdown = %v, want %v", cfg.GracefulShutdown, true)
 			}
 
@@ -479,7 +479,7 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 }
 
 func TestAtreugo_SetLogOutput(t *testing.T) {
-	s := New(&Config{LogLevel: "info"})
+	s := New(Config{LogLevel: "info"})
 	output := new(bytes.Buffer)
 
 	s.SetLogOutput(output)
@@ -552,7 +552,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(&Config{
+			s := New(Config{
 				Addr:             tt.args.addr,
 				LogLevel:         "error",
 				TLSEnable:        tt.args.tlsEnable,

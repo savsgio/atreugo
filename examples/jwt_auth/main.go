@@ -13,7 +13,7 @@ func init() { //nolint:gochecknoinits
 }
 
 func main() {
-	config := &atreugo.Config{
+	config := atreugo.Config{
 		Addr: "0.0.0.0:8000",
 	}
 	server := atreugo.New(config)

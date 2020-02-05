@@ -94,7 +94,7 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := &Config{
+			cfg := Config{
 				Addr:      tt.args.addr,
 				LogLevel:  "fatal",
 				Reuseport: tt.args.reuseport,

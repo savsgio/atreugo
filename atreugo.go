@@ -16,7 +16,7 @@ var tcpNetworks = []string{"tcp", "tcp4", "tcp6"}
 var validNetworks = append(tcpNetworks, []string{"unix"}...)
 
 // New create a new instance of Atreugo Server
-func New(cfg *Config) *Atreugo {
+func New(cfg Config) *Atreugo {
 	if cfg.Network != "" && !gotils.StringSliceInclude(validNetworks, cfg.Network) {
 		panic("Invalid network: " + cfg.Network)
 	}
@@ -76,7 +76,7 @@ func New(cfg *Config) *Atreugo {
 	return server
 }
 
-func fasthttpServer(cfg *Config, handler fasthttp.RequestHandler, log fasthttp.Logger) *fasthttp.Server {
+func fasthttpServer(cfg Config, handler fasthttp.RequestHandler, log fasthttp.Logger) *fasthttp.Server {
 	if cfg.Compress {
 		handler = fasthttp.CompressHandler(handler)
 	}
