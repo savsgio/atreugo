@@ -7,12 +7,39 @@ import (
 
 	fastrouter "github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger"
+	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
 
 func defaultErrorView(ctx *RequestCtx, err error, statusCode int) {
 	ctx.Error(err.Error(), statusCode)
+}
+
+func emptyView(ctx *RequestCtx) error {
+	return nil
+}
+
+func buildOptionsView(url string, paths []*Path, fn View) View {
+	allow := make([]string, 0)
+
+	for _, p := range paths {
+		if p.url != url || p.method == fasthttp.MethodOptions {
+			continue
+		}
+
+		allow = append(allow, p.method)
+	}
+
+	if len(allow) == 0 {
+		allow = append(allow, fasthttp.MethodOptions)
+	}
+
+	return func(ctx *RequestCtx) error {
+		ctx.Response.Header.Set("Allow", strings.Join(allow, ", "))
+
+		return fn(ctx)
+	}
 }
 
 func newRouter(log *logger.Logger, errorView ErrorView) *Router {
@@ -47,10 +74,36 @@ func (r *Router) init() {
 		panic("Could not be executed by group router")
 	}
 
+	optionsURLsHandled := make([]string, 0)
+
 	for _, p := range r.paths {
+		if p.method == fasthttp.MethodOptions {
+			r.router.Handle(
+				fasthttp.MethodOptions,
+				p.url,
+				p.handlerBuilder(buildOptionsView(p.url, r.paths, p.view), p.middlewares),
+			)
+
+			optionsURLsHandled = append(optionsURLsHandled, p.url)
+
+			continue
+		}
+
 		handler := p.handlerBuilder(p.view, p.middlewares)
 		if p.withTimeout {
 			handler = fasthttp.TimeoutWithCodeHandler(handler, p.timeout, p.timeoutMsg, p.timeoutCode)
+		}
+
+		if r.router.HandleOPTIONS && !gotils.StringSliceInclude(
+			append(r.customOptionsURLS, optionsURLsHandled...), p.url,
+		) {
+			r.router.Handle(
+				fasthttp.MethodOptions,
+				p.url,
+				p.handlerBuilder(buildOptionsView(p.url, r.paths, emptyView), p.middlewares),
+			)
+
+			optionsURLsHandled = append(optionsURLsHandled, p.url)
 		}
 
 		r.router.Handle(p.method, p.url, handler)
@@ -85,6 +138,10 @@ func (r *Router) getGroupFullPath(path string) string {
 		path = r.parent.getGroupFullPath(path)
 	}
 
+	if path != "/" && strings.HasSuffix(path, "/") {
+		path = path[:len(path)-1]
+	}
+
 	return path
 }
 
@@ -95,6 +152,10 @@ func (r *Router) appendPath(p *Path) {
 	}
 
 	r.paths = append(r.paths, p)
+
+	if p.method == fasthttp.MethodOptions {
+		r.customOptionsURLS = append(r.customOptionsURLS, p.url)
+	}
 }
 
 func (r *Router) addPath(method, url string, fn View) *Path {
@@ -102,7 +163,12 @@ func (r *Router) addPath(method, url string, fn View) *Path {
 		panic("The http method '" + method + "' must be in uppercase")
 	}
 
-	p := &Path{handlerBuilder: r.handler, method: method, url: r.getGroupFullPath(url), view: fn}
+	p := &Path{
+		handlerBuilder: r.handler,
+		method:         method,
+		url:            r.getGroupFullPath(url),
+		view:           fn,
+	}
 	r.appendPath(p)
 
 	return p

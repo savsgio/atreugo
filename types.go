@@ -37,8 +37,9 @@ type Router struct {
 
 	errorView ErrorView
 
-	paths       []*Path
-	middlewares Middlewares
+	paths             []*Path
+	customOptionsURLS []string
+	middlewares       Middlewares
 
 	log *logger.Logger
 }
@@ -104,12 +105,6 @@ type Config struct { // nolint:maligned
 	// Shutdown works by first closing all open listeners and then waiting indefinitely for all connections
 	// to return to idle and then shut down.
 	GracefulShutdown bool
-
-	// An optional view that is called on automatic OPTIONS requests.
-	// The view is only called if HandleOPTIONS is true and no OPTIONS
-	// view for the specific path was set.
-	// The "Allowed" header is set before calling the handler.
-	GlobalOPTIONS View
 
 	// Configurable view which is called when no matching route is
 	// found. If it is not set, http.NotFound is used.

@@ -66,7 +66,6 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 	type args struct {
 		network              string
 		logLevel             string
-		globalOPTIONSView    View
 		notFoundView         View
 		methodNotAllowedView View
 		panicView            PanicView
@@ -74,16 +73,12 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 
 	type want struct {
 		logLevel             string
-		globalOPTIONSView    bool
 		notFoundView         bool
 		methodNotAllowedView bool
 		panicView            bool
 		err                  bool
 	}
 
-	globalOPTIONSView := func(ctx *RequestCtx) error {
-		return nil
-	}
 	notFoundView := func(ctx *RequestCtx) error {
 		return nil
 	}
@@ -106,7 +101,6 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			args: args{},
 			want: want{
 				logLevel:             logger.INFO,
-				globalOPTIONSView:    false,
 				notFoundView:         false,
 				methodNotAllowedView: false,
 				panicView:            false,
@@ -117,14 +111,12 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			args: args{
 				network:              "unix",
 				logLevel:             logger.WARNING,
-				globalOPTIONSView:    globalOPTIONSView,
 				notFoundView:         notFoundView,
 				methodNotAllowedView: methodNotAllowedView,
 				panicView:            panicView,
 			},
 			want: want{
 				logLevel:             logger.WARNING,
-				globalOPTIONSView:    true,
 				notFoundView:         true,
 				methodNotAllowedView: true,
 				panicView:            true,
@@ -159,7 +151,6 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			cfg := Config{
 				Network:              tt.args.network,
 				LogLevel:             tt.args.logLevel,
-				GlobalOPTIONS:        tt.args.globalOPTIONSView,
 				NotFoundView:         tt.args.notFoundView,
 				MethodNotAllowedView: tt.args.methodNotAllowedView,
 				PanicView:            tt.args.panicView,
@@ -174,8 +165,8 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 				t.Fatal("Atreugo router instance is nil")
 			}
 
-			if tt.want.globalOPTIONSView != (s.router.GlobalOPTIONS != nil) {
-				t.Error("GlobalOPTIONS handler is not setted")
+			if s.router.GlobalOPTIONS != nil {
+				t.Error("GlobalOPTIONS handler is not nil")
 			}
 
 			if tt.want.notFoundView != (s.router.NotFound != nil) {

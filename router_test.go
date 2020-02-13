@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	fastrouter "github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
 )
@@ -31,6 +32,65 @@ func TestRouter_defaultErrorView(t *testing.T) {
 		t.Errorf("Response body == %s, want %s", ctx.Response.Body(), err.Error())
 	}
 }
+
+func TestRouter_emptyView(t *testing.T) {
+	ctx := acquireRequestCtx(new(fasthttp.RequestCtx))
+
+	if err := emptyView(ctx); err != nil {
+		t.Errorf("emptyView() must returns a nil error")
+	}
+}
+
+func TestRouter_buildOptionsView(t *testing.T) {
+	url := "/"
+	p1 := &Path{method: fasthttp.MethodGet, url: url}
+	p2 := &Path{method: fasthttp.MethodPost, url: url}
+	paths := []*Path{p1, p2}
+
+	var errOptionsView error = nil
+
+	headerKey := "key"
+	headerValue := "value"
+	optionsView := func(ctx *RequestCtx) error {
+		ctx.Response.Header.Set(headerKey, headerValue)
+
+		return errOptionsView
+	}
+
+	h := buildOptionsView(url, paths, optionsView)
+
+	ctx := acquireRequestCtx(new(fasthttp.RequestCtx))
+
+	if err := h(ctx); err != errOptionsView {
+		t.Errorf("Error == %v, want %v", err, errOptionsView)
+	}
+
+	wantAllowHeader := "GET, POST"
+	allowHeaderValue := string(ctx.Response.Header.Peek("Allow"))
+
+	if allowHeaderValue != wantAllowHeader {
+		t.Errorf("Allow header == %s, want %s", allowHeaderValue, wantAllowHeader)
+	}
+
+	customHeaderValue := string(ctx.Response.Header.Peek(headerKey))
+	if customHeaderValue != headerValue {
+		t.Errorf("Header '%s' == %s, want %s", headerKey, customHeaderValue, headerValue)
+	}
+
+	h = buildOptionsView(url, []*Path{}, optionsView)
+
+	if err := h(ctx); err != nil {
+		t.Errorf("emptyView() must returns a nil error")
+	}
+
+	wantAllowHeader = "OPTIONS"
+	allowHeaderValue = string(ctx.Response.Header.Peek("Allow"))
+
+	if allowHeaderValue != wantAllowHeader {
+		t.Errorf("Allow header == %s, want %s", allowHeaderValue, wantAllowHeader)
+	}
+}
+
 func TestRouter_newRouter(t *testing.T) {
 	r := newRouter(testLog, nil)
 
@@ -76,22 +136,25 @@ func TestRouter_NewGroupPath(t *testing.T) {
 	}
 }
 
-func TestRouter_init(t *testing.T) {
-	var registeredView View
-	var registeredMiddlewares Middlewares // nolint:wsl
+func TestRouter_init(t *testing.T) { // nolint:funlen
+	var registeredViews []View
+	var registeredMiddlewaresView Middlewares                                            // nolint:wsl
+	var registeredMiddlewaresOptionsView1, registeredMiddlewaresOptionsView2 Middlewares // nolint:wsl
 
-	handlerBuilderCalled := false
+	handlerBuilderViewCalled := false
+	handlerBuilderOptionsView1Called, handlerBuilderOptionsView2Called := false, false
 
-	p := &Path{
+	url := "/test"
+	path := &Path{
 		handlerBuilder: func(fn View, middle Middlewares) fasthttp.RequestHandler {
-			registeredView = fn
-			registeredMiddlewares = middle
-			handlerBuilderCalled = true
+			registeredViews = append(registeredViews, fn)
+			registeredMiddlewaresView = middle
+			handlerBuilderViewCalled = true
 
 			return func(ctx *fasthttp.RequestCtx) {}
 		},
-		method:      "GET",
-		url:         "/test",
+		method:      fasthttp.MethodGet,
+		url:         url,
 		view:        func(ctx *RequestCtx) error { return nil },
 		middlewares: Middlewares{},
 		withTimeout: true,
@@ -100,27 +163,73 @@ func TestRouter_init(t *testing.T) {
 		timeoutCode: 404,
 	}
 
+	pathOptions1 := &Path{handlerBuilder: func(fn View, middle Middlewares) fasthttp.RequestHandler {
+		registeredViews = append(registeredViews, fn)
+		registeredMiddlewaresOptionsView1 = middle
+		handlerBuilderOptionsView1Called = true
+
+		return func(ctx *fasthttp.RequestCtx) {}
+	}, method: fasthttp.MethodOptions, url: url}
+
+	pathOptions2 := &Path{handlerBuilder: func(fn View, middle Middlewares) fasthttp.RequestHandler {
+		registeredViews = append(registeredViews, fn)
+		registeredMiddlewaresOptionsView2 = middle
+		handlerBuilderOptionsView2Called = true
+
+		return func(ctx *fasthttp.RequestCtx) {}
+	}, method: fasthttp.MethodOptions, url: "/options"}
+
 	r := newRouter(testLog, nil)
-	r.appendPath(p)
+	r.appendPath(path)
+	r.appendPath(pathOptions1)
+	r.appendPath(pathOptions2)
 	r.init()
 
 	ctx := new(fasthttp.RequestCtx)
-	h, _ := r.router.Lookup(p.method, p.url, ctx)
+	h, _ := r.router.Lookup(path.method, path.url, ctx)
 
 	if h == nil {
 		t.Error("Path is not registered in internal router")
 	}
 
-	if !handlerBuilderCalled {
-		t.Error("Path.handlerBuilder is not called")
+	h, _ = r.router.Lookup(fasthttp.MethodOptions, path.url, ctx)
+
+	if h == nil {
+		t.Error("Path AUTO (method: OPTIONS) is not registered in internal router")
 	}
 
-	if reflect.ValueOf(registeredView).Pointer() != reflect.ValueOf(p.view).Pointer() {
-		t.Errorf("Registered view == %p, want %p", registeredView, p.view)
+	h, _ = r.router.Lookup(pathOptions2.method, pathOptions2.url, ctx)
+
+	if h == nil {
+		t.Error("Path (method: OPTIONS) is not registered in internal router")
 	}
 
-	if !reflect.DeepEqual(registeredMiddlewares, p.middlewares) {
-		t.Errorf("Registered middlewares == %v, want %v", registeredMiddlewares, &p.middlewares)
+	for _, called := range []bool{
+		handlerBuilderViewCalled, handlerBuilderOptionsView1Called, handlerBuilderOptionsView2Called,
+	} {
+		if !called {
+			t.Error("Path.handlerBuilder is not called")
+		}
+	}
+
+	if len(registeredViews) != len(r.paths) {
+		t.Fatalf("Registered views == %d, want %d", len(registeredViews), len(r.paths))
+	}
+
+	if reflect.ValueOf(registeredViews[0]).Pointer() != reflect.ValueOf(path.view).Pointer() {
+		t.Errorf("Registered view == %p, want %p", registeredViews[0], path.view)
+	}
+
+	for _, middle := range []Middlewares{
+		registeredMiddlewaresView, registeredMiddlewaresOptionsView1, registeredMiddlewaresOptionsView2,
+	} {
+		if !reflect.DeepEqual(middle, path.middlewares) {
+			t.Errorf("Registered middlewares == %v, want %v", middle, &path.middlewares)
+		}
+	}
+
+	if r.router.GlobalOPTIONS != nil {
+		t.Error("GlobalOPTIONS is not nil")
 	}
 
 	defer func() {
@@ -247,7 +356,7 @@ func TestRouter_getGroupFullPath(t *testing.T) {
 	bar := foo.NewGroupPath("/bar")
 	buz := bar.NewGroupPath("/buz")
 
-	path := "/atreugo"
+	path := "/atreugo/"
 
 	fullPath := buz.getGroupFullPath(path)
 	expected := "/foo/bar/buz/atreugo"
@@ -275,7 +384,7 @@ func TestRouter_AddAndAppendPath(t *testing.T) {
 	r := newRouter(testLog, nil)
 	foo := r.NewGroupPath("/foo")
 
-	method := "GET"
+	method := fasthttp.MethodOptions
 	url := "/"
 	fn := func(ctx *RequestCtx) error { return nil }
 
@@ -283,6 +392,10 @@ func TestRouter_AddAndAppendPath(t *testing.T) {
 
 	if len(r.paths) == 0 {
 		t.Fatal("Path is not added")
+	}
+
+	if len(r.customOptionsURLS) == 0 {
+		t.Fatal("Custom OPTIONS url is not added")
 	}
 
 	p := r.paths[0]
@@ -298,6 +411,10 @@ func TestRouter_AddAndAppendPath(t *testing.T) {
 	wantURL := foo.getGroupFullPath(url)
 	if p.url != wantURL {
 		t.Errorf("Path.url == '%s', want '%s'", p.url, wantURL)
+	}
+
+	if r.customOptionsURLS[0] != wantURL {
+		t.Errorf("Custom OPTIONS url == %s, want %s", r.customOptionsURLS[0], wantURL)
 	}
 
 	if reflect.ValueOf(p.view).Pointer() != reflect.ValueOf(fn).Pointer() {
@@ -684,7 +801,7 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: fasthttp.MethodPut,
-			args: args{method: fasthttp.MethodHead, fn: r.PUT},
+			args: args{method: fasthttp.MethodPut, fn: r.PUT},
 		},
 		{
 			name: fasthttp.MethodPatch,
@@ -701,6 +818,7 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 
 		t.Run(tt.name, func(t *testing.T) {
 			r.paths = r.paths[:0]
+			r.router = fastrouter.New()
 
 			tt.args.fn(path, viewFn)
 			r.init()

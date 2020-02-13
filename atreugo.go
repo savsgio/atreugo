@@ -46,10 +46,6 @@ func New(cfg Config) *Atreugo {
 
 	r := newRouter(log, cfg.ErrorView)
 
-	if cfg.GlobalOPTIONS != nil {
-		r.router.GlobalOPTIONS = viewToHandler(cfg.GlobalOPTIONS, r.errorView)
-	}
-
 	if cfg.NotFoundView != nil {
 		r.router.NotFound = viewToHandler(cfg.NotFoundView, r.errorView)
 	}
