@@ -35,8 +35,10 @@ func buildOptionsView(url string, paths []*Path, fn View) View {
 		allow = append(allow, fasthttp.MethodOptions)
 	}
 
+	allowValue := strings.Join(allow, ", ")
+
 	return func(ctx *RequestCtx) error {
-		ctx.Response.Header.Set("Allow", strings.Join(allow, ", "))
+		ctx.Response.Header.Set("Allow", allowValue)
 
 		return fn(ctx)
 	}
