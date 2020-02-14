@@ -1,8 +1,8 @@
-# CORS Setting
+# CORS middleware
 
 Example to run Atreugo server with CORS middleware.
 
-###Usage
+### Usage
 CORS is disabled by default.
 
 You could copy and use *cors_middleware.go*
@@ -19,7 +19,7 @@ Specific domain name
 corsAllowOrigin = "http://localhost:3000"
 ```
 
-###Quick Test
+### Quick Test
 
 1.Run Atreugo server:
 ```
