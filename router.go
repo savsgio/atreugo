@@ -79,36 +79,26 @@ func (r *Router) init() {
 	optionsURLsHandled := make([]string, 0)
 
 	for _, p := range r.paths {
+		view := p.view
 		if p.method == fasthttp.MethodOptions {
-			r.router.Handle(
-				fasthttp.MethodOptions,
-				p.url,
-				p.handlerBuilder(buildOptionsView(p.url, r.paths, p.view), p.middlewares),
-			)
-
+			view = buildOptionsView(p.url, r.paths, p.view)
 			optionsURLsHandled = append(optionsURLsHandled, p.url)
-
-			continue
 		}
 
-		handler := p.handlerBuilder(p.view, p.middlewares)
+		handler := p.handlerBuilder(view, p.middlewares)
 		if p.withTimeout {
 			handler = fasthttp.TimeoutWithCodeHandler(handler, p.timeout, p.timeoutMsg, p.timeoutCode)
 		}
 
-		if r.router.HandleOPTIONS && !gotils.StringSliceInclude(
-			append(r.customOptionsURLS, optionsURLsHandled...), p.url,
-		) {
-			r.router.Handle(
-				fasthttp.MethodOptions,
-				p.url,
-				p.handlerBuilder(buildOptionsView(p.url, r.paths, emptyView), p.middlewares),
-			)
+		r.router.Handle(p.method, p.url, handler)
+
+		handleOPTIONS := !gotils.StringSliceInclude(append(r.customOptionsURLS, optionsURLsHandled...), p.url)
+		if r.router.HandleOPTIONS && handleOPTIONS {
+			handler = p.handlerBuilder(buildOptionsView(p.url, r.paths, emptyView), p.middlewares)
+			r.router.Handle(fasthttp.MethodOptions, p.url, handler)
 
 			optionsURLsHandled = append(optionsURLsHandled, p.url)
 		}
-
-		r.router.Handle(p.method, p.url, handler)
 	}
 }
 

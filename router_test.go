@@ -138,13 +138,10 @@ func TestRouter_NewGroupPath(t *testing.T) {
 
 func TestRouter_init(t *testing.T) { // nolint:funlen
 	var registeredViews []View
-	var registeredMiddlewaresView Middlewares                                            // nolint:wsl
-	var registeredMiddlewaresOptionsView1, registeredMiddlewaresOptionsView2 Middlewares // nolint:wsl
+	var registeredMiddlewaresView, registeredMiddlewaresOptionsView Middlewares // nolint:wsl
 
-	handlerBuilderViewCalled := false
-	handlerBuilderOptionsView1Called, handlerBuilderOptionsView2Called := false, false
+	handlerBuilderViewCalled, handlerBuilderOptionsViewCalled := false, false
 
-	url := "/test"
 	path := &Path{
 		handlerBuilder: func(fn View, middle Middlewares) fasthttp.RequestHandler {
 			registeredViews = append(registeredViews, fn)
@@ -154,7 +151,7 @@ func TestRouter_init(t *testing.T) { // nolint:funlen
 			return func(ctx *fasthttp.RequestCtx) {}
 		},
 		method:      fasthttp.MethodGet,
-		url:         url,
+		url:         "/test",
 		view:        func(ctx *RequestCtx) error { return nil },
 		middlewares: Middlewares{},
 		withTimeout: true,
@@ -163,66 +160,56 @@ func TestRouter_init(t *testing.T) { // nolint:funlen
 		timeoutCode: 404,
 	}
 
-	pathOptions1 := &Path{handlerBuilder: func(fn View, middle Middlewares) fasthttp.RequestHandler {
-		registeredViews = append(registeredViews, fn)
-		registeredMiddlewaresOptionsView1 = middle
-		handlerBuilderOptionsView1Called = true
+	pathOptions := &Path{
+		handlerBuilder: func(fn View, middle Middlewares) fasthttp.RequestHandler {
+			registeredViews = append(registeredViews, fn)
+			registeredMiddlewaresOptionsView = middle
+			handlerBuilderOptionsViewCalled = true
 
-		return func(ctx *fasthttp.RequestCtx) {}
-	}, method: fasthttp.MethodOptions, url: url}
-
-	pathOptions2 := &Path{handlerBuilder: func(fn View, middle Middlewares) fasthttp.RequestHandler {
-		registeredViews = append(registeredViews, fn)
-		registeredMiddlewaresOptionsView2 = middle
-		handlerBuilderOptionsView2Called = true
-
-		return func(ctx *fasthttp.RequestCtx) {}
-	}, method: fasthttp.MethodOptions, url: "/options"}
+			return func(ctx *fasthttp.RequestCtx) {}
+		},
+		method: fasthttp.MethodOptions,
+		url:    "/options",
+	}
 
 	r := newRouter(testLog, nil)
 	r.appendPath(path)
-	r.appendPath(pathOptions1)
-	r.appendPath(pathOptions2)
+	r.appendPath(pathOptions)
 	r.init()
 
 	ctx := new(fasthttp.RequestCtx)
-	h, _ := r.router.Lookup(path.method, path.url, ctx)
 
+	h, _ := r.router.Lookup(path.method, path.url, ctx)
 	if h == nil {
 		t.Error("Path is not registered in internal router")
 	}
 
 	h, _ = r.router.Lookup(fasthttp.MethodOptions, path.url, ctx)
-
 	if h == nil {
 		t.Error("Path AUTO (method: OPTIONS) is not registered in internal router")
 	}
 
-	h, _ = r.router.Lookup(pathOptions2.method, pathOptions2.url, ctx)
-
+	h, _ = r.router.Lookup(pathOptions.method, pathOptions.url, ctx)
 	if h == nil {
 		t.Error("Path (method: OPTIONS) is not registered in internal router")
 	}
 
-	for _, called := range []bool{
-		handlerBuilderViewCalled, handlerBuilderOptionsView1Called, handlerBuilderOptionsView2Called,
-	} {
+	for _, called := range []bool{handlerBuilderViewCalled, handlerBuilderOptionsViewCalled} {
 		if !called {
 			t.Error("Path.handlerBuilder is not called")
 		}
 	}
 
-	if len(registeredViews) != len(r.paths) {
-		t.Fatalf("Registered views == %d, want %d", len(registeredViews), len(r.paths))
+	totalRegisteredViews := len(r.paths) + 1 // Add +1 for auto OPTIONS handle
+	if len(registeredViews) != totalRegisteredViews {
+		t.Fatalf("Registered views == %d, want %d", len(registeredViews), totalRegisteredViews)
 	}
 
 	if reflect.ValueOf(registeredViews[0]).Pointer() != reflect.ValueOf(path.view).Pointer() {
 		t.Errorf("Registered view == %p, want %p", registeredViews[0], path.view)
 	}
 
-	for _, middle := range []Middlewares{
-		registeredMiddlewaresView, registeredMiddlewaresOptionsView1, registeredMiddlewaresOptionsView2,
-	} {
+	for _, middle := range []Middlewares{registeredMiddlewaresView, registeredMiddlewaresOptionsView} {
 		if !reflect.DeepEqual(middle, path.middlewares) {
 			t.Errorf("Registered middlewares == %v, want %v", middle, &path.middlewares)
 		}
