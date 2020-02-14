@@ -3,6 +3,7 @@ package middlewares
 import (
 	"github.com/savsgio/atreugo/v10"
 	"github.com/savsgio/go-logger"
+
 	"strconv"
 	"strings"
 )
@@ -17,14 +18,14 @@ type CorsOptions struct {
 }
 
 type CorsHandler struct {
+	maxAge            int
+	allowCredentials  bool
 	allowedOriginsAll bool
-	allowedOrigins    []string
 	allowedHeadersAll bool
+	allowedOrigins    []string
 	allowedHeaders    []string
 	allowedMethods    []string
 	exposedHeaders    []string
-	allowCredentials  bool
-	maxAge            int
 }
 
 var defaultOptions = &CorsOptions{
@@ -38,7 +39,6 @@ func DefaultCors() *CorsHandler {
 }
 
 func NewCorsMiddleware(options CorsOptions) *CorsHandler {
-
 	cors := &CorsHandler{
 		allowedOrigins:   options.AllowedOrigins,
 		allowedHeaders:   options.AllowedHeaders,
@@ -60,6 +60,7 @@ func NewCorsMiddleware(options CorsOptions) *CorsHandler {
 			}
 		}
 	}
+
 	if len(cors.allowedHeaders) == 0 {
 		cors.allowedHeaders = defaultOptions.AllowedHeaders
 		cors.allowedHeadersAll = true
@@ -71,6 +72,7 @@ func NewCorsMiddleware(options CorsOptions) *CorsHandler {
 			}
 		}
 	}
+
 	if len(cors.allowedMethods) == 0 {
 		cors.allowedMethods = defaultOptions.AllowedMethods
 	}
@@ -84,19 +86,23 @@ func (c *CorsHandler) CorsMiddleware(ctx *atreugo.RequestCtx) {
 
 func (c *CorsHandler) handlePreflight(ctx *atreugo.RequestCtx) {
 	originHeader := string(ctx.Request.Header.Peek("Origin"))
-	if len(originHeader) == 0 || c.isAllowedOrigin(originHeader) == false {
+
+	if len(originHeader) == 0 || !c.isAllowedOrigin(originHeader) {
 		logger.Debug("Origin ", originHeader, " is not in", c.allowedOrigins)
 		return
 	}
+
 	method := string(ctx.Request.Header.Method())
 	if !c.isAllowedMethod(method) {
 		logger.Debug("Method ", method, " is not in", c.allowedMethods)
 		return
 	}
+
 	var headers []string
 	if len(ctx.Request.Header.Peek("Access-Control-Request-Headers")) > 0 {
 		headers = strings.Split(string(ctx.Request.Header.Peek("Access-Control-Request-Headers")), ",")
 	}
+
 	if !c.areHeadersAllowed(headers) {
 		logger.Debug("Headers ", headers, " is not in", c.allowedHeaders)
 		return
@@ -104,12 +110,15 @@ func (c *CorsHandler) handlePreflight(ctx *atreugo.RequestCtx) {
 
 	ctx.Response.Header.Set("Access-Control-Allow-Origin", originHeader)
 	ctx.Response.Header.Set("Access-Control-Allow-Methods", method)
+
 	if len(headers) > 0 {
 		ctx.Response.Header.Set("Access-Control-Allow-Headers", strings.Join(headers, ", "))
 	}
+
 	if c.allowCredentials {
 		ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
 	}
+
 	if c.maxAge > 0 {
 		ctx.Response.Header.Set("Access-Control-Max-Age", strconv.Itoa(c.maxAge))
 	}
@@ -119,11 +128,13 @@ func (c *CorsHandler) isAllowedOrigin(originHeader string) bool {
 	if c.allowedOriginsAll {
 		return true
 	}
+
 	for _, val := range c.allowedOrigins {
 		if val == originHeader {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -131,14 +142,17 @@ func (c *CorsHandler) isAllowedMethod(methodHeader string) bool {
 	if len(c.allowedMethods) == 0 {
 		return false
 	}
+
 	if methodHeader == "OPTIONS" {
 		return true
 	}
+
 	for _, m := range c.allowedMethods {
 		if m == methodHeader {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -146,16 +160,20 @@ func (c *CorsHandler) areHeadersAllowed(headers []string) bool {
 	if c.allowedHeadersAll || len(headers) == 0 {
 		return true
 	}
+
 	for _, header := range headers {
 		found := false
+
 		for _, h := range c.allowedHeaders {
 			if h == header {
 				found = true
 			}
 		}
+
 		if !found {
 			return false
 		}
 	}
+
 	return true
 }
