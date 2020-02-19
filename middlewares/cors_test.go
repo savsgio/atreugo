@@ -4,25 +4,8 @@ import (
 	"github.com/savsgio/atreugo/v10"
 	"github.com/valyala/fasthttp"
 
-	"reflect"
 	"testing"
 )
-
-func TestDefaultCors(t *testing.T) {
-	s := DefaultCors()
-
-	if !reflect.DeepEqual(s.allowedOrigins, []string{"*"}) {
-		t.Errorf("defaultOptions: AllowedOrigins is not %s", []string{"*"})
-	}
-
-	if !reflect.DeepEqual(s.allowedMethods, []string{"GET", "POST"}) {
-		t.Errorf("defaultOptions: AllowedMethods is not %s", []string{"GET", "POST"})
-	}
-
-	if !reflect.DeepEqual(s.allowedHeaders, []string{"Origin", "Accept", "Content-Type"}) {
-		t.Errorf("defaultOptions: AllowedHeaders is not %s", []string{"Origin", "Accept", "Content-Type"})
-	}
-}
 
 var presetOptions = CorsOptions{
 	// if you leave allowedOrigins empty then atreugo will treat it as "*"
@@ -41,20 +24,6 @@ func TestNewCorsMiddleware(t *testing.T) {
 		if s == nil {
 			t.Error("NewCorsMiddleware() CorsOptions error")
 			return
-		}
-
-		if len(s.allowedOrigins) == 0 {
-			ss := defaultOptions.AllowedOrigins
-			if ss == nil {
-				t.Error("NewCorsMiddleware() allowedOrigins error")
-			}
-		}
-
-		ctx := new(atreugo.RequestCtx)
-		ctx.RequestCtx = new(fasthttp.RequestCtx)
-		h := s.handlePreflight(ctx)
-		if h != nil {
-			t.Error("handlePreflight() error")
 		}
 	})
 }
@@ -126,34 +95,6 @@ func TestCorsMiddleware(t *testing.T) {
 
 			ctx := new(atreugo.RequestCtx)
 			ctx.RequestCtx = new(fasthttp.RequestCtx)
-			err := newCors.CorsMiddleware(ctx)
-			if err != nil {
-				t.Errorf("CorsMiddleware() error")
-			}
-
-			if tt.want.emptyHeaders && (len(newCors.allowedHeaders) == 0) {
-				t.Error("Empty allowedHeaders error")
-			}
-
-			if tt.want.emptyOrigins && (len(newCors.allowedOrigins) == 0) {
-				t.Error("Empty allowedOrigins error")
-			}
-
-			if !tt.want.emptyMethods && (len(newCors.allowedMethods) == 0) {
-				t.Error("Empty allowedMethods error")
-			}
-
-			var isAllowedOrigin = newCors.isAllowedOrigin("APP")
-
-			if tt.want.emptyOrigins && isAllowedOrigin {
-				t.Error("isAllowedOrigin() error")
-			}
-
-			err = newCors.handlePreflight(ctx)
-			if err != nil {
-				t.Error(err)
-				return
-			}
 
 			ctx.Response.Header.Add("Origin", "APP")
 			ctx.Response.Header.Add("Access-Control-Allow-Origin", "APP")
@@ -170,16 +111,6 @@ func TestCorsMiddleware(t *testing.T) {
 				t.Error("varyHeader (great than 0)")
 			}
 
-			method := string(ctx.Request.Header.Method())
-			if method == fasthttp.MethodOptions {
-				if len(newCors.allowedMethods) == 0 {
-					t.Error("method pass, allowedMethods error")
-				}
-
-				if len(newCors.allowedHeaders) == 0 {
-					t.Error("method pass, allowedHeaders error")
-				}
-			}
 		})
 	}
 }

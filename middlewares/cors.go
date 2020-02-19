@@ -2,8 +2,8 @@ package middlewares
 
 import (
 	"github.com/savsgio/atreugo/v10"
-	"github.com/savsgio/go-logger"
 	"github.com/valyala/fasthttp"
+	"strconv"
 
 	"strings"
 )
@@ -30,11 +30,11 @@ type CorsOptions struct {
 }
 
 type CorsHandler struct {
-	allowedHeadersAll bool
-	allowedOrigins    []string
-	allowedHeaders    []string
-	allowedMethods    []string
-	exposedHeaders    []string
+	allowedOrigins []string
+	allowedHeaders []string
+	allowedMethods []string
+	exposedHeaders []string
+	maxAge         int
 }
 
 var defaultOptions = CorsOptions{
@@ -43,11 +43,7 @@ var defaultOptions = CorsOptions{
 	AllowedHeaders: []string{"Origin", "Accept", "Content-Type"},
 }
 
-func DefaultCors() *CorsHandler {
-	return NewCorsMiddleware(defaultOptions)
-}
-
-func NewCorsMiddleware(options CorsOptions) *CorsHandler {
+func NewCorsMiddleware(options CorsOptions) atreugo.Middleware {
 	cors := CorsHandler{
 		allowedOrigins: options.AllowedOrigins,
 		allowedHeaders: options.AllowedHeaders,
@@ -55,26 +51,10 @@ func NewCorsMiddleware(options CorsOptions) *CorsHandler {
 		exposedHeaders: options.ExposedHeaders,
 	}
 
-	if len(cors.allowedOrigins) == 0 {
-		cors.allowedOrigins = defaultOptions.AllowedOrigins
-	} else {
-		for _, v := range options.AllowedOrigins {
-			if v == "*" {
-				cors.allowedOrigins = defaultOptions.AllowedOrigins
-				break
-			}
-		}
-	}
-
-	if len(cors.allowedHeaders) == 0 {
-		cors.allowedHeaders = defaultOptions.AllowedHeaders
-		cors.allowedHeadersAll = true
-	} else {
-		for _, v := range options.AllowedHeaders {
-			if v == "*" {
-				cors.allowedHeadersAll = true
-				break
-			}
+	for _, v := range options.AllowedOrigins {
+		if v == "*" {
+			cors.allowedOrigins = defaultOptions.AllowedOrigins
+			break
 		}
 	}
 
@@ -82,16 +62,15 @@ func NewCorsMiddleware(options CorsOptions) *CorsHandler {
 		cors.allowedMethods = defaultOptions.AllowedMethods
 	}
 
-	return &cors
-}
-
-func (c *CorsHandler) CorsMiddleware(ctx *atreugo.RequestCtx) error {
-	err := c.handlePreflight(ctx)
-	if err != nil {
-		logger.Error(err)
+	if len(cors.allowedMethods) == 0 {
+		cors.allowedMethods = defaultOptions.AllowedMethods
 	}
 
-	return ctx.Next()
+	return cors.middleware
+}
+
+func (c *CorsHandler) middleware(ctx *atreugo.RequestCtx) error {
+	return c.handlePreflight(ctx)
 }
 
 func (c *CorsHandler) handlePreflight(ctx *atreugo.RequestCtx) error {
@@ -123,6 +102,10 @@ func (c *CorsHandler) handlePreflight(ctx *atreugo.RequestCtx) error {
 
 	if len(c.allowedHeaders) > 0 {
 		ctx.Response.Header.Set("Access-Control-Allow-Headers", strings.Join(c.allowedHeaders, ", "))
+	}
+
+	if c.maxAge > 0 {
+		ctx.Response.Header.Set("Access-Control-Max-Age", strconv.Itoa(c.maxAge))
 	}
 
 	return ctx.Next()
