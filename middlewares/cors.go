@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"fmt"
 	"github.com/savsgio/atreugo/v10"
 	"github.com/valyala/fasthttp"
 
@@ -30,17 +31,12 @@ type CorsOptions struct {
 }
 
 type CorsHandler struct {
-	allowedOrigins []string
-	allowedHeaders []string
-	allowedMethods []string
-	exposedHeaders []string
-	maxAge         int
-}
-
-var defaultOptions = CorsOptions{
-	AllowedOrigins: []string{"*"},
-	AllowedMethods: []string{"GET", "POST"},
-	AllowedHeaders: []string{"Origin", "Accept", "Content-Type"},
+	allowedOrigins   []string
+	allowedHeaders   []string
+	allowedMethods   []string
+	exposedHeaders   []string
+	maxAge           int
+	allowCredentials bool
 }
 
 func NewCorsMiddleware(options CorsOptions) atreugo.Middleware {
@@ -49,28 +45,19 @@ func NewCorsMiddleware(options CorsOptions) atreugo.Middleware {
 		allowedHeaders: options.AllowedHeaders,
 		allowedMethods: options.AllowedMethods,
 		exposedHeaders: options.ExposedHeaders,
+		maxAge:         options.AllowMaxAge,
 	}
 
-	for _, v := range options.AllowedOrigins {
-		if v == "*" {
-			cors.allowedOrigins = defaultOptions.AllowedOrigins
-			break
-		}
-	}
-
-	if len(cors.allowedMethods) == 0 {
-		cors.allowedMethods = defaultOptions.AllowedMethods
-	}
-
-	if len(cors.allowedMethods) == 0 {
-		cors.allowedMethods = defaultOptions.AllowedMethods
-	}
-
+	fmt.Println("test")
 	return cors.middleware
 }
 
 func (c *CorsHandler) middleware(ctx *atreugo.RequestCtx) error {
-	return c.handlePreflight(ctx)
+	if err := c.handlePreflight(ctx); err != nil {
+		return err
+	}
+
+	return ctx.Next()
 }
 
 func (c *CorsHandler) handlePreflight(ctx *atreugo.RequestCtx) error {
@@ -108,12 +95,20 @@ func (c *CorsHandler) handlePreflight(ctx *atreugo.RequestCtx) error {
 		ctx.Response.Header.Set("Access-Control-Max-Age", strconv.Itoa(c.maxAge))
 	}
 
+	if len(c.exposedHeaders) > 0 {
+		ctx.Response.Header.Set("Access-Control-Expose-Headers", strings.Join(c.exposedHeaders, ", "))
+	}
+
+	if c.allowCredentials {
+		ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	}
+
 	return ctx.Next()
 }
 
 func (c *CorsHandler) isAllowedOrigin(originHeader string) bool {
 	for _, val := range c.allowedOrigins {
-		if val == originHeader {
+		if val == originHeader || val == "*" {
 			return true
 		}
 	}
