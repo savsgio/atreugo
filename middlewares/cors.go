@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"github.com/savsgio/atreugo/v10"
-	"github.com/valyala/fasthttp"
 
 	"strconv"
 	"strings"
@@ -30,21 +29,12 @@ type CorsOptions struct {
 }
 
 type CorsHandler struct {
-	allowedOrigins   []string
-	allowedHeaders   []string
-	allowedMethods   []string
-	exposedHeaders   []string
-	maxAge           int
-	allowCredentials bool
+	options CorsOptions
 }
 
 func NewCorsMiddleware(options CorsOptions) atreugo.Middleware {
 	cors := CorsHandler{
-		allowedOrigins: options.AllowedOrigins,
-		allowedHeaders: options.AllowedHeaders,
-		allowedMethods: options.AllowedMethods,
-		exposedHeaders: options.ExposedHeaders,
-		maxAge:         options.AllowMaxAge,
+		options: options,
 	}
 
 	return cors.middleware
@@ -65,7 +55,12 @@ func (c *CorsHandler) handlePreflight(ctx *atreugo.RequestCtx) error {
 		return ctx.Next()
 	}
 
+	// Mandatory header
 	ctx.Response.Header.Set("Access-Control-Allow-Origin", originHeader)
+
+	if c.options.AllowCredentials {
+		ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	}
 
 	varyHeader := ctx.Response.Header.Peek("Vary")
 	if len(varyHeader) > 0 {
@@ -76,36 +71,27 @@ func (c *CorsHandler) handlePreflight(ctx *atreugo.RequestCtx) error {
 
 	ctx.Response.Header.SetBytesV("Vary", varyHeader)
 
-	method := string(ctx.Request.Header.Method())
-	if method != fasthttp.MethodOptions {
-		return ctx.Next()
+	if len(c.options.AllowedMethods) > 0 {
+		ctx.Response.Header.Set("Access-Control-Allow-Methods", strings.Join(c.options.AllowedMethods, ", "))
 	}
 
-	if len(c.allowedMethods) > 0 {
-		ctx.Response.Header.Set("Access-Control-Allow-Methods", strings.Join(c.allowedMethods, ", "))
+	if len(c.options.AllowedHeaders) > 0 {
+		ctx.Response.Header.Set("Access-Control-Allow-Headers", strings.Join(c.options.AllowedHeaders, ", "))
 	}
 
-	if len(c.allowedHeaders) > 0 {
-		ctx.Response.Header.Set("Access-Control-Allow-Headers", strings.Join(c.allowedHeaders, ", "))
+	if c.options.AllowMaxAge > 0 {
+		ctx.Response.Header.Set("Access-Control-Max-Age", strconv.Itoa(c.options.AllowMaxAge))
 	}
 
-	if c.maxAge > 0 {
-		ctx.Response.Header.Set("Access-Control-Max-Age", strconv.Itoa(c.maxAge))
-	}
-
-	if len(c.exposedHeaders) > 0 {
-		ctx.Response.Header.Set("Access-Control-Expose-Headers", strings.Join(c.exposedHeaders, ", "))
-	}
-
-	if c.allowCredentials {
-		ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	if len(c.options.ExposedHeaders) > 0 {
+		ctx.Response.Header.Set("Access-Control-Expose-Headers", strings.Join(c.options.ExposedHeaders, ", "))
 	}
 
 	return ctx.Next()
 }
 
 func (c *CorsHandler) isAllowedOrigin(originHeader string) bool {
-	for _, val := range c.allowedOrigins {
+	for _, val := range c.options.AllowedOrigins {
 		if val == originHeader || val == "*" {
 			return true
 		}

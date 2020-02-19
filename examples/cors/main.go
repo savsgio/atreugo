@@ -17,20 +17,16 @@ func main() {
 	}
 	server := atreugo.New(config)
 
-	server.UseBefore(func(ctx *atreugo.RequestCtx) error {
-		options := middlewares.CorsOptions{
-			AllowedOrigins:   []string{"http://localhost:63342", "192.168.3.1:8000", "APP"},
-			AllowedHeaders:   []string{"Content-Type", "content-type"},
-			AllowedMethods:   []string{"GET", "POST", "OPTIONS", "PUT", "DELETE"},
-			AllowCredentials: true,
-			AllowMaxAge:      5600,
-		}
-		if err := middlewares.NewCorsMiddleware(options); err != nil {
-			logger.Error("server.UseBefore executed NewCorsMiddleware")
-		}
-
-		return ctx.Next()
+	cors := middlewares.NewCorsMiddleware(middlewares.CorsOptions{
+		AllowedOrigins:   []string{"http://localhost:63342", "192.168.3.1:8000", "APP"},
+		AllowedHeaders:   []string{"Content-Type", "content-type"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS", "PUT", "DELETE"},
+		ExposedHeaders:   []string{"Content-Length, Authorization"},
+		AllowCredentials: true,
+		AllowMaxAge:      5600,
 	})
+
+	server.UseAfter(cors)
 
 	server.GET("/", func(ctx *atreugo.RequestCtx) error {
 		return ctx.JSONResponse(atreugo.JSON{"Method": "GET"})
