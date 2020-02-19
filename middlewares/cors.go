@@ -3,8 +3,8 @@ package middlewares
 import (
 	"github.com/savsgio/atreugo/v10"
 	"github.com/valyala/fasthttp"
-	"strconv"
 
+	"strconv"
 	"strings"
 )
 

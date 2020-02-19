@@ -110,7 +110,6 @@ func TestCorsMiddleware(t *testing.T) {
 			if len(varyHeader) == 0 {
 				t.Error("varyHeader (great than 0)")
 			}
-
 		})
 	}
 }

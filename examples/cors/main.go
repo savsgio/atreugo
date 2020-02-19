@@ -18,7 +18,7 @@ func main() {
 	server := atreugo.New(config)
 
 	server.UseBefore(func(ctx *atreugo.RequestCtx) error {
-		withCors := middlewares.NewCorsMiddleware(middlewares.CorsOptions{
+		err := middlewares.NewCorsMiddleware(middlewares.CorsOptions{
 			// if you leave allowedOrigins empty then atreugo will treat it as "*"
 			AllowedOrigins: []string{"http://localhost:63342", "192.168.3.1:8000", "APP"},
 			// if you leave allowedHeaders empty then atreugo will accept any non-simple headers
@@ -28,7 +28,6 @@ func main() {
 			AllowCredentials: true,
 			AllowMaxAge:      5600,
 		})
-		err := withCors.CorsMiddleware(ctx)
 		if err != nil {
 			logger.Error(err)
 		}
