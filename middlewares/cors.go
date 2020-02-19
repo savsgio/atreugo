@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"github.com/savsgio/atreugo/v10"
 	"github.com/valyala/fasthttp"
 
@@ -48,7 +47,6 @@ func NewCorsMiddleware(options CorsOptions) atreugo.Middleware {
 		maxAge:         options.AllowMaxAge,
 	}
 
-	fmt.Println("test")
 	return cors.middleware
 }
 
