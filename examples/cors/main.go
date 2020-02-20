@@ -22,6 +22,7 @@ func main() {
 		AllowedHeaders:   []string{"Content-Type", "content-type"},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS", "PUT", "DELETE"},
 		ExposedHeaders:   []string{"Content-Length, Authorization"},
+		AllowedVary:      []string{"Origin, User-Agent"},
 		AllowCredentials: true,
 		AllowMaxAge:      5600,
 	})

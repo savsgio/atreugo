@@ -12,6 +12,7 @@ var presetOptions = CorsOptions{
 	AllowedHeaders:   []string{"Content-Type", "content-type"},
 	AllowedMethods:   []string{"GET", "POST", "OPTIONS", "PUT", "DELETE"},
 	ExposedHeaders:   []string{"Content-Length, Authorization"},
+	AllowedVary:      []string{"Origin, User-Agent"},
 	AllowCredentials: true,
 	AllowMaxAge:      5600,
 }
@@ -40,7 +41,15 @@ func Test_middleware(t *testing.T) {
 
 	c := CorsHandler{}
 
-	if err := c.middleware(ctx); err != nil {
+	if err := c.middleware(ctx); err != nil && err.Error() != "CORS blocked" {
+		t.Errorf("got %v, want %t", nil, err)
+		return
+	}
+
+	// testing for ctx.Next()
+	c.options.AllowedOrigins = []string{"*"}
+
+	if err := c.middleware(ctx); err != nil && err.Error() != "CORS blocked" {
 		t.Errorf("got %v, want %t", nil, err)
 		return
 	}
@@ -51,27 +60,14 @@ func Test_handlePreflight(t *testing.T) {
 	ctx.RequestCtx = new(fasthttp.RequestCtx)
 
 	c := CorsHandler{}
-	c.options.AllowedOrigins = presetOptions.AllowedOrigins
-	firstItem := c.options.AllowedOrigins[0]
+	c.options = presetOptions
 
-	ctx.Response.Header.Set("Access-Control-Expose-Headers", "Origin")
-	ctx.Response.Header.Set("Origin", firstItem)
+	originsFirst := c.options.AllowedOrigins[0]
 
-	originHeader := string(ctx.Request.Header.Peek("Origin"))
+	ctx.Request.Header.Set("Origin", originsFirst)
 
-	if !c.isAllowedOrigin(originHeader) {
-		t.Errorf("got %v, want %s", originHeader, firstItem)
-		return
-	}
-
-	ctx.Response.Header.Set("Access-Control-Allow-Origin", "Test")
-
-	if err := c.handlePreflight(ctx); err == nil {
+	if err := c.handlePreflight(ctx); err != nil {
 		t.Errorf("got %v, want %t", nil, err)
 		return
-	}
-
-	if origin := string(ctx.Response.Header.Peek("Access-Control-Allow-Origin")); origin != "Test" {
-		t.Errorf("got %v, want %s", origin, "test Origin")
 	}
 }

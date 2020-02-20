@@ -3,6 +3,7 @@ package middlewares
 import (
 	"github.com/savsgio/atreugo/v10"
 
+	"errors"
 	"strconv"
 	"strings"
 )
@@ -15,14 +16,17 @@ type CorsOptions struct {
 	// which headers can be used during the actual request
 	AllowedHeaders []string
 
-	// seconds for caching the preflight result
-	AllowMaxAge int
-
 	// specify the method or methods allowed to resource
 	AllowedMethods []string
 
 	// which header names can be exposed as part of the response
 	ExposedHeaders []string
+
+	// whether a cached response can be used
+	AllowedVary []string
+
+	// seconds for caching the preflight result
+	AllowMaxAge int
 
 	// whether to expose the response to frontend code
 	AllowCredentials bool
@@ -52,39 +56,34 @@ func (c *CorsHandler) handlePreflight(ctx *atreugo.RequestCtx) error {
 	originHeader := string(ctx.Request.Header.Peek("Origin"))
 
 	if !c.isAllowedOrigin(originHeader) {
-		return ctx.Next()
+		return errors.New("CORS blocked")
 	}
 
-	// Mandatory header
+	// Mandatory Access-Control-Allow-Origin
 	ctx.Response.Header.Set("Access-Control-Allow-Origin", originHeader)
 
-	if c.options.AllowCredentials {
-		ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	if len(c.options.AllowedHeaders) > 0 {
+		ctx.Response.Header.Set("Access-Control-Allow-Headers", strings.Join(c.options.AllowedHeaders, ", "))
 	}
-
-	varyHeader := ctx.Response.Header.Peek("Vary")
-	if len(varyHeader) > 0 {
-		varyHeader = append(varyHeader, ", "...)
-	}
-
-	varyHeader = append(varyHeader, "Origin"...)
-
-	ctx.Response.Header.SetBytesV("Vary", varyHeader)
 
 	if len(c.options.AllowedMethods) > 0 {
 		ctx.Response.Header.Set("Access-Control-Allow-Methods", strings.Join(c.options.AllowedMethods, ", "))
 	}
 
-	if len(c.options.AllowedHeaders) > 0 {
-		ctx.Response.Header.Set("Access-Control-Allow-Headers", strings.Join(c.options.AllowedHeaders, ", "))
+	if len(c.options.ExposedHeaders) > 0 {
+		ctx.Response.Header.Set("Access-Control-Expose-Headers", strings.Join(c.options.ExposedHeaders, ", "))
+	}
+
+	if len(c.options.AllowedVary) > 0 {
+		ctx.Response.Header.Set("Vary", strings.Join(c.options.AllowedVary, ", "))
 	}
 
 	if c.options.AllowMaxAge > 0 {
 		ctx.Response.Header.Set("Access-Control-Max-Age", strconv.Itoa(c.options.AllowMaxAge))
 	}
 
-	if len(c.options.ExposedHeaders) > 0 {
-		ctx.Response.Header.Set("Access-Control-Expose-Headers", strings.Join(c.options.ExposedHeaders, ", "))
+	if c.options.AllowCredentials {
+		ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
 	}
 
 	return ctx.Next()
