@@ -8,7 +8,7 @@
 
 High performance and extensible micro web framework with zero memory allocations in hot paths.
 
-It's build on top of [fasthttp](https://github.com/valyala/fasthttp).
+It's built on top of [fasthttp](https://github.com/valyala/fasthttp).
 
 ## Install
 
@@ -58,7 +58,7 @@ See: [docs](https://github.com/savsgio/atreugo/tree/master/docs)
   - Group paths and middlewares.
   - Static files.
   - Serve one file like pdf, etc.
-  - Middlewares for especific views.
+  - Middlewares for specific views.
   - fasthttp handlers support.
   - net/http handlers support.
 
@@ -76,7 +76,7 @@ Go to [examples](https://github.com/savsgio/atreugo/tree/master/examples) direct
 
 ## Note:
 
-`*atreugo.RequestCtx` is equal than `*fasthttp.RequestCtx`, but adding extra funtionality, so you can use
+`*atreugo.RequestCtx` is equal to `*fasthttp.RequestCtx`, but with extra functionalities, so you can use
 the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
 
 ## Benchmark
@@ -87,7 +87,7 @@ the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
 
 ![](https://raw.githubusercontent.com/smallnest/go-web-framework-benchmark/master/benchmark.png)
 
-- Concurrency Test (allocations): In 30 ms processing time, the tets result for 100, 1000, 5000 clients is:
+- Concurrency Test (allocations): In 30 ms processing time, the test result for 100, 1000, 5000 clients is:
 
 \* _Smaller is better_
 
