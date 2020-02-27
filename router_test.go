@@ -346,21 +346,21 @@ func TestRouter_getGroupFullPath(t *testing.T) {
 	path := "/atreugo/"
 
 	fullPath := buz.getGroupFullPath(path)
-	expected := "/foo/bar/buz/atreugo"
+	expected := "/foo/bar/buz/atreugo/"
 
 	if fullPath != expected {
 		t.Errorf("Router.getGroupFullPath == %s, want %s", fullPath, expected)
 	}
 
 	fullPath = bar.getGroupFullPath(path)
-	expected = "/foo/bar/atreugo"
+	expected = "/foo/bar/atreugo/"
 
 	if fullPath != expected {
 		t.Errorf("Router.getGroupFullPath == %s, want %s", fullPath, expected)
 	}
 
 	fullPath = foo.getGroupFullPath(path)
-	expected = "/foo/atreugo"
+	expected = "/foo/atreugo/"
 
 	if fullPath != expected {
 		t.Errorf("Router.getGroupFullPath == %s, want %s", fullPath, expected)

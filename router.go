@@ -130,10 +130,6 @@ func (r *Router) getGroupFullPath(path string) string {
 		path = r.parent.getGroupFullPath(path)
 	}
 
-	if path != "/" && strings.HasSuffix(path, "/") {
-		path = path[:len(path)-1]
-	}
-
 	return path
 }
 
