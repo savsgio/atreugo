@@ -14,7 +14,7 @@ os:
   - osx
 
 before_install:
-  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.22.2
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
   - go get -u -v golang.org/x/tools/cmd/cover
   - go get -u -v github.com/modocache/gover
   - go get -u -v github.com/mattn/goveralls
