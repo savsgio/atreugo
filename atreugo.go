@@ -90,7 +90,6 @@ func fasthttpServer(cfg Config, handler fasthttp.RequestHandler, log fasthttp.Lo
 		IdleTimeout:                        cfg.IdleTimeout,
 		MaxConnsPerIP:                      cfg.MaxConnsPerIP,
 		MaxRequestsPerConn:                 cfg.MaxRequestsPerConn,
-		MaxKeepaliveDuration:               cfg.MaxKeepaliveDuration,
 		MaxRequestBodySize:                 cfg.MaxRequestBodySize,
 		ReduceMemoryUsage:                  cfg.ReduceMemoryUsage,
 		GetOnly:                            cfg.GetOnly,

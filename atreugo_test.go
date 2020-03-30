@@ -20,7 +20,14 @@ var testAtreugoConfig = Config{
 	LogLevel: "fatal",
 }
 
-var notConfigFasthttpFields = []string{"Handler", "ErrorHandler", "TCPKeepalive", "TCPKeepalivePeriod", "Logger"}
+var notConfigFasthttpFields = []string{
+	"Handler",
+	"ErrorHandler",
+	"TCPKeepalive",
+	"TCPKeepalivePeriod",
+	"Logger",
+	"MaxKeepaliveDuration", // Deprecated: Use IdleTimeout instead.
+}
 
 type mockListener struct {
 	ln net.Listener

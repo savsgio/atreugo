@@ -199,10 +199,6 @@ type Config struct { // nolint:maligned
 	// By default unlimited number of requests may be served per connection.
 	MaxRequestsPerConn int
 
-	// MaxKeepaliveDuration is a no-op and only left here for backwards compatibility.
-	// Deprecated: Use IdleTimeout instead.
-	MaxKeepaliveDuration time.Duration
-
 	// Maximum request body size.
 	//
 	// The server rejects requests with bodies exceeding this limit.
@@ -299,13 +295,6 @@ type Config struct { // nolint:maligned
 // It is prohibited copying StaticFS values. Create new values instead.
 type StaticFS struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
-
-	// Filters to be executed before/after request a file.
-	//
-	// WARNING: It's deprecated, will be remove in version v11.0.0.
-	// Use instead:
-	// 		r.StaticCustom(url, fs).Middlewares(middlewares)
-	Filters Filters
 
 	// Path to the root directory to serve files from.
 	Root string
@@ -433,16 +422,3 @@ type PathRewriteFunc func(ctx *RequestCtx) []byte
 
 // JSON is a map whose key is a string and whose value an interface
 type JSON map[string]interface{}
-
-//
-// DEPRECATED
-//
-
-// Filters like middlewares, but for specific paths.
-// It will be executed before and after the view defined in the path
-// in addition of the general middlewares
-//
-// WARNING: It's deprecated, will be remove in version v11.0.0.
-// Use instead:
-//		Middlewares type
-type Filters Middlewares
