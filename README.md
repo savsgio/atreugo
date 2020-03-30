@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/savsgio/atreugo.svg?branch=master)](https://travis-ci.org/savsgio/atreugo)
 [![Coverage Status](https://coveralls.io/repos/github/savsgio/atreugo/badge.svg?branch=master)](https://coveralls.io/github/savsgio/atreugo?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/savsgio/atreugo)](https://goreportcard.com/report/github.com/savsgio/atreugo)
-[![GoDev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/savsgio/atreugo/v10)
+[![GoDev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/savsgio/atreugo/v11)
 [![GitHub release](https://img.shields.io/github/release/savsgio/atreugo.svg)](https://github.com/savsgio/atreugo/releases)
 
 High performance and extensible micro web framework with zero memory allocations in hot paths.
@@ -15,7 +15,7 @@ It's built on top of [fasthttp](https://github.com/valyala/fasthttp).
 - **WITH** Go modules:
 
 ```bash
-go get github.com/savsgio/atreugo/v10
+go get github.com/savsgio/atreugo/v11
 ```
 
 - **WITHOUT** Go modules:

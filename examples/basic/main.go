@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/savsgio/atreugo/v10"
+	"github.com/savsgio/atreugo/v11"
 )
 
 func main() {

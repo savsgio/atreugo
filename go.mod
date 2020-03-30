@@ -1,6 +1,6 @@
-module github.com/savsgio/atreugo/v10
+module github.com/savsgio/atreugo/v11
 
-go 1.13
+go 1.11
 
 require (
 	github.com/fasthttp/router v1.0.0
