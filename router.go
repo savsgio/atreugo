@@ -360,7 +360,7 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 		ffs.PathRewrite = fasthttp.NewPathSlashesStripper(stripSlashes)
 	}
 
-	p := r.RequestHandlerPath(fasthttp.MethodGet, url+"/*filepath", ffs.NewRequestHandler())
+	p := r.RequestHandlerPath(fasthttp.MethodGet, url+"/{filepath:*}", ffs.NewRequestHandler())
 
 	// nolint:godox
 	// TODO: Remove in version v11.0.0

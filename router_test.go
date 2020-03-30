@@ -1020,7 +1020,7 @@ func TestRouter_Static(t *testing.T) {
 				rootPath: "/var/www",
 			},
 			want: want{
-				routerPath: "/static/*filepath",
+				routerPath: "/static/{filepath:*}",
 			},
 		},
 		{
@@ -1030,7 +1030,7 @@ func TestRouter_Static(t *testing.T) {
 				rootPath: "/var/www",
 			},
 			want: want{
-				routerPath: "/static/*filepath",
+				routerPath: "/static/{filepath:*}",
 			},
 		},
 	}
@@ -1076,7 +1076,7 @@ func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
 				rootPath: "./docs",
 			},
 			want: want{
-				routerPath: "/static/*filepath",
+				routerPath: "/static/{filepath:*}",
 			},
 		},
 		{
@@ -1086,7 +1086,7 @@ func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
 				rootPath: "./docs",
 			},
 			want: want{
-				routerPath: "/static/*filepath",
+				routerPath: "/static/{filepath:*}",
 			},
 		},
 		{
@@ -1101,7 +1101,7 @@ func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
 				}},
 			},
 			want: want{
-				routerPath: "/static/*filepath",
+				routerPath: "/static/{filepath:*}",
 			},
 		},
 	}
@@ -1456,7 +1456,7 @@ func TestRouter_DeprecatedPaths(t *testing.T) { //nolint:funlen
 
 			wantURL := tt.args.url
 			if tt.name == "StaticWithFilters" {
-				wantURL += "/*filepath"
+				wantURL += "/{filepath:*}"
 			}
 
 			handler, _ := r.router.Lookup("GET", wantURL, ctx)

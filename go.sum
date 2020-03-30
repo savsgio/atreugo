@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/fasthttp/router v0.7.0 h1:k2ZhnUNPr7CLXSwDSNvkuOtH4vSijR1Kjjxh0gYzWVQ=
-github.com/fasthttp/router v0.7.0/go.mod h1:00BQmm3xiThNypescxIQ+Gfgw2I/3QWKvuagFoENUb4=
+github.com/fasthttp/router v1.0.0 h1:ziodHFKysNBSMsVeVjuHdI4wzhPwYTE2sT+1uBgHFxk=
+github.com/fasthttp/router v1.0.0/go.mod h1:ZVa4I0mMb6i+hPjW90TE5DzFpIv03w8eAo6dlExRE7U=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
@@ -18,9 +18,8 @@ github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lN
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/savsgio/go-logger v1.0.0 h1:jiaRvohRr8RwtcK/WDcA/Yp4eaPaarAko3JNPzt1xoQ=
 github.com/savsgio/go-logger v1.0.0/go.mod h1:/ZzTTmB3JJqjZQcLlxTGbwy3fIsLUoYyldsSEL5rU2g=
-github.com/savsgio/gotils v0.0.0-20200117113501-90175b0fbe3f/go.mod h1:lHhJedqxCoHN+zMtwGNTXWmF0u9Jt363FYRhV6g0CdY=
-github.com/savsgio/gotils v0.0.0-20200308224205-e330c862e34f h1:0E9mVEuHlin0NKhic4cxMiYl7mpk1kDW+lavlU3lbjQ=
-github.com/savsgio/gotils v0.0.0-20200308224205-e330c862e34f/go.mod h1:lHhJedqxCoHN+zMtwGNTXWmF0u9Jt363FYRhV6g0CdY=
+github.com/savsgio/gotils v0.0.0-20200319105752-a9cc718f6a3f h1:XfUnevLK4O22at3R77FlyQHKwlQs75LELdsH2wRX2KQ=
+github.com/savsgio/gotils v0.0.0-20200319105752-a9cc718f6a3f/go.mod h1:lHhJedqxCoHN+zMtwGNTXWmF0u9Jt363FYRhV6g0CdY=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
