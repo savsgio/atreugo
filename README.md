@@ -31,6 +31,7 @@ go get github.com/savsgio/atreugo
 - 1.11.x
 - 1.12.x
 - 1.13.x
+- 1.14.x
 
 ## Documentation
 
