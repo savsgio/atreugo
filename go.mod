@@ -3,7 +3,7 @@ module github.com/savsgio/atreugo/v11
 go 1.11
 
 require (
-	github.com/fasthttp/router v1.0.0
+	github.com/fasthttp/router v1.0.1
 	github.com/google/uuid v1.1.1
 	github.com/json-iterator/go v1.1.9
 	github.com/savsgio/go-logger v1.0.0
