@@ -35,6 +35,8 @@ type Router struct {
 	parent    *Router
 	beginPath string
 
+	handleOPTIONS bool
+
 	errorView ErrorView
 
 	paths             []*Path

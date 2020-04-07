@@ -157,7 +157,7 @@ func (s *Atreugo) HandleMethodNotAllowed(v bool) {
 //
 // It's activated by default
 func (s *Atreugo) HandleOPTIONS(v bool) {
-	s.router.HandleOPTIONS = v
+	s.handleOPTIONS = v
 }
 
 // Serve serves incoming connections from the given listener.

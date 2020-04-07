@@ -334,8 +334,12 @@ func TestAtreugo_RouterConfiguration(t *testing.T) { //nolint:funlen
 				t.Errorf("Router.HandleMethodNotAllowed == %v, want %v", s.router.HandleMethodNotAllowed, tt.want.v)
 			}
 
-			if s.router.HandleOPTIONS != tt.want.v {
-				t.Errorf("Router.HandleOPTIONS == %v, want %v", s.router.HandleOPTIONS, tt.want.v)
+			if s.router.HandleOPTIONS != false {
+				t.Errorf("Router.router.HandleOPTIONS == %v, want %v", s.router.HandleOPTIONS, false)
+			}
+
+			if s.handleOPTIONS != tt.want.v {
+				t.Errorf("Router.handleOPTIONS == %v, want %v", s.handleOPTIONS, tt.want.v)
 			}
 		})
 	}

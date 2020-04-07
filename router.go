@@ -46,6 +46,9 @@ func buildOptionsView(url string, paths []*Path, fn View) View {
 func newRouter(log *logger.Logger, errorView ErrorView) *Router {
 	r := new(Router)
 	r.router = fastrouter.New()
+	r.router.HandleOPTIONS = false
+	r.handleOPTIONS = true
+
 	r.beginPath = "/"
 	r.log = log
 
@@ -62,10 +65,14 @@ func newRouter(log *logger.Logger, errorView ErrorView) *Router {
 func (r *Router) NewGroupPath(path string) *Router {
 	g := new(Router)
 	g.router = r.router.Group(path)
+	g.router.HandleOPTIONS = false
+	g.handleOPTIONS = r.handleOPTIONS
+
 	g.parent = r
+
 	g.beginPath = path
-	g.errorView = r.errorView
 	g.log = r.log
+	g.errorView = r.errorView
 
 	return g
 }
@@ -79,8 +86,9 @@ func (r *Router) init() {
 
 	for _, p := range r.paths {
 		view := p.view
+
 		if p.method == fasthttp.MethodOptions {
-			view = buildOptionsView(p.url, r.paths, p.view)
+			view = buildOptionsView(p.url, r.paths, view)
 			optionsURLsHandled = append(optionsURLsHandled, p.url)
 		}
 
@@ -92,8 +100,11 @@ func (r *Router) init() {
 		r.router.Handle(p.method, p.url, handler)
 
 		handleOPTIONS := !gotils.StringSliceInclude(append(r.customOptionsURLS, optionsURLsHandled...), p.url)
-		if r.router.HandleOPTIONS && handleOPTIONS {
-			handler = p.handlerBuilder(buildOptionsView(p.url, r.paths, emptyView), p.middlewares)
+
+		if r.handleOPTIONS && handleOPTIONS {
+			view = buildOptionsView(p.url, r.paths, emptyView)
+			handler = p.handlerBuilder(view, p.middlewares)
+
 			r.router.Handle(fasthttp.MethodOptions, p.url, handler)
 
 			optionsURLsHandled = append(optionsURLsHandled, p.url)
