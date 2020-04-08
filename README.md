@@ -37,6 +37,10 @@ go get github.com/savsgio/atreugo
 
 See: [docs](https://github.com/savsgio/atreugo/tree/master/docs)
 
+## Official libraries
+
+- See: [Organization](https://github.com/atreugo)
+
 ## Feature Overview
 
 - Optimized for speed. Easily handles more than 100K qps and more than 1M concurrent keep-alive connections on modern hardware.
@@ -93,11 +97,6 @@ the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
 \* _Smaller is better_
 
 ![](https://raw.githubusercontent.com/smallnest/go-web-framework-benchmark/master/concurrency_alloc.png)
-
-## Useful third-party libraries
-
-- [session](https://github.com/fasthttp/session)
-- [websocket](https://github.com/fasthttp/websocket)
 
 # Contributing
 
