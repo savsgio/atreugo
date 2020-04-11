@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/fasthttp/router v1.0.1 h1:OEc/ITEJ7CQbQZ4UTPwQynBka/kmL/lrQsc2chKbHRo=
-github.com/fasthttp/router v1.0.1/go.mod h1:ZVa4I0mMb6i+hPjW90TE5DzFpIv03w8eAo6dlExRE7U=
+github.com/fasthttp/router v1.0.2 h1:rdYdcAmwOLqWuFgc4afa409SYmuw4t0A66K5Ib+GT3I=
+github.com/fasthttp/router v1.0.2/go.mod h1:Myk/ofrwtfiLSCIfbE44+e+PyP3mR6JhZg3AYzqwJI0=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
