@@ -37,7 +37,9 @@ go get github.com/savsgio/atreugo
 
 See: [docs](https://github.com/savsgio/atreugo/tree/master/docs)
 
-## Official libraries
+## Organization
+
+Find useful libraries like middlewares, websocket, etc.
 
 - See: [Organization](https://github.com/atreugo)
 
@@ -100,4 +102,4 @@ the same functions of `*fasthttp.RequestCtx`. Don't worry :smile:
 
 # Contributing
 
-**Feel free to contribute it or fork me...** :wink:
+**Feel free to contribute or fork me...** :wink:
