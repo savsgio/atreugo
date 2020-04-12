@@ -44,7 +44,7 @@ script:
 
   # run tests
   - |
-    pkgs=($(go list ./... | grep -v examples | tr '\n' ' '))
+    pkgs=($(go list ./... | tr '\n' ' '))
     for i in "${!pkgs[@]}"; do
       go test -v -cover -race -coverprofile=$i.coverprofile ${pkgs[i]}
     done
