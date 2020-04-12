@@ -79,7 +79,7 @@ Find useful libraries like middlewares, websocket, etc.
 
 ## Examples:
 
-Go to [examples](https://github.com/savsgio/atreugo/tree/master/examples) directory to see how to use Atreugo.
+Go to [examples](https://github.com/atreugo/examples) to see how to use Atreugo.
 
 ## Note:
 
