@@ -11,7 +11,7 @@ import (
 	"time"
 
 	fastrouter "github.com/fasthttp/router"
-	logger "github.com/savsgio/go-logger"
+	logger "github.com/savsgio/go-logger/v2"
 	"github.com/valyala/fasthttp"
 )
 

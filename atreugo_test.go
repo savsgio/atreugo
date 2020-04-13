@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode"
 
-	logger "github.com/savsgio/go-logger"
+	logger "github.com/savsgio/go-logger/v2"
 	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttputil"
