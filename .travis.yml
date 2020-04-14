@@ -15,10 +15,8 @@ os:
 
 before_install:
   - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
-  - go get -u -v golang.org/x/tools/cmd/cover
-  - go get -u -v github.com/modocache/gover
   - go get -u -v github.com/mattn/goveralls
-  - go get -v ./...
+  - go get -v
 
 script:
   # lint (go version >= 1.11, gotip not supported)
@@ -43,12 +41,7 @@ script:
     fi
 
   # run tests
-  - |
-    pkgs=($(go list ./... | tr '\n' ' '))
-    for i in "${!pkgs[@]}"; do
-      go test -v -cover -race -coverprofile=$i.coverprofile ${pkgs[i]}
-    done
+  - go test -v -cover -race -coverprofile=.coverprofile
 
   # send coverage
-  - $HOME/gopath/bin/gover
-  - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci
+  - $HOME/gopath/bin/goveralls -coverprofile=.coverprofile -service=travis-ci
