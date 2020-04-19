@@ -27,10 +27,6 @@ var notConfigFasthttpFields = []string{
 	"TCPKeepalivePeriod",
 	"Logger",
 	"MaxKeepaliveDuration", // Deprecated: Use IdleTimeout instead.
-
-	// nolint:godox
-	// TODO: Remove from here when upgrade fasthttp to a greater version to v1.9.0
-	"NoDefaultDate", // Not implemented yet
 }
 
 type mockListener struct {

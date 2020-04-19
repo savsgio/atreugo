@@ -227,6 +227,14 @@ type Config struct { // nolint:maligned
 	// Server accepts all the requests by default.
 	GetOnly bool
 
+	// Will not pre parse Multipart Form data if set to true.
+	//
+	// This option is useful for servers that desire to treat
+	// multipart form data as a binary blob, or choose when to parse the data.
+	//
+	// Server pre parses multipart form data by default.
+	DisablePreParseMultipartForm bool
+
 	// Logs all errors, including the most frequent
 	// 'connection reset by peer', 'broken pipe' and 'connection timeout'
 	// errors. Such errors are common in production serving real-world
@@ -268,6 +276,13 @@ type Config struct { // nolint:maligned
 	// the only time a Server header will be sent is if a non-zero length
 	// value is explicitly provided during a request.
 	NoDefaultServerHeader bool
+
+	// NoDefaultDate, when set to true, causes the default Date
+	// header to be excluded from the Response.
+	//
+	// The default Date header value is the current date value. When
+	// set to true, the Date will not be present.
+	NoDefaultDate bool
 
 	// NoDefaultContentType, when set to true, causes the default Content-Type
 	// header to be excluded from the Response.
