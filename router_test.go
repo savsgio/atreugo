@@ -647,6 +647,30 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 				},
 			},
 		},
+		{
+			name: "NoNext",
+			args: args{
+				viewFn: viewFn,
+				before: []Middleware{
+					func(ctx *RequestCtx) error {
+						handlerCounter.beforeMiddlewares++
+						return nil
+					},
+				},
+				after:       after,
+				middlewares: middlewares,
+			},
+			want: want{
+				statusCode: fasthttp.StatusOK,
+				counter: counter{
+					viewCalled:            false,
+					beforeMiddlewares:     1,
+					beforeViewMiddlewares: 0,
+					afterViewMiddlewares:  0,
+					afterMiddlewares:      0,
+				},
+			},
+		},
 	}
 
 	method := "GET"
