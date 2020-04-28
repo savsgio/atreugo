@@ -47,7 +47,7 @@ func TestRouter_buildOptionsView(t *testing.T) {
 	p2 := &Path{method: fasthttp.MethodPost, url: url}
 	paths := []*Path{p1, p2}
 
-	var errOptionsView error = nil
+	var errOptionsView error
 
 	headerKey := "key"
 	headerValue := "value"
