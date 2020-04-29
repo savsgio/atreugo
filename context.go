@@ -35,12 +35,12 @@ func (ctx *RequestCtx) reset() {
 	ctx.RequestCtx = nil
 }
 
-// RequestID returns the "X-Request-ID" header value
+// RequestID returns the "X-Request-ID" header value.
 func (ctx *RequestCtx) RequestID() []byte {
 	return ctx.Request.Header.Peek(XRequestIDHeader)
 }
 
-// Next pass control to the next middleware/view function
+// Next pass control to the next middleware/view function.
 func (ctx *RequestCtx) Next() error {
 	ctx.next = true
 	return nil
@@ -48,14 +48,14 @@ func (ctx *RequestCtx) Next() error {
 
 // SkipView sets flag to skip view execution in the current request
 //
-// Use it in before middlewares
+// Use it in before middlewares.
 func (ctx *RequestCtx) SkipView() {
 	ctx.skipView = true
 }
 
 // AttachContext attach a context.Context to the RequestCtx
 //
-// WARNING: The extra context could not be itself
+// WARNING: The extra context could not be itself.
 func (ctx *RequestCtx) AttachContext(extraCtx context.Context) {
 	if extraCtx == ctx {
 		panic("could not attach to itself")
@@ -64,7 +64,7 @@ func (ctx *RequestCtx) AttachContext(extraCtx context.Context) {
 	ctx.SetUserValue(attachedCtxKey, extraCtx)
 }
 
-// AttachedContext returns the attached context.Context if exist
+// AttachedContext returns the attached context.Context if exist.
 func (ctx *RequestCtx) AttachedContext() context.Context {
 	if extraCtx, ok := ctx.UserValue(attachedCtxKey).(context.Context); ok {
 		return extraCtx
@@ -90,7 +90,7 @@ func (ctx *RequestCtx) AttachedContext() context.Context {
 // 		ctx.AttachContext(context.WithValue(context.Background(), "myKey", "myValue"))
 //		ctx.Value("myKey")
 //
-// to avoid extra allocation
+// to avoid extra allocation.
 func (ctx *RequestCtx) Value(key interface{}) interface{} {
 	if !ctx.searchingOnAttachedCtx {
 		if extraCtx := ctx.AttachedContext(); extraCtx != nil {

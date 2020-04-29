@@ -9,7 +9,7 @@ import (
 // Middlewares defines the middlewares (before, after and skip) in the order in which you want to execute them
 // only for the view
 //
-// ** The previous middlewares configuration could be overridden
+// WARNING: The previous middlewares configuration could be overridden.
 func (p *Path) Middlewares(middlewares Middlewares) *Path {
 	p.middlewares = middlewares
 
@@ -17,7 +17,7 @@ func (p *Path) Middlewares(middlewares Middlewares) *Path {
 }
 
 // UseBefore registers the middlewares in the order in which you want to execute them
-// only before the execution of the view
+// only before the execution of the view.
 func (p *Path) UseBefore(fns ...Middleware) *Path {
 	p.middlewares.Before = append(p.middlewares.Before, fns...)
 
@@ -25,14 +25,14 @@ func (p *Path) UseBefore(fns ...Middleware) *Path {
 }
 
 // UseAfter registers the middlewares in the order in which you want to execute them
-// only after the execution of the view
+// only after the execution of the view.
 func (p *Path) UseAfter(fns ...Middleware) *Path {
 	p.middlewares.After = append(p.middlewares.After, fns...)
 
 	return p
 }
 
-// SkipMiddlewares registers the middlewares that you want to skip only when executing the view
+// SkipMiddlewares registers the middlewares that you want to skip only when executing the view.
 func (p *Path) SkipMiddlewares(fns ...Middleware) *Path {
 	p.middlewares.Skip = append(p.middlewares.Skip, fns...)
 

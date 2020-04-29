@@ -287,7 +287,7 @@ func TestFileResponse(t *testing.T) { // nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ioutil.WriteFile(tt.args.filePath, testFileContent, 0644); err != nil {
+			if err := ioutil.WriteFile(tt.args.filePath, testFileContent, 0600); err != nil {
 				t.Fatalf("Error writing file %s", tt.args.filePath)
 			}
 			defer os.Remove(tt.args.filePath)
@@ -429,7 +429,7 @@ func Test_ErrorResponse(t *testing.T) {
 	}
 }
 
-// Benchmarks
+// Benchmarks.
 func Benchmark_FileResponse(b *testing.B) {
 	cwd, _ := os.Getwd()
 	path := cwd + "/LICENSE"

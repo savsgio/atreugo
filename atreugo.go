@@ -15,7 +15,7 @@ import (
 var tcpNetworks = []string{"tcp", "tcp4", "tcp6"}
 var validNetworks = append(tcpNetworks, []string{"unix"}...)
 
-// New create a new instance of Atreugo Server
+// New create a new instance of Atreugo Server.
 func New(cfg Config) *Atreugo {
 	if cfg.Network != "" && !gotils.StringSliceInclude(validNetworks, cfg.Network) {
 		panic("Invalid network: " + cfg.Network)
@@ -111,7 +111,7 @@ func fasthttpServer(cfg Config, handler fasthttp.RequestHandler, log fasthttp.Lo
 // The matched route path is only added to handlers of routes that were
 // registered when this option was enabled.
 //
-// It's deactivated by default
+// It's deactivated by default.
 func (s *Atreugo) SaveMatchedRoutePath(v bool) {
 	s.router.SaveMatchedRoutePath = v
 }
@@ -122,7 +122,7 @@ func (s *Atreugo) SaveMatchedRoutePath(v bool) {
 // client is redirected to /foo with http status code 301 for GET requests
 // and 307 for all other request methods.
 //
-// It's activated by default
+// It's activated by default.
 func (s *Atreugo) RedirectTrailingSlash(v bool) {
 	s.router.RedirectTrailingSlash = v
 }
@@ -137,7 +137,7 @@ func (s *Atreugo) RedirectTrailingSlash(v bool) {
 // For example /FOO and /..//Foo could be redirected to /foo.
 // RedirectTrailingSlash is independent of this option.
 //
-// It's activated by default
+// It's activated by default.
 func (s *Atreugo) RedirectFixedPath(v bool) {
 	s.router.RedirectFixedPath = v
 }
@@ -149,7 +149,7 @@ func (s *Atreugo) RedirectFixedPath(v bool) {
 // If no other Method is allowed, the request is delegated to the NotFound
 // handler.
 //
-// It's activated by default
+// It's activated by default.
 func (s *Atreugo) HandleMethodNotAllowed(v bool) {
 	s.router.HandleMethodNotAllowed = v
 }
@@ -157,7 +157,7 @@ func (s *Atreugo) HandleMethodNotAllowed(v bool) {
 // HandleOPTIONS if enabled, the router automatically replies to OPTIONS requests.
 // Custom OPTIONS handlers take priority over automatic replies.
 //
-// It's activated by default
+// It's activated by default.
 func (s *Atreugo) HandleOPTIONS(v bool) {
 	s.handleOPTIONS = v
 }
@@ -167,7 +167,7 @@ func (s *Atreugo) HandleOPTIONS(v bool) {
 // Serve blocks until the given listener returns permanent error.
 //
 // If use a custom Listener, will be updated your atreugo configuration
-// with the Listener address automatically
+// with the Listener address automatically.
 func (s *Atreugo) Serve(ln net.Listener) error {
 	defer ln.Close()
 
@@ -230,7 +230,7 @@ func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	return nil
 }
 
-// SetLogOutput set log output of server
+// SetLogOutput set log output of server.
 func (s *Atreugo) SetLogOutput(output io.Writer) {
 	s.log.SetOutput(output)
 }

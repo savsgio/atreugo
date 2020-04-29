@@ -1202,12 +1202,12 @@ func TestRouter_ListPaths(t *testing.T) {
 	}
 }
 
-// Benchmarks
+// Benchmarks.
 func Benchmark_handler(b *testing.B) {
 	r := newRouter(testLog, nil)
 
 	h := r.handler(func(ctx *RequestCtx) error {
-		return ctx.HTTPResponse("Hello world")
+		return nil
 	}, Middlewares{})
 
 	ctx := new(fasthttp.RequestCtx)
@@ -1222,7 +1222,7 @@ func Benchmark_handler(b *testing.B) {
 func Benchmark_RouterHandler(b *testing.B) {
 	r := newRouter(testLog, nil)
 	r.GET("/", func(ctx *RequestCtx) error {
-		return ctx.HTTPResponse("Hello world")
+		return nil
 	})
 	r.init()
 

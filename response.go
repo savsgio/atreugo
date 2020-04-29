@@ -14,7 +14,7 @@ func (ctx *RequestCtx) newResponse(contentType string, statusCode ...int) {
 	}
 }
 
-// JSONResponse return response with body in json format
+// JSONResponse return response with body in json format.
 func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
 	ctx.newResponse("application/json", statusCode...)
 
@@ -28,7 +28,7 @@ func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
 	return nil
 }
 
-// HTTPResponse return response with body in html format
+// HTTPResponse return response with body in html format.
 func (ctx *RequestCtx) HTTPResponse(body string, statusCode ...int) error {
 	ctx.newResponse("text/html; charset=utf-8", statusCode...)
 	ctx.SetBodyString(body)
@@ -36,7 +36,7 @@ func (ctx *RequestCtx) HTTPResponse(body string, statusCode ...int) error {
 	return nil
 }
 
-// HTTPResponseBytes return response with body in html format
+// HTTPResponseBytes return response with body in html format.
 func (ctx *RequestCtx) HTTPResponseBytes(body []byte, statusCode ...int) error {
 	ctx.newResponse("text/html; charset=utf-8", statusCode...)
 	ctx.SetBody(body)
@@ -44,7 +44,7 @@ func (ctx *RequestCtx) HTTPResponseBytes(body []byte, statusCode ...int) error {
 	return nil
 }
 
-// TextResponse return response with body in text format
+// TextResponse return response with body in text format.
 func (ctx *RequestCtx) TextResponse(body string, statusCode ...int) error {
 	ctx.newResponse("text/plain; charset=utf-8", statusCode...)
 	ctx.SetBodyString(body)
@@ -52,7 +52,7 @@ func (ctx *RequestCtx) TextResponse(body string, statusCode ...int) error {
 	return nil
 }
 
-// TextResponseBytes return response with body in text format
+// TextResponseBytes return response with body in text format.
 func (ctx *RequestCtx) TextResponseBytes(body []byte, statusCode ...int) error {
 	ctx.newResponse("text/plain; charset=utf-8", statusCode...)
 	ctx.SetBody(body)
@@ -92,7 +92,7 @@ func (ctx *RequestCtx) FileResponse(fileName, filePath, mimeType string) error {
 	return nil
 }
 
-// RedirectResponse redirect request to an especific url
+// RedirectResponse redirect request to an especific url.
 func (ctx *RequestCtx) RedirectResponse(url string, statusCode int) error {
 	ctx.Redirect(url, statusCode)
 
