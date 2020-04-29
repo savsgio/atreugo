@@ -219,7 +219,7 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 // Middlewares defines the middlewares (before, after and skip) in the order in which you want to execute them
 // for the view or group
 //
-// ** The previous middlewares configuration could be overridden.
+// WARNING: The previous middlewares configuration could be overridden.
 func (r *Router) Middlewares(middlewares Middlewares) *Router {
 	r.middlewares = middlewares
 
