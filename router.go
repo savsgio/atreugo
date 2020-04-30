@@ -194,8 +194,8 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 			r.log.Debugf("%s %s", actx.Method(), actx.URI())
 		}
 
-		for _, h := range chain {
-			if err := h(actx); err != nil {
+		for i := range chain {
+			if err := chain[i](actx); err != nil {
 				statusCode := actx.Response.StatusCode()
 				if statusCode == fasthttp.StatusOK {
 					statusCode = fasthttp.StatusInternalServerError
