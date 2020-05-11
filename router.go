@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/fasthttp/router"
 	fastrouter "github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger/v2"
 	"github.com/savsgio/gotils"
@@ -282,6 +283,11 @@ func (r *Router) PATCH(url string, viewFn View) *Path {
 // DELETE shortcut for router.Path("DELETE", url, viewFn).
 func (r *Router) DELETE(url string, viewFn View) *Path {
 	return r.Path(fasthttp.MethodDelete, url, viewFn)
+}
+
+// ANY shortcut for router.Path("*", url, viewFn).
+func (r *Router) ANY(url string, viewFn View) *Path {
+	return r.Path(router.MethodWild, url, viewFn)
 }
 
 // Path registers a new view with the given path and method

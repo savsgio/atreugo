@@ -5,17 +5,36 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/fasthttp/router"
 	fastrouter "github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger/v2"
 	"github.com/valyala/fasthttp"
 )
 
 var testLog = logger.New("test", "fatal", nil)
+
+var httpMethods = []string{
+	fasthttp.MethodGet,
+	fasthttp.MethodHead,
+	fasthttp.MethodPost,
+	fasthttp.MethodPut,
+	fasthttp.MethodPatch,
+	fasthttp.MethodDelete,
+	fasthttp.MethodConnect,
+	fasthttp.MethodOptions,
+	fasthttp.MethodTrace,
+	router.MethodWild,
+}
+
+func randomHTTPMethod() string {
+	return httpMethods[rand.Intn(len(httpMethods)-1)]
+}
 
 func TestRouter_defaultErrorView(t *testing.T) {
 	err := errors.New("error")
@@ -822,6 +841,10 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 			name: fasthttp.MethodDelete,
 			args: args{method: fasthttp.MethodDelete, fn: r.DELETE},
 		},
+		{
+			name: router.MethodWild,
+			args: args{method: router.MethodWild, fn: r.ANY},
+		},
 	}
 
 	for _, test := range tests {
@@ -834,8 +857,13 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 			tt.args.fn(path, viewFn)
 			r.init()
 
+			reqMethod := tt.args.method
+			for reqMethod == router.MethodWild {
+				reqMethod = randomHTTPMethod()
+			}
+
 			ctx := new(fasthttp.RequestCtx)
-			h, _ := r.router.Lookup(tt.args.method, path, ctx)
+			h, _ := r.router.Lookup(reqMethod, path, ctx)
 
 			if h == nil {
 				t.Errorf("The path is not registered with method %s", tt.args.method)
