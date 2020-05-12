@@ -285,7 +285,9 @@ func (r *Router) DELETE(url string, viewFn View) *Path {
 	return r.Path(fasthttp.MethodDelete, url, viewFn)
 }
 
-// ANY shortcut for router.Path("*", url, viewFn).
+// ANY shortcut for router.Path("*", url, viewFn)
+//
+// WARNING: Use only for routes where the request method is not important.
 func (r *Router) ANY(url string, viewFn View) *Path {
 	return r.Path(router.MethodWild, url, viewFn)
 }
