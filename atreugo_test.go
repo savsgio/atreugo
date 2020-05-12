@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net"
 	"reflect"
+	"runtime"
 	"syscall"
 	"testing"
 	"time"
@@ -204,7 +205,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 	}
 }
 
-func Test_fasthttpServer(t *testing.T) { //nolint:funlen
+func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 	type args struct {
 		compress bool
 	}
@@ -248,12 +249,57 @@ func Test_fasthttpServer(t *testing.T) { //nolint:funlen
 				LogLevel: "fatal",
 				Compress: tt.args.compress,
 			}
-			srv := fasthttpServer(cfg, handler, testLog)
+			srv := newFasthttpServer(cfg, handler, testLog)
 
 			if (reflect.ValueOf(handler).Pointer() == reflect.ValueOf(srv.Handler).Pointer()) == tt.want.compress {
 				t.Error("The handler has not been wrapped by compression handler")
 			}
 		})
+	}
+}
+
+func TestAtreugo_newPreforkServer(t *testing.T) {
+	cfg := Config{
+		LogLevel:         "fatal",
+		GracefulShutdown: false,
+	}
+
+	s := New(cfg)
+	sPrefork := s.newPreforkServer()
+
+	if sPrefork.Network != s.cfg.Network {
+		t.Errorf("Prefork.Network == %s, want %s", sPrefork.Network, s.cfg.Network)
+	}
+
+	if sPrefork.Reuseport != s.cfg.Reuseport {
+		t.Errorf("Prefork.Reuseport == %v, want %v", sPrefork.Reuseport, s.cfg.Reuseport)
+	}
+
+	recoverThreshold := runtime.GOMAXPROCS(0) / 2
+	if sPrefork.RecoverThreshold != recoverThreshold {
+		t.Errorf("Prefork.RecoverThreshold == %d, want %d", sPrefork.RecoverThreshold, recoverThreshold)
+	}
+
+	if !isEqual(sPrefork.Logger, s.log) {
+		t.Errorf("Prefork.Logger == %p, want %p", sPrefork.Logger, s.log)
+	}
+
+	if !isEqual(sPrefork.ServeFunc, s.Serve) {
+		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.Serve)
+	}
+
+	// With graceful shutdown
+	cfg.GracefulShutdown = true
+
+	s = New(cfg)
+	sPrefork = s.newPreforkServer()
+
+	if isEqual(sPrefork.ServeFunc, s.Serve) {
+		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.ServeGracefully)
+	}
+
+	if !isEqual(sPrefork.ServeFunc, s.ServeGracefully) {
+		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.ServeGracefully)
 	}
 }
 
@@ -501,6 +547,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		addr      string
 		graceful  bool
 		tlsEnable bool
+		prefork   bool
 	}
 
 	type want struct {
@@ -518,6 +565,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 				addr:      "localhost:8081",
 				graceful:  false,
 				tlsEnable: false,
+				prefork:   false,
 			},
 			want: want{
 				getErr: false,
@@ -529,9 +577,34 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 				addr:      "localhost:8081",
 				graceful:  true,
 				tlsEnable: false,
+				prefork:   false,
 			},
 			want: want{
 				getErr: false,
+			},
+		},
+		{
+			name: "PreforkError",
+			args: args{
+				addr:      "invalid",
+				graceful:  false,
+				tlsEnable: false,
+				prefork:   true,
+			},
+			want: want{
+				getErr: true,
+			},
+		},
+		{
+			name: "PreforkGracefulError",
+			args: args{
+				addr:      "invalid",
+				graceful:  true,
+				tlsEnable: false,
+				prefork:   true,
+			},
+			want: want{
+				getErr: true,
 			},
 		},
 		{
@@ -554,6 +627,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 			},
 		},
 	}
+
 	for _, test := range tests {
 		tt := test
 
@@ -563,6 +637,7 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 				LogLevel:         "error",
 				TLSEnable:        tt.args.tlsEnable,
 				GracefulShutdown: tt.args.graceful,
+				Prefork:          tt.args.prefork,
 			})
 
 			errCh := make(chan error, 1)
