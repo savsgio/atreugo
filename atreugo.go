@@ -272,3 +272,8 @@ func (s *Atreugo) ListenAndServe() error {
 
 	return s.Serve(ln)
 }
+
+// IsPreforkChild checks if the current thread/process is a child.
+func IsPreforkChild() bool {
+	return prefork.IsChild()
+}

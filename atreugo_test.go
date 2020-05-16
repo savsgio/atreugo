@@ -15,6 +15,7 @@ import (
 	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttputil"
+	"github.com/valyala/fasthttp/prefork"
 )
 
 var testAtreugoConfig = Config{
@@ -659,5 +660,11 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 				}
 			}
 		})
+	}
+}
+
+func Test_IsPreforkChild(t *testing.T) {
+	if IsPreforkChild() != prefork.IsChild() {
+		t.Errorf("IsPreforkChild() == %v, want %v", IsPreforkChild(), prefork.IsChild())
 	}
 }
