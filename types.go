@@ -429,7 +429,7 @@ type PanicView func(*RequestCtx, interface{})
 // Middleware must process all incoming requests before/after defined views.
 type Middleware View
 
-// Middlewares is a collection of middlewares with the order of execution and which to skip
+// Middlewares is a collection of middlewares with the order of execution and which to skip.
 type Middlewares struct {
 	Before []Middleware
 	After  []Middleware
@@ -448,5 +448,5 @@ type Middlewares struct {
 // The returned path may refer to ctx members. For example, ctx.Path().
 type PathRewriteFunc func(ctx *RequestCtx) []byte
 
-// JSON is a map whose key is a string and whose value an interface
+// JSON is a map whose key is a string and whose value an interface.
 type JSON map[string]interface{}

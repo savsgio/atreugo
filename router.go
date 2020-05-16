@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fasthttp/router"
 	fastrouter "github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger/v2"
 	"github.com/savsgio/gotils"
@@ -294,7 +293,7 @@ func (r *Router) DELETE(url string, viewFn View) *Path {
 //
 // WARNING: Use only for routes where the request method is not important.
 func (r *Router) ANY(url string, viewFn View) *Path {
-	return r.Path(router.MethodWild, url, viewFn)
+	return r.Path(fastrouter.MethodWild, url, viewFn)
 }
 
 // Path registers a new view with the given path and method

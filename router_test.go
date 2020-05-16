@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fasthttp/router"
 	fastrouter "github.com/fasthttp/router"
 	logger "github.com/savsgio/go-logger/v2"
 	"github.com/valyala/fasthttp"
@@ -29,7 +28,7 @@ var httpMethods = []string{
 	fasthttp.MethodConnect,
 	fasthttp.MethodOptions,
 	fasthttp.MethodTrace,
-	router.MethodWild,
+	fastrouter.MethodWild,
 }
 
 func randomHTTPMethod() string {
@@ -884,8 +883,8 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 			args: args{method: fasthttp.MethodDelete, fn: r.DELETE},
 		},
 		{
-			name: router.MethodWild,
-			args: args{method: router.MethodWild, fn: r.ANY},
+			name: fastrouter.MethodWild,
+			args: args{method: fastrouter.MethodWild, fn: r.ANY},
 		},
 	}
 
@@ -900,7 +899,7 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 			r.init()
 
 			reqMethod := tt.args.method
-			for reqMethod == router.MethodWild {
+			for reqMethod == fastrouter.MethodWild {
 				reqMethod = randomHTTPMethod()
 			}
 
