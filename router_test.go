@@ -249,10 +249,52 @@ func TestRouter_init(t *testing.T) { // nolint:funlen
 	g.init()
 }
 
-func TestRouter_buildMiddlewaresChain(t *testing.T) { //nolint:funlen
+func TestRouter_buildMiddlewaresChain(t *testing.T) {
+	logLevels := []string{"fatal", "debug"}
+
+	mdlws := Middlewares{
+		Before: []Middleware{
+			func(ctx *RequestCtx) error { return ctx.Next() },
+			func(ctx *RequestCtx) error { return ctx.Next() },
+		},
+		After: []Middleware{func(ctx *RequestCtx) error { return ctx.Next() }},
+	}
+
+	for _, level := range logLevels {
+		s := New(Config{LogLevel: level})
+		s.Middlewares(mdlws)
+
+		chain := s.buildMiddlewaresChain(mdlws.Before[0])
+
+		wantSkipLen := 0
+		if len(chain.Skip) != wantSkipLen {
+			t.Errorf("Middlewares.Skip length == %d, want %d", len(chain.Skip), wantSkipLen)
+		}
+
+		wantBeforeLen := len(mdlws.Before) - 1
+		if s.log.DebugEnabled() {
+			wantBeforeLen++
+		}
+
+		if len(chain.Before) != wantBeforeLen {
+			t.Errorf("Middlewares.Before length == %d, want %d", len(chain.Before), wantBeforeLen)
+		}
+
+		if s.log.DebugEnabled() && isEqual(chain.Before[0], mdlws.Before[1]) {
+			t.Error("First before middleware must be the logger middleware")
+		}
+
+		wantAfterLen := len(mdlws.After)
+		if len(chain.After) != wantAfterLen {
+			t.Errorf("Middlewares.After length == %d, want %d", len(chain.After), wantAfterLen)
+		}
+	}
+}
+
+func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 	s := New(testAtreugoConfig)
 
-	method := "POST"
+	method := randomHTTPMethod()
 	url := "/foo"
 
 	skipMiddlewareGlobalCalled := false

@@ -121,6 +121,15 @@ func (r *Router) buildMiddlewaresChain(skip ...Middleware) Middlewares {
 	if r.parent != nil {
 		skip = append(skip, r.middlewares.Skip...)
 		subMdlws = r.parent.buildMiddlewaresChain(skip...)
+	} else if r.log.DebugEnabled() {
+		debugMiddleware := func(ctx *RequestCtx) error {
+			r.log.Debugf("%s %s", ctx.Method(), ctx.URI())
+
+			return ctx.Next()
+		}
+
+		// Add debug middleware at first position if the log level is enabled as debug
+		mdlws.Before = append(mdlws.Before, debugMiddleware)
 	}
 
 	mdlws.Before = appendMiddlewares(mdlws.Before, subMdlws.Before, skip...)
@@ -190,10 +199,6 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := AcquireRequestCtx(ctx)
-
-		if r.log.DebugEnabled() {
-			r.log.Debugf("%s %s", actx.Method(), actx.URI())
-		}
 
 		for i := range chain {
 			if err := chain[i](actx); err != nil {
