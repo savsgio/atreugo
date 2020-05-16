@@ -124,6 +124,11 @@ func (s *Atreugo) newPreforkServer() *prefork.Prefork {
 	return p
 }
 
+// IsPreforkChild checks if the current thread/process is a child.
+func IsPreforkChild() bool {
+	return prefork.IsChild()
+}
+
 // SaveMatchedRoutePath if enabled, adds the matched route path onto the ctx.UserValue context
 // before invoking the handler.
 // The matched route path is only added to handlers of routes that were
@@ -271,9 +276,4 @@ func (s *Atreugo) ListenAndServe() error {
 	}
 
 	return s.Serve(ln)
-}
-
-// IsPreforkChild checks if the current thread/process is a child.
-func IsPreforkChild() bool {
-	return prefork.IsChild()
 }
