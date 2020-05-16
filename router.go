@@ -189,7 +189,7 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 	chain = append(chain, mdlws.After...)
 
 	return func(ctx *fasthttp.RequestCtx) {
-		actx := acquireRequestCtx(ctx)
+		actx := AcquireRequestCtx(ctx)
 
 		if r.log.DebugEnabled() {
 			r.log.Debugf("%s %s", actx.Method(), actx.URI())
@@ -213,7 +213,7 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 			actx.next = false
 		}
 
-		releaseRequestCtx(actx)
+		ReleaseRequestCtx(actx)
 	}
 }
 
@@ -372,9 +372,9 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 
 	if fs.PathRewrite != nil {
 		ffs.PathRewrite = func(ctx *fasthttp.RequestCtx) []byte {
-			actx := acquireRequestCtx(ctx)
+			actx := AcquireRequestCtx(ctx)
 			result := fs.PathRewrite(actx)
-			releaseRequestCtx(actx)
+			ReleaseRequestCtx(actx)
 
 			return result
 		}

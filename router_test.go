@@ -39,7 +39,7 @@ func randomHTTPMethod() string {
 func TestRouter_defaultErrorView(t *testing.T) {
 	err := errors.New("error")
 	statusCode := 500
-	ctx := acquireRequestCtx(new(fasthttp.RequestCtx))
+	ctx := AcquireRequestCtx(new(fasthttp.RequestCtx))
 
 	defaultErrorView(ctx, err, statusCode)
 
@@ -53,7 +53,7 @@ func TestRouter_defaultErrorView(t *testing.T) {
 }
 
 func TestRouter_emptyView(t *testing.T) {
-	ctx := acquireRequestCtx(new(fasthttp.RequestCtx))
+	ctx := AcquireRequestCtx(new(fasthttp.RequestCtx))
 
 	if err := emptyView(ctx); err != nil {
 		t.Errorf("emptyView() must returns a nil error")
@@ -78,7 +78,7 @@ func TestRouter_buildOptionsView(t *testing.T) {
 
 	h := buildOptionsView(url, paths, optionsView)
 
-	ctx := acquireRequestCtx(new(fasthttp.RequestCtx))
+	ctx := AcquireRequestCtx(new(fasthttp.RequestCtx))
 
 	if err := h(ctx); err != errOptionsView {
 		t.Errorf("Error == %v, want %v", err, errOptionsView)

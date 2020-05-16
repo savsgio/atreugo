@@ -11,27 +11,37 @@ import (
 
 var attachedCtxKey = fmt.Sprintf("__attachedCtx::%s__", gotils.RandBytes(make([]byte, 15)))
 
-var requestCtxPool = sync.Pool{
+var requestCtxPool = &sync.Pool{
 	New: func() interface{} {
 		return new(RequestCtx)
 	},
 }
 
-func acquireRequestCtx(ctx *fasthttp.RequestCtx) *RequestCtx {
+// AcquireRequestCtx returns an empty RequestCtx instance from request context pool.
+//
+// The returned RequestCtx instance may be passed to ReleaseRequestCtx when it is
+// no longer needed. This allows RequestCtx recycling, reduces GC pressure
+// and usually improves performance.
+func AcquireRequestCtx(ctx *fasthttp.RequestCtx) *RequestCtx {
 	actx := requestCtxPool.Get().(*RequestCtx)
 	actx.RequestCtx = ctx
 
 	return actx
 }
 
-func releaseRequestCtx(actx *RequestCtx) {
-	actx.reset()
-	requestCtxPool.Put(actx)
+// ReleaseRequestCtx returns ctx acquired via AcquireRequestCtx to request context pool.
+//
+// It is forbidden accessing ctx and/or its' members after returning
+// it to request pool.
+func ReleaseRequestCtx(ctx *RequestCtx) {
+	ctx.reset()
+	requestCtxPool.Put(ctx)
 }
 
 func (ctx *RequestCtx) reset() {
 	ctx.next = false
 	ctx.skipView = false
+	ctx.searchingOnAttachedCtx = false
 	ctx.RequestCtx = nil
 }
 

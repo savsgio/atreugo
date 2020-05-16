@@ -8,29 +8,29 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func Test_acquireRequestCtx(t *testing.T) {
+func Test_AcquireRequestCtx(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx)
 
 	if actx.RequestCtx != ctx {
-		t.Errorf("acquireRequestCtx() = %p, want %p", actx.RequestCtx, ctx)
+		t.Errorf("AcquireRequestCtx() = %p, want %p", actx.RequestCtx, ctx)
 	}
 }
 
-func Test_releaseRequestCtx(t *testing.T) {
+func Test_ReleaseRequestCtx(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx)
 
-	releaseRequestCtx(actx)
+	ReleaseRequestCtx(actx)
 
 	if actx.RequestCtx != nil {
-		t.Errorf("releaseRequestCtx() *fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)
+		t.Errorf("ReleaseRequestCtx() *fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)
 	}
 }
 
 func TestRequestCtx_reset(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx)
 
 	if err := actx.Next(); err != nil {
 		t.Fatalf("Error calling next. %+v", err)
@@ -66,7 +66,7 @@ func TestRequestCtx_RequestID(t *testing.T) {
 }
 
 func Test_Next(t *testing.T) {
-	ctx := acquireRequestCtx(new(fasthttp.RequestCtx))
+	ctx := AcquireRequestCtx(new(fasthttp.RequestCtx))
 
 	if err := ctx.Next(); err != nil {
 		t.Errorf("ctx.Next() unexpected error: %v", err)
@@ -75,7 +75,7 @@ func Test_Next(t *testing.T) {
 
 func Test_SkipView(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx)
 
 	actx.SkipView()
 
@@ -88,7 +88,7 @@ func Test_AttachContext(t *testing.T) {
 	type key struct{}
 
 	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx)
 
 	actx.AttachContext(context.WithValue(ctx, key{}, "value"))
 
@@ -110,7 +110,7 @@ func Test_AttachedContext(t *testing.T) {
 	type key struct{}
 
 	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx)
 	otherCtx := context.WithValue(ctx, key{}, "value")
 
 	attachedCtx := actx.AttachedContext()
@@ -135,7 +135,7 @@ func Test_Value(t *testing.T) {
 	value := "value"
 
 	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx)
 
 	if v := actx.Value("fake"); v != nil {
 		t.Errorf("Value() of key '%v' == %s, want %v", "fake", v, nil)

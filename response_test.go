@@ -55,7 +55,7 @@ func Test_newResponse(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
+			actx := AcquireRequestCtx(ctx)
 
 			actx.newResponse(tt.args.contentType, tt.args.statusCode...)
 
@@ -123,7 +123,7 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
+			actx := AcquireRequestCtx(ctx)
 
 			err := actx.JSONResponse(tt.args.body, tt.args.statusCode)
 			if tt.want.err && (err == nil) {
@@ -161,7 +161,7 @@ func TestResponses(t *testing.T) { // nolint:funlen
 	}
 
 	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx)
 	body := "<h1>Test</h1>"
 	statusCode := 403
 
@@ -293,7 +293,7 @@ func TestFileResponse(t *testing.T) { // nolint:funlen
 			defer os.Remove(tt.args.filePath)
 
 			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
+			actx := AcquireRequestCtx(ctx)
 
 			if err := actx.FileResponse(tt.args.fileName, tt.args.filePath, tt.args.mimeType); err != nil {
 				t.Fatalf("Error creating FileResponse for %s", tt.args.fileName)
@@ -356,7 +356,7 @@ func TestRedirectResponse(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
+			actx := AcquireRequestCtx(ctx)
 
 			if err := actx.RedirectResponse(tt.args.url, tt.args.statusCode); err != nil {
 				t.Errorf("RedirectResponse() error: %v", err)
@@ -415,7 +415,7 @@ func Test_ErrorResponse(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
-			actx := acquireRequestCtx(ctx)
+			actx := AcquireRequestCtx(ctx)
 
 			if actx.ErrorResponse(err, tt.args.statusCode...) != err {
 				t.Errorf("Unexpected error == %v", err)
@@ -435,7 +435,7 @@ func Benchmark_FileResponse(b *testing.B) {
 	path := cwd + "/LICENSE"
 
 	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx)
 
 	b.ResetTimer()
 
@@ -448,7 +448,7 @@ func Benchmark_FileResponse(b *testing.B) {
 
 func Benchmark_JSONResponse(b *testing.B) {
 	ctx := new(fasthttp.RequestCtx)
-	actx := acquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx)
 
 	body := JSON{
 		"hello":  11,

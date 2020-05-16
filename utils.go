@@ -8,13 +8,13 @@ import (
 
 func viewToHandler(view View, errorView ErrorView) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
-		actx := acquireRequestCtx(ctx)
+		actx := AcquireRequestCtx(ctx)
 
 		if err := view(actx); err != nil {
 			errorView(actx, err, fasthttp.StatusInternalServerError)
 		}
 
-		releaseRequestCtx(actx)
+		ReleaseRequestCtx(actx)
 	}
 }
 
