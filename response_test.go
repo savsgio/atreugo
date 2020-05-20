@@ -10,68 +10,6 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func Test_newResponse(t *testing.T) {
-	type args struct {
-		contentType string
-		statusCode  []int
-	}
-
-	type want struct {
-		contentType string
-		statusCode  int
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "WithStatusCode",
-			args: args{
-				contentType: "text/plain",
-				statusCode:  []int{301},
-			},
-			want: want{
-				contentType: "text/plain",
-				statusCode:  301,
-			},
-		},
-		{
-			name: "WithOutStatusCode",
-			args: args{
-				contentType: "text/plain",
-				statusCode:  make([]int, 0),
-			},
-			want: want{
-				contentType: "text/plain",
-				statusCode:  200,
-			},
-		},
-	}
-
-	for _, test := range tests {
-		tt := test
-
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := new(fasthttp.RequestCtx)
-			actx := AcquireRequestCtx(ctx)
-
-			actx.newResponse(tt.args.contentType, tt.args.statusCode...)
-
-			responseStatusCode := actx.Response.StatusCode()
-			if responseStatusCode != tt.want.statusCode {
-				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
-			}
-
-			responseContentType := string(actx.Response.Header.ContentType())
-			if responseContentType != tt.want.contentType {
-				t.Errorf("content-type: '%v', want: '%v'", responseContentType, tt.want.contentType)
-			}
-		})
-	}
-}
-
 func TestJSONResponse(t *testing.T) { //nolint:funlen
 	type args struct {
 		body       interface{}
