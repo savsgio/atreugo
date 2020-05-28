@@ -1,7 +1,8 @@
 package atreugo
 
 import (
-	jsoniter "github.com/json-iterator/go"
+	"encoding/json"
+
 	"github.com/valyala/bytebufferpool"
 	"github.com/valyala/fasthttp"
 )
@@ -14,7 +15,7 @@ func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
 		ctx.Response.Header.SetStatusCode(statusCode[0])
 	}
 
-	data, err := jsoniter.Marshal(body)
+	data, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
