@@ -151,6 +151,17 @@ type Config struct { // nolint:maligned
 	// non zero RequestConfig field values will overwrite the default configs
 	HeaderReceived func(header *fasthttp.RequestHeader) fasthttp.RequestConfig
 
+	// ContinueHandler is called after receiving the Expect 100 Continue Header
+	//
+	// https://www.w3.org/Protocols/rfc2616/rfc2616-sec8.html#sec8.2.3
+	// https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.1.1
+	// Using ContinueHandler a server can make decisioning on whether or not
+	// to read a potentially large request body based on the headers
+	//
+	// The default is to automatically read request bodies of Expect 100 Continue requests
+	// like they are normal requests
+	ContinueHandler func(header *fasthttp.RequestHeader) bool
+
 	// The maximum number of concurrent connections the server may serve.
 	//
 	// DefaultConcurrency is used if not set.
