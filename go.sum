@@ -1,7 +1,7 @@
 github.com/andybalholm/brotli v1.0.0 h1:7UCwP93aiSfvWpapti8g88vVVGp2qqtGyePsSuDafo4=
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
-github.com/fasthttp/router v1.1.4 h1:3ulfh/vIINwy6ZqrJSEQ3nqO1NmmUEkzzmNjt6QICzU=
-github.com/fasthttp/router v1.1.4/go.mod h1:W5ZxvX7D6aU2bWeYZ+MGuWVMsP2UhjIu+QftD1B9oIg=
+github.com/fasthttp/router v1.1.5 h1:+F0ZWUu3i+D3o/HnnuxpN0J8U6CXQCPx0xYVaeOJ2g4=
+github.com/fasthttp/router v1.1.5/go.mod h1:W5ZxvX7D6aU2bWeYZ+MGuWVMsP2UhjIu+QftD1B9oIg=
 github.com/klauspost/compress v1.10.4 h1:jFzIFaf586tquEB5EhzQG0HwGNSlgAJpG53G6Ss11wc=
 github.com/klauspost/compress v1.10.4/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/savsgio/go-logger/v2 v2.0.0 h1:9CzMIHfAzHoMJoY+0ODI9DJGfBxRIVqI7jZkg47MRrQ=
