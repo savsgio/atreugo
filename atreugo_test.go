@@ -22,6 +22,10 @@ var testAtreugoConfig = Config{
 	LogLevel: "fatal",
 }
 
+var zeroTCPAddr = &net.TCPAddr{
+	IP: net.IPv4zero,
+}
+
 var notConfigFasthttpFields = []string{
 	"Handler",
 	"ErrorHandler",
@@ -40,6 +44,15 @@ type mockListener struct {
 	acceptCalled bool
 	closeCalled  bool
 	addrCalled   bool
+}
+
+type mockConn struct {
+	net.Conn
+	errClose            error
+	errRead             error
+	errWrite            error
+	errSetReadDeadline  error
+	errSetWriteDeadline error
 }
 
 func (m *mockListener) Accept() (net.Conn, error) {
@@ -65,6 +78,44 @@ func (m *mockListener) Close() error {
 func (m *mockListener) Addr() net.Addr {
 	m.addrCalled = true
 	return m.ln.Addr()
+}
+
+func (m *mockConn) Close() error {
+	return m.errClose
+}
+
+func (m *mockConn) Read(b []byte) (int, error) {
+	n := len(b)
+	if m.errRead != nil {
+		n = 0
+	}
+
+	return n, m.errRead
+}
+
+func (m *mockConn) Write(b []byte) (int, error) {
+	n := len(b)
+	if m.errWrite != nil {
+		n = 0
+	}
+
+	return n, m.errWrite
+}
+
+func (m *mockConn) RemoteAddr() net.Addr {
+	return zeroTCPAddr
+}
+
+func (m *mockConn) LocalAddr() net.Addr {
+	return zeroTCPAddr
+}
+
+func (m *mockConn) SetReadDeadline(t time.Time) error {
+	return m.errSetReadDeadline
+}
+
+func (m *mockConn) SetWriteDeadline(t time.Time) error {
+	return m.errSetWriteDeadline
 }
 
 func newMockListener(ln net.Listener, acceptError, closeError error) *mockListener {
@@ -389,6 +440,31 @@ func TestAtreugo_RouterConfiguration(t *testing.T) { //nolint:funlen
 				t.Errorf("Router.handleOPTIONS == %v, want %v", s.handleOPTIONS, tt.want.v)
 			}
 		})
+	}
+}
+
+func TestAtreugo_ServeConn(t *testing.T) {
+	cfg := Config{
+		LogLevel:    "fatal",
+		ReadTimeout: 1 * time.Second,
+	}
+	s := New(cfg)
+
+	c := &mockConn{errRead: errors.New("Read error")}
+	errCh := make(chan error, 1)
+
+	go func() {
+		errCh <- s.ServeConn(c)
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+
+	if err := s.server.Shutdown(); err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if err := <-errCh; err == nil {
+		t.Fatalf("Expected error: %v", err)
 	}
 }
 

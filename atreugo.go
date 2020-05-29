@@ -185,6 +185,19 @@ func (s *Atreugo) HandleOPTIONS(v bool) {
 	s.handleOPTIONS = v
 }
 
+// ServeConn serves HTTP requests from the given connection.
+//
+// ServeConn returns nil if all requests from the c are successfully served.
+// It returns non-nil error otherwise.
+//
+// Connection c must immediately propagate all the data passed to Write()
+// to the client. Otherwise requests' processing may hang.
+//
+// ServeConn closes c before returning.
+func (s *Atreugo) ServeConn(c net.Conn) error {
+	return s.server.ServeConn(c)
+}
+
 // Serve serves incoming connections from the given listener.
 //
 // Serve blocks until the given listener returns permanent error.
