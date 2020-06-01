@@ -461,11 +461,11 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 
 		t.Run(tt.name, func(t *testing.T) {
 			ln := &mock.Listener{
-				LN:          fasthttputil.NewInmemoryListener(),
+				Listener:    fasthttputil.NewInmemoryListener(),
 				AcceptError: tt.args.lnAcceptError,
 				CloseError:  tt.args.lnCloseError,
 			}
-			defer ln.LN.Close()
+			defer ln.Listener.Close()
 
 			logOutput := &bytes.Buffer{}
 

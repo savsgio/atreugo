@@ -1,7 +1,7 @@
 github.com/andybalholm/brotli v1.0.0 h1:7UCwP93aiSfvWpapti8g88vVVGp2qqtGyePsSuDafo4=
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
-github.com/atreugo/mock v0.0.0-20200601085747-8e353bc08c18 h1:v2roQmyr2DvF7zofHYTacfvAvMdSsVZswfUa/WtsqY8=
-github.com/atreugo/mock v0.0.0-20200601085747-8e353bc08c18/go.mod h1:HTHAc8RoZXMVTr6wZQN7Jjm3mYMnbfkqqKdnQgSoe9o=
+github.com/atreugo/mock v0.0.0-20200601091009-13c275b330b0 h1:IVqe9WnancrkICl5HqEfGjrnkQ4+VsU5fodcuFVoG/A=
+github.com/atreugo/mock v0.0.0-20200601091009-13c275b330b0/go.mod h1:HTHAc8RoZXMVTr6wZQN7Jjm3mYMnbfkqqKdnQgSoe9o=
 github.com/fasthttp/router v1.1.5 h1:+F0ZWUu3i+D3o/HnnuxpN0J8U6CXQCPx0xYVaeOJ2g4=
 github.com/fasthttp/router v1.1.5/go.mod h1:W5ZxvX7D6aU2bWeYZ+MGuWVMsP2UhjIu+QftD1B9oIg=
 github.com/klauspost/compress v1.10.4 h1:jFzIFaf586tquEB5EhzQG0HwGNSlgAJpG53G6Ss11wc=
