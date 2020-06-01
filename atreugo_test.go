@@ -3,7 +3,6 @@ package atreugo
 import (
 	"bytes"
 	"errors"
-	"net"
 	"reflect"
 	"runtime"
 	"syscall"
@@ -11,6 +10,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/atreugo/httptest/mock"
 	logger "github.com/savsgio/go-logger/v2"
 	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
@@ -22,10 +22,6 @@ var testAtreugoConfig = Config{
 	LogLevel: "fatal",
 }
 
-var zeroTCPAddr = &net.TCPAddr{
-	IP: net.IPv4zero,
-}
-
 var notConfigFasthttpFields = []string{
 	"Handler",
 	"ErrorHandler",
@@ -33,93 +29,6 @@ var notConfigFasthttpFields = []string{
 	"TCPKeepalivePeriod",
 	"Logger",
 	"MaxKeepaliveDuration", // Deprecated: Use IdleTimeout instead.
-}
-
-type mockListener struct {
-	ln net.Listener
-
-	acceptError error
-	closeError  error
-
-	acceptCalled bool
-	closeCalled  bool
-	addrCalled   bool
-}
-
-type mockConn struct {
-	net.Conn
-	errClose            error
-	errRead             error
-	errWrite            error
-	errSetReadDeadline  error
-	errSetWriteDeadline error
-}
-
-func (m *mockListener) Accept() (net.Conn, error) {
-	m.acceptCalled = true
-
-	if m.acceptError != nil {
-		return nil, m.acceptError
-	}
-
-	return m.ln.Accept()
-}
-
-func (m *mockListener) Close() error {
-	m.closeCalled = true
-
-	if m.closeError != nil {
-		return m.closeError
-	}
-
-	return m.ln.Close()
-}
-
-func (m *mockListener) Addr() net.Addr {
-	m.addrCalled = true
-	return m.ln.Addr()
-}
-
-func (m *mockConn) Close() error {
-	return m.errClose
-}
-
-func (m *mockConn) Read(b []byte) (int, error) {
-	n := len(b)
-	if m.errRead != nil {
-		n = 0
-	}
-
-	return n, m.errRead
-}
-
-func (m *mockConn) Write(b []byte) (int, error) {
-	n := len(b)
-	if m.errWrite != nil {
-		n = 0
-	}
-
-	return n, m.errWrite
-}
-
-func (m *mockConn) RemoteAddr() net.Addr {
-	return zeroTCPAddr
-}
-
-func (m *mockConn) LocalAddr() net.Addr {
-	return zeroTCPAddr
-}
-
-func (m *mockConn) SetReadDeadline(t time.Time) error {
-	return m.errSetReadDeadline
-}
-
-func (m *mockConn) SetWriteDeadline(t time.Time) error {
-	return m.errSetWriteDeadline
-}
-
-func newMockListener(ln net.Listener, acceptError, closeError error) *mockListener {
-	return &mockListener{ln: ln, acceptError: acceptError, closeError: closeError}
 }
 
 func Test_New(t *testing.T) { //nolint:funlen,gocognit
@@ -450,7 +359,7 @@ func TestAtreugo_ServeConn(t *testing.T) {
 	}
 	s := New(cfg)
 
-	c := &mockConn{errRead: errors.New("Read error")}
+	c := &mock.MockConn{ErrRead: errors.New("Read error")}
 	errCh := make(chan error, 1)
 
 	go func() {
@@ -551,10 +460,12 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			ln := newMockListener(
-				fasthttputil.NewInmemoryListener(), tt.args.lnAcceptError, tt.args.lnCloseError,
-			)
-			defer ln.ln.Close()
+			ln := &mock.MockListener{
+				LN:          fasthttputil.NewInmemoryListener(),
+				AcceptError: tt.args.lnAcceptError,
+				CloseError:  tt.args.lnCloseError,
+			}
+			defer ln.LN.Close()
 
 			logOutput := &bytes.Buffer{}
 
