@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/atreugo/httptest/mock"
+	"github.com/atreugo/mock"
 	logger "github.com/savsgio/go-logger/v2"
 	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
@@ -359,7 +359,7 @@ func TestAtreugo_ServeConn(t *testing.T) {
 	}
 	s := New(cfg)
 
-	c := &mock.MockConn{ErrRead: errors.New("Read error")}
+	c := &mock.Conn{ErrRead: errors.New("Read error")}
 	errCh := make(chan error, 1)
 
 	go func() {
@@ -460,7 +460,7 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			ln := &mock.MockListener{
+			ln := &mock.Listener{
 				LN:          fasthttputil.NewInmemoryListener(),
 				AcceptError: tt.args.lnAcceptError,
 				CloseError:  tt.args.lnCloseError,
