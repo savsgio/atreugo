@@ -110,6 +110,8 @@ func (r *Router) init() {
 			optionsURLsHandled = append(optionsURLsHandled, p.url)
 		}
 	}
+
+	r.paths = nil
 }
 
 func (r *Router) buildMiddlewaresChain(skip ...Middleware) Middlewares {

@@ -193,7 +193,26 @@ func TestRouter_init(t *testing.T) { // nolint:funlen
 	r := newRouter(testLog, nil)
 	r.appendPath(path)
 	r.appendPath(pathOptions)
+
+	totalRegisteredViews := len(r.paths) + 1 // Add +1 for auto OPTIONS handle
+
 	r.init()
+
+	// Check if a re-execution raise a panic
+	func() {
+		defer func() {
+			err := recover()
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+			}
+		}()
+
+		r.init()
+	}()
+
+	if len(registeredViews) != totalRegisteredViews {
+		t.Fatalf("Registered views == %d, want %d", len(registeredViews), totalRegisteredViews)
+	}
 
 	ctx := new(fasthttp.RequestCtx)
 
@@ -216,11 +235,6 @@ func TestRouter_init(t *testing.T) { // nolint:funlen
 		if !called {
 			t.Error("Path.handlerBuilder is not called")
 		}
-	}
-
-	totalRegisteredViews := len(r.paths) + 1 // Add +1 for auto OPTIONS handle
-	if len(registeredViews) != totalRegisteredViews {
-		t.Fatalf("Registered views == %d, want %d", len(registeredViews), totalRegisteredViews)
 	}
 
 	if reflect.ValueOf(registeredViews[0]).Pointer() != reflect.ValueOf(path.view).Pointer() {
@@ -889,15 +903,15 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 	}
 
 	for _, test := range tests {
+		test.args.fn(path, viewFn)
+	}
+
+	r.init()
+
+	for _, test := range tests {
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			r.paths = r.paths[:0]
-			r.router = fastrouter.New()
-
-			tt.args.fn(path, viewFn)
-			r.init()
-
 			reqMethod := tt.args.method
 			for reqMethod == fastrouter.MethodWild {
 				reqMethod = randomHTTPMethod()
