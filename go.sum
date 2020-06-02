@@ -2,8 +2,8 @@ github.com/andybalholm/brotli v1.0.0 h1:7UCwP93aiSfvWpapti8g88vVVGp2qqtGyePsSuDa
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
 github.com/atreugo/mock v0.0.0-20200601091009-13c275b330b0 h1:IVqe9WnancrkICl5HqEfGjrnkQ4+VsU5fodcuFVoG/A=
 github.com/atreugo/mock v0.0.0-20200601091009-13c275b330b0/go.mod h1:HTHAc8RoZXMVTr6wZQN7Jjm3mYMnbfkqqKdnQgSoe9o=
-github.com/fasthttp/router v1.1.5 h1:+F0ZWUu3i+D3o/HnnuxpN0J8U6CXQCPx0xYVaeOJ2g4=
-github.com/fasthttp/router v1.1.5/go.mod h1:W5ZxvX7D6aU2bWeYZ+MGuWVMsP2UhjIu+QftD1B9oIg=
+github.com/fasthttp/router v1.1.6 h1:lBcXxp1ZNoNbSeh4+RvAaXKSEiHU6sGd+gEMpd5Xjog=
+github.com/fasthttp/router v1.1.6/go.mod h1:E1mpv7mrQzAhiSQdqhRb+GBTC7MEV+bLFVmgzSA5oFM=
 github.com/klauspost/compress v1.10.4 h1:jFzIFaf586tquEB5EhzQG0HwGNSlgAJpG53G6Ss11wc=
 github.com/klauspost/compress v1.10.4/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/savsgio/go-logger/v2 v2.0.0 h1:9CzMIHfAzHoMJoY+0ODI9DJGfBxRIVqI7jZkg47MRrQ=
@@ -12,8 +12,8 @@ github.com/savsgio/gotils v0.0.0-20200413113635-8c468ce75cca h1:Qe7Mtuhjkk38HVpR
 github.com/savsgio/gotils v0.0.0-20200413113635-8c468ce75cca/go.mod h1:TWNAOTaVzGOXq8RbEvHnhzA/A2sLZzgn0m6URjnukY8=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
-github.com/valyala/fasthttp v1.13.1 h1:Z7kVhKP9NZz+tCSY7AVhCMPPAk7b+e5fq0l/BfdTlFc=
-github.com/valyala/fasthttp v1.13.1/go.mod h1:ol1PCaL0dX20wC0htZ7sYCsvCYmrouYra0zHzaclZhE=
+github.com/valyala/fasthttp v1.14.0 h1:67bfuW9azCMwW/Jlq/C+VeihNpAuJMWkYPBig1gdi3A=
+github.com/valyala/fasthttp v1.14.0/go.mod h1:ol1PCaL0dX20wC0htZ7sYCsvCYmrouYra0zHzaclZhE=
 github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a h1:0R4NLDRDZX6JcmhJgXi5E4b8Wg84ihbmUKp/GvSPEzc=
 github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a/go.mod h1:v3UYOV9WzVtRmSR+PDvWpU/qWl4Wa5LApYYX4ZtKbio=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
