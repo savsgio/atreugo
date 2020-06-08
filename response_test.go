@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/valyala/fasthttp"
@@ -186,6 +187,10 @@ func TestResponses(t *testing.T) { // nolint:funlen
 }
 
 func TestFileResponse(t *testing.T) { // nolint:funlen
+	if runtime.GOOS == "windows" {
+		t.SkipNow()
+	}
+
 	type args struct {
 		fileName string
 		filePath string

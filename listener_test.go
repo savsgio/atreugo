@@ -1,6 +1,7 @@
 package atreugo
 
 import (
+	"runtime"
 	"testing"
 )
 
@@ -16,6 +17,8 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		network string
 		err     bool
 	}
+
+	const unixNetwork = "unix"
 
 	tests := []struct {
 		name string
@@ -50,11 +53,11 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 			name: "Unix",
 			args: args{
 				addr:    "/tmp/test.sock",
-				network: "unix",
+				network: unixNetwork,
 			},
 			want: want{
 				addr:    "/tmp/test.sock",
-				network: "unix",
+				network: unixNetwork,
 				err:     false,
 			},
 		},
@@ -62,7 +65,7 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 			name: "UnixRemoveError",
 			args: args{
 				addr:    "/bin/sh",
-				network: "unix",
+				network: unixNetwork,
 			},
 			want: want{
 				addr:    "/bin/sh",
@@ -74,7 +77,7 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 			name: "UnixChmodError",
 			args: args{
 				addr:    "345&%·%&%&/%&(",
-				network: "unix",
+				network: unixNetwork,
 			},
 			want: want{
 				err: true,
@@ -93,6 +96,10 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 	for _, test := range tests {
 		tt := test
 
+		if runtime.GOOS == "windows" && tt.args.network == unixNetwork {
+			continue
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := Config{
 				Addr:      tt.args.addr,
@@ -104,12 +111,12 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 			}
 
 			defer func() {
-				r := recover()
+				err := recover()
 
-				if tt.want.err && r == nil {
+				if tt.want.err && err == nil {
 					t.Errorf("Panic expected")
-				} else if !tt.want.err && r != nil {
-					t.Errorf("Unexpected panic")
+				} else if !tt.want.err && err != nil {
+					t.Errorf("Unexpected panic: %v", err)
 				}
 			}()
 
