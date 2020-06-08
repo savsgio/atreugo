@@ -13,10 +13,14 @@ go:
   - tip
 
 before_script:
+  - go get -u -v github.com/mattn/goveralls
   - go get -t -v ./...
 
 script:
-  - go test -v -cover -race ./...
+  - go test -v -cover -race ./... -coverprofile=.coverprofile
+
+  # send coverage
+  - $HOME/gopath/bin/goveralls -coverprofile=.coverprofile -service=travis-ci
 
 jobs:
   allow_failures:
