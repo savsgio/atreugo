@@ -1,47 +1,37 @@
 language: go
-sudo: false
-go:
-  - 1.9.x
-  - 1.10.x
-  - 1.11.x
-  - 1.12.x
-  - 1.13.x
-  - 1.14.x
-  - tip
 
 os:
   - linux
   - osx
+  - windows
 
-before_install:
-  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.27.0
-  - go get -u -v github.com/mattn/goveralls
-  - go get -v
+go:
+  - 1.14.x
+  - 1.13.x
+  - 1.12.x
+  - 1.11.x
+  - tip
+
+before_script:
+  - go get -t -v ./...
 
 script:
-  # lint (go version >= 1.11, gotip not supported)
-  - |
-    if [[ $(go version | awk '{print $3}') =~ ^go1.1[1-9]$ ]]; then
-        golangci-lint run
-    fi
+  - go test -v -cover -race ./...
 
-  # build test for supported platforms
-  - GOOS=linux go build
-  - GOOS=darwin go build
-  - GOOS=freebsd go build
-  - GOOS=windows go build
-  - |
-    if [[ $(uname) == Darwin ]]; then
-      # Last supported version for GOOS=386 is go1.14 in Darwin
-      if [[ $(go version | awk '{print $3}') =~ ^go1\.(9|10|11|12|13|14)$ ]]; then
-          GOARCH=386 go build
-      fi
-    else
-        GOARCH=386 go build
-    fi
+jobs:
+  allow_failures:
+    - go: tip
 
-  # run tests
-  - go test -v -cover -race -coverprofile=.coverprofile
+  include:
+    - stage: lint
+      script:
+        - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.27.0
+        - golangci-lint run
 
-  # send coverage
-  - $HOME/gopath/bin/goveralls -coverprofile=.coverprofile -service=travis-ci
+    - stage: cross compilation
+      script:
+        - GOOS=linux go build
+        - GOOS=darwin go build
+        - GOOS=freebsd go build
+        - GOOS=windows go build
+        - GOARCH=386 go build
