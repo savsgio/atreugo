@@ -64,7 +64,7 @@ func newRouter(log *logger.Logger, errorView ErrorView) *Router {
 // NewGroupPath returns a new router to group paths.
 func (r *Router) NewGroupPath(path string) *Router {
 	g := new(Router)
-	g.router = r.router.Group(path)
+	g.router = r.router
 	g.router.HandleOPTIONS = false
 	g.handleOPTIONS = r.handleOPTIONS
 
