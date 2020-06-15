@@ -2,8 +2,8 @@ github.com/andybalholm/brotli v1.0.0 h1:7UCwP93aiSfvWpapti8g88vVVGp2qqtGyePsSuDa
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
 github.com/atreugo/mock v0.0.0-20200601091009-13c275b330b0 h1:IVqe9WnancrkICl5HqEfGjrnkQ4+VsU5fodcuFVoG/A=
 github.com/atreugo/mock v0.0.0-20200601091009-13c275b330b0/go.mod h1:HTHAc8RoZXMVTr6wZQN7Jjm3mYMnbfkqqKdnQgSoe9o=
-github.com/fasthttp/router v1.2.1 h1:8xVgc9j39HkI4KQcxcN3Kmo0K/1/GnGGbBeqjegtCJk=
-github.com/fasthttp/router v1.2.1/go.mod h1:7KEYuV4ieG9kNJqqxnH0pwIdO69cJCVhVqZx3CpOURw=
+github.com/fasthttp/router v1.2.2 h1:znEzZbSKjKDzXwUHiq/HQ17brnKx9ZF6ZphYKGrfkVk=
+github.com/fasthttp/router v1.2.2/go.mod h1:7KEYuV4ieG9kNJqqxnH0pwIdO69cJCVhVqZx3CpOURw=
 github.com/klauspost/compress v1.10.4 h1:jFzIFaf586tquEB5EhzQG0HwGNSlgAJpG53G6Ss11wc=
 github.com/klauspost/compress v1.10.4/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/savsgio/go-logger/v2 v2.0.1 h1:MgmsI5hnQFz0n5oX1Do/T9DldTo60guQTGwlRpzk0mk=
