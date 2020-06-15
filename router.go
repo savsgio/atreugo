@@ -61,22 +61,6 @@ func newRouter(log *logger.Logger, errorView ErrorView) *Router {
 	return r
 }
 
-// NewGroupPath returns a new router to group paths.
-func (r *Router) NewGroupPath(path string) *Router {
-	g := new(Router)
-	g.router = r.router
-	g.router.HandleOPTIONS = false
-	g.handleOPTIONS = r.handleOPTIONS
-
-	g.parent = r
-
-	g.beginPath = path
-	g.log = r.log
-	g.errorView = r.errorView
-
-	return g
-}
-
 func (r *Router) init() {
 	if r.parent != nil {
 		panic("Could not be executed by group router")
@@ -223,6 +207,27 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 	}
 }
 
+// NewGroupPath returns a new router to group paths.
+func (r *Router) NewGroupPath(path string) *Router {
+	g := new(Router)
+	g.router = r.router
+	g.router.HandleOPTIONS = false
+	g.handleOPTIONS = r.handleOPTIONS
+
+	g.parent = r
+
+	g.beginPath = path
+	g.log = r.log
+	g.errorView = r.errorView
+
+	return g
+}
+
+// ListPaths returns all registered routes grouped by method.
+func (r *Router) ListPaths() map[string][]string {
+	return r.router.List()
+}
+
 // Middlewares defines the middlewares (before, after and skip) in the order in which you want to execute them
 // for the view or group
 //
@@ -298,15 +303,6 @@ func (r *Router) ANY(url string, viewFn View) *Path {
 	return r.Path(fastrouter.MethodWild, url, viewFn)
 }
 
-// Path registers a new view with the given path and method
-//
-// This function is intended for bulk loading and to allow the usage of less
-// frequently used, non-standardized or custom methods (e.g. for internal
-// communication with a proxy).
-func (r *Router) Path(method, url string, viewFn View) *Path {
-	return r.addPath(method, url, viewFn)
-}
-
 // RequestHandlerPath wraps fasthttp request handler to atreugo view and registers it to
 // the given path and method.
 func (r *Router) RequestHandlerPath(method, url string, handler fasthttp.RequestHandler) *Path {
@@ -315,7 +311,7 @@ func (r *Router) RequestHandlerPath(method, url string, handler fasthttp.Request
 		return nil
 	}
 
-	return r.addPath(method, url, viewFn)
+	return r.Path(method, url, viewFn)
 }
 
 // NetHTTPPath wraps net/http handler to atreugo view and registers it to
@@ -410,10 +406,14 @@ func (r *Router) ServeFile(url, filePath string) *Path {
 		return nil
 	}
 
-	return r.addPath(fasthttp.MethodGet, url, viewFn)
+	return r.Path(fasthttp.MethodGet, url, viewFn)
 }
 
-// ListPaths returns all registered routes grouped by method.
-func (r *Router) ListPaths() map[string][]string {
-	return r.router.List()
+// Path registers a new view with the given path and method
+//
+// This function is intended for bulk loading and to allow the usage of less
+// frequently used, non-standardized or custom methods (e.g. for internal
+// communication with a proxy).
+func (r *Router) Path(method, url string, viewFn View) *Path {
+	return r.addPath(method, url, viewFn)
 }
