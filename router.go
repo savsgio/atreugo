@@ -68,32 +68,33 @@ func (r *Router) mutable(v bool) {
 	}
 }
 
-func (r *Router) buildMiddlewaresChain(skip ...Middleware) Middlewares {
-	mdlws := Middlewares{}
+func (r *Router) buildMiddlewares(m Middlewares) Middlewares {
+	m2 := Middlewares{}
+	m2.Before = append(m2.Before, r.middlewares.Before...)
+	m2.Before = append(m2.Before, m.Before...)
+	m2.After = append(m2.After, m.After...)
+	m2.After = append(m2.After, r.middlewares.After...)
 
-	var subMdlws Middlewares
+	m2.Skip = append(m2.Skip, m.Skip...)
+	m2.Skip = append(m2.Skip, r.middlewares.Skip...)
 
-	if r.parent != nil {
-		skip = append(skip, r.middlewares.Skip...)
-		subMdlws = r.parent.buildMiddlewaresChain(skip...)
-	} else if r.log.DebugEnabled() {
+	switch {
+	case r.parent != nil:
+		return r.parent.buildMiddlewares(m2)
+	case r.log.DebugEnabled():
 		debugMiddleware := func(ctx *RequestCtx) error {
 			r.log.Debugf("%s %s", ctx.Method(), ctx.URI())
 
 			return ctx.Next()
 		}
 
-		// Add debug middleware at first position if the log level is enabled as debug
-		mdlws.Before = append(mdlws.Before, debugMiddleware)
+		m2.Before = append([]Middleware{debugMiddleware}, m2.Before...)
 	}
 
-	mdlws.Before = appendMiddlewares(mdlws.Before, subMdlws.Before, skip...)
-	mdlws.Before = appendMiddlewares(mdlws.Before, r.middlewares.Before, skip...)
+	m2.Before = appendMiddlewares(m2.Before[:0], m2.Before, m2.Skip...)
+	m2.After = appendMiddlewares(m2.After[:0], m2.After, m2.Skip...)
 
-	mdlws.After = appendMiddlewares(mdlws.After, r.middlewares.After, skip...)
-	mdlws.After = appendMiddlewares(mdlws.After, subMdlws.After, skip...)
-
-	return mdlws
+	return m2
 }
 
 func (r *Router) getGroupFullPath(path string) string {
@@ -105,10 +106,9 @@ func (r *Router) getGroupFullPath(path string) string {
 }
 
 func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
-	mdlws := r.buildMiddlewaresChain(middle.Skip...)
+	middle = r.buildMiddlewares(middle)
 
-	chain := append(mdlws.Before, middle.Before...)
-	chain = append(chain, func(ctx *RequestCtx) error {
+	chain := append(middle.Before, func(ctx *RequestCtx) error {
 		if !ctx.skipView {
 			if err := fn(ctx); err != nil {
 				return err
@@ -117,7 +117,6 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 		return ctx.Next()
 	})
 	chain = append(chain, middle.After...)
-	chain = append(chain, mdlws.After...)
 
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := AcquireRequestCtx(ctx)

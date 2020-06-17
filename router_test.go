@@ -170,44 +170,48 @@ func TestRouter_mutable(t *testing.T) {
 	}
 }
 
-func TestRouter_buildMiddlewaresChain(t *testing.T) {
+func TestRouter_buildMiddlewares(t *testing.T) {
 	logLevels := []string{"fatal", "debug"}
 
-	mdlws := Middlewares{
-		Before: []Middleware{
-			func(ctx *RequestCtx) error { return ctx.Next() },
-			func(ctx *RequestCtx) error { return ctx.Next() },
-		},
-		After: []Middleware{func(ctx *RequestCtx) error { return ctx.Next() }},
+	middleware1 := func(ctx *RequestCtx) error { return ctx.Next() }
+	middleware2 := func(ctx *RequestCtx) error { return ctx.Next() }
+	middleware3 := func(ctx *RequestCtx) error { return ctx.Next() }
+
+	middle := Middlewares{
+		Before: []Middleware{middleware1, middleware2},
+		After:  []Middleware{middleware3},
+	}
+	m := Middlewares{
+		Skip: []Middleware{middleware1},
 	}
 
 	for _, level := range logLevels {
 		s := New(Config{LogLevel: level})
-		s.Middlewares(mdlws)
+		s.Middlewares(middle)
 
-		chain := s.buildMiddlewaresChain(mdlws.Before[0])
+		result := s.buildMiddlewares(m)
 
-		wantSkipLen := 0
-		if len(chain.Skip) != wantSkipLen {
-			t.Errorf("Middlewares.Skip length == %d, want %d", len(chain.Skip), wantSkipLen)
+		wantSkipLen := len(m.Skip) + len(middle.Skip)
+		if len(result.Skip) != wantSkipLen {
+			t.Errorf("Middlewares.Skip length == %d, want %d", len(result.Skip), wantSkipLen)
 		}
 
-		wantBeforeLen := len(mdlws.Before) - 1
+		wantBeforeLen := len(middle.Before) - len(m.Skip)
 		if s.log.DebugEnabled() {
 			wantBeforeLen++
 		}
 
-		if len(chain.Before) != wantBeforeLen {
-			t.Errorf("Middlewares.Before length == %d, want %d", len(chain.Before), wantBeforeLen)
+		if len(result.Before) != wantBeforeLen {
+			t.Errorf("Middlewares.Before length == %d, want %d", len(result.Before), wantBeforeLen)
 		}
 
-		if s.log.DebugEnabled() && isEqual(chain.Before[0], mdlws.Before[1]) {
+		if s.log.DebugEnabled() && isEqual(result.Before[0], middle.Before[1]) {
 			t.Error("First before middleware must be the logger middleware")
 		}
 
-		wantAfterLen := len(mdlws.After)
-		if len(chain.After) != wantAfterLen {
-			t.Errorf("Middlewares.After length == %d, want %d", len(chain.After), wantAfterLen)
+		wantAfterLen := len(middle.After)
+		if len(result.After) != wantAfterLen {
+			t.Errorf("Middlewares.After length == %d, want %d", len(result.After), wantAfterLen)
 		}
 	}
 }
