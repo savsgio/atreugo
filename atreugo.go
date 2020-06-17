@@ -170,8 +170,6 @@ func (s *Atreugo) HandleOPTIONS(v bool) {
 //
 // ServeConn closes c before returning.
 func (s *Atreugo) ServeConn(c net.Conn) error {
-	s.init()
-
 	return s.server.ServeConn(c)
 }
 
@@ -183,8 +181,6 @@ func (s *Atreugo) ServeConn(c net.Conn) error {
 // with the Listener address automatically.
 func (s *Atreugo) Serve(ln net.Listener) error {
 	defer ln.Close()
-
-	s.init()
 
 	s.cfg.Addr = ln.Addr().String()
 	s.cfg.Network = ln.Addr().Network()

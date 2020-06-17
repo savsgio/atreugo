@@ -35,6 +35,16 @@ func randomHTTPMethod() string {
 	return httpMethods[rand.Intn(len(httpMethods)-1)]
 }
 
+func catchPanic(testFunc func()) (recv interface{}) {
+	defer func() {
+		recv = recover()
+	}()
+
+	testFunc()
+
+	return nil
+}
+
 func TestRouter_defaultErrorView(t *testing.T) {
 	err := errors.New("error")
 	statusCode := 500
@@ -61,9 +71,10 @@ func TestRouter_emptyView(t *testing.T) {
 
 func TestRouter_buildOptionsView(t *testing.T) {
 	url := "/"
-	p1 := &Path{method: fasthttp.MethodGet, url: url}
-	p2 := &Path{method: fasthttp.MethodPost, url: url}
-	paths := []*Path{p1, p2}
+	paths := map[string][]string{
+		fasthttp.MethodGet:  {url},
+		fasthttp.MethodPost: {url},
+	}
 
 	var errOptionsView error
 
@@ -75,7 +86,7 @@ func TestRouter_buildOptionsView(t *testing.T) {
 		return errOptionsView
 	}
 
-	h := buildOptionsView(url, paths, optionsView)
+	h := buildOptionsView(url, optionsView, paths)
 
 	ctx := AcquireRequestCtx(new(fasthttp.RequestCtx))
 
@@ -95,7 +106,7 @@ func TestRouter_buildOptionsView(t *testing.T) {
 		t.Errorf("Header '%s' == %s, want %s", headerKey, customHeaderValue, headerValue)
 	}
 
-	h = buildOptionsView(url, []*Path{}, optionsView)
+	h = buildOptionsView(url, optionsView, nil)
 
 	if err := h(ctx); err != nil {
 		t.Errorf("emptyView() must returns a nil error")
@@ -116,150 +127,47 @@ func TestRouter_newRouter(t *testing.T) {
 		t.Error("Router instance is nil")
 	}
 
-	if r.beginPath != "/" {
-		t.Errorf("Router beginPath == '%s', want '%s'", r.beginPath, "/")
+	if r.routerMutable {
+		t.Error("Router routerMutable is true")
 	}
 
-	if reflect.ValueOf(r.log).Pointer() != reflect.ValueOf(testLog).Pointer() {
-		t.Errorf("Router log == %p, want %p", r.log, testLog)
+	if !r.handleOPTIONS {
+		t.Error("Router handleOPTIONS is false")
 	}
 
 	if reflect.ValueOf(r.errorView).Pointer() != reflect.ValueOf(defaultErrorView).Pointer() {
 		t.Errorf("Router log == %p, want %p", r.errorView, defaultErrorView)
 	}
-}
 
-func TestRouter_NewGroupPath(t *testing.T) {
-	r := newRouter(testLog, nil)
-	g := r.NewGroupPath("/fast")
-
-	if g.router == nil {
-		t.Error("Group router instance is nil")
-	}
-
-	if g.parent != r {
-		t.Errorf("Group router parent == '%p', want %p", g.parent, r)
-	}
-
-	if g.beginPath != "/fast" {
-		t.Errorf("Group router beginPath == '%s', want '%s'", g.beginPath, "/fast")
-	}
-
-	if reflect.ValueOf(g.errorView).Pointer() != reflect.ValueOf(r.errorView).Pointer() {
-		t.Errorf("Group router log == %p, want %p", g.errorView, r.errorView)
-	}
-
-	if reflect.ValueOf(g.log).Pointer() != reflect.ValueOf(r.log).Pointer() {
-		t.Errorf("Group router log == %p, want %p", g.log, r.log)
+	if reflect.ValueOf(r.log).Pointer() != reflect.ValueOf(testLog).Pointer() {
+		t.Errorf("Router log == %p, want %p", r.log, testLog)
 	}
 }
 
-func TestRouter_init(t *testing.T) { // nolint:funlen
-	var registeredViews []View
-	var registeredMiddlewaresView, registeredMiddlewaresOptionsView Middlewares // nolint:wsl
-
-	handlerBuilderViewCalled, handlerBuilderOptionsViewCalled := false, false
-
-	path := &Path{
-		handlerBuilder: func(fn View, middle Middlewares) fasthttp.RequestHandler {
-			registeredViews = append(registeredViews, fn)
-			registeredMiddlewaresView = middle
-			handlerBuilderViewCalled = true
-
-			return func(ctx *fasthttp.RequestCtx) {}
-		},
-		method:      fasthttp.MethodGet,
-		url:         "/test",
-		view:        func(ctx *RequestCtx) error { return nil },
-		middlewares: Middlewares{},
-		withTimeout: true,
-		timeout:     1 * time.Millisecond,
-		timeoutMsg:  "Timeout",
-		timeoutCode: 404,
-	}
-
-	pathOptions := &Path{
-		handlerBuilder: func(fn View, middle Middlewares) fasthttp.RequestHandler {
-			registeredViews = append(registeredViews, fn)
-			registeredMiddlewaresOptionsView = middle
-			handlerBuilderOptionsViewCalled = true
-
-			return func(ctx *fasthttp.RequestCtx) {}
-		},
-		method: fasthttp.MethodOptions,
-		url:    "/options",
-	}
+func TestRouter_mutable(t *testing.T) {
+	handler := func(ctx *fasthttp.RequestCtx) {}
 
 	r := newRouter(testLog, nil)
-	r.appendPath(path)
-	r.appendPath(pathOptions)
+	r.router.GET("/", handler)
 
-	totalRegisteredViews := len(r.paths) + 1 // Add +1 for auto OPTIONS handle
+	values := []bool{true, false, false, true, true, false}
 
-	r.init()
+	for _, v := range values {
+		r.mutable(v)
 
-	// Check if a re-execution raise a panic
-	func() {
-		defer func() {
-			err := recover()
-			if err != nil {
-				t.Errorf("Unexpected error: %v", err)
-			}
-		}()
+		if r.routerMutable != v {
+			t.Errorf("Router.routerMutable == %v, want %v", r.routerMutable, v)
+		}
 
-		r.init()
-	}()
+		err := catchPanic(func() {
+			r.router.GET("/", handler)
+		})
 
-	if len(registeredViews) != totalRegisteredViews {
-		t.Fatalf("Registered views == %d, want %d", len(registeredViews), totalRegisteredViews)
-	}
-
-	ctx := new(fasthttp.RequestCtx)
-
-	h, _ := r.router.Lookup(path.method, path.url, ctx)
-	if h == nil {
-		t.Error("Path is not registered in internal router")
-	}
-
-	h, _ = r.router.Lookup(fasthttp.MethodOptions, path.url, ctx)
-	if h == nil {
-		t.Error("Path AUTO (method: OPTIONS) is not registered in internal router")
-	}
-
-	h, _ = r.router.Lookup(pathOptions.method, pathOptions.url, ctx)
-	if h == nil {
-		t.Error("Path (method: OPTIONS) is not registered in internal router")
-	}
-
-	for _, called := range []bool{handlerBuilderViewCalled, handlerBuilderOptionsViewCalled} {
-		if !called {
-			t.Error("Path.handlerBuilder is not called")
+		isMutable := err == nil
+		if isMutable != v {
+			t.Errorf("Router internal mutable == %v, want %v", isMutable, v)
 		}
 	}
-
-	if reflect.ValueOf(registeredViews[0]).Pointer() != reflect.ValueOf(path.view).Pointer() {
-		t.Errorf("Registered view == %p, want %p", registeredViews[0], path.view)
-	}
-
-	for _, middle := range []Middlewares{registeredMiddlewaresView, registeredMiddlewaresOptionsView} {
-		if !reflect.DeepEqual(middle, path.middlewares) {
-			t.Errorf("Registered middlewares == %v, want %v", middle, &path.middlewares)
-		}
-	}
-
-	if r.router.GlobalOPTIONS != nil {
-		t.Error("GlobalOPTIONS is not nil")
-	}
-
-	defer func() {
-		err := recover()
-		if err == nil {
-			t.Error("Panic expected")
-		}
-	}()
-
-	g := r.NewGroupPath("/test")
-	g.init()
 }
 
 func TestRouter_buildMiddlewaresChain(t *testing.T) {
@@ -381,8 +289,6 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 		return ctx.Next()
 	}).SkipMiddlewares(skipMiddlewareGroup)
 
-	s.init()
-
 	ctx := new(fasthttp.RequestCtx)
 	h, _ := s.router.Lookup(method, "/v1"+url, ctx)
 
@@ -438,48 +344,6 @@ func TestRouter_getGroupFullPath(t *testing.T) {
 
 	if fullPath != expected {
 		t.Errorf("Router.getGroupFullPath == %s, want %s", fullPath, expected)
-	}
-}
-
-func TestRouter_AddAndAppendPath(t *testing.T) {
-	r := newRouter(testLog, nil)
-	foo := r.NewGroupPath("/foo")
-
-	method := fasthttp.MethodOptions
-	url := "/"
-	fn := func(ctx *RequestCtx) error { return nil }
-
-	foo.addPath(method, url, fn)
-
-	if len(r.paths) == 0 {
-		t.Fatal("Path is not added")
-	}
-
-	if len(r.customOptionsURLS) == 0 {
-		t.Fatal("Custom OPTIONS url is not added")
-	}
-
-	p := r.paths[0]
-
-	if reflect.ValueOf(p.handlerBuilder).Pointer() != reflect.ValueOf(foo.handler).Pointer() {
-		t.Errorf("Path.view == %p, want %p", p.handlerBuilder, r.handler)
-	}
-
-	if p.method != method {
-		t.Errorf("Path.method == '%s', want '%s'", p.method, method)
-	}
-
-	wantURL := foo.getGroupFullPath(url)
-	if p.url != wantURL {
-		t.Errorf("Path.url == '%s', want '%s'", p.url, wantURL)
-	}
-
-	if r.customOptionsURLS[0] != wantURL {
-		t.Errorf("Custom OPTIONS url == %s, want %s", r.customOptionsURLS[0], wantURL)
-	}
-
-	if reflect.ValueOf(p.view).Pointer() != reflect.ValueOf(fn).Pointer() {
-		t.Errorf("Path.view == %p, want %p", p.view, fn)
 	}
 }
 
@@ -767,7 +631,6 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 			r.UseBefore(tt.args.before...)
 			r.UseAfter(tt.args.after...)
 			r.Path(method, path, tt.args.viewFn).Middlewares(tt.args.middlewares)
-			r.init()
 
 			ctx := new(fasthttp.RequestCtx)
 
@@ -806,6 +669,110 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 				t.Errorf("Debug trace has not been write in log when logger 'debug' is enabled")
 			}
 		})
+	}
+}
+
+func TestRouter_handlePath(t *testing.T) {
+	r := newRouter(testLog, nil)
+
+	path := &Path{
+		router:      r,
+		method:      fasthttp.MethodGet,
+		url:         "/test",
+		view:        func(ctx *RequestCtx) error { return nil },
+		middlewares: Middlewares{},
+		withTimeout: true,
+		timeout:     1 * time.Millisecond,
+		timeoutMsg:  "Timeout",
+		timeoutCode: 404,
+	}
+
+	pathOptions := &Path{
+		router: r,
+		method: fasthttp.MethodOptions,
+		url:    "/options",
+	}
+
+	paths := []*Path{path, pathOptions}
+
+	for i := range paths {
+		p := paths[i]
+
+		r.handlePath(p)
+
+		ctx := new(fasthttp.RequestCtx)
+
+		h, _ := r.router.Lookup(path.method, path.url, ctx)
+		if h == nil {
+			t.Error("Path is not registered in internal router")
+		}
+
+		h, _ = r.router.Lookup(fasthttp.MethodOptions, path.url, ctx)
+		if h == nil {
+			t.Error("Path (method: OPTIONS) is not registered in internal router")
+		}
+	}
+
+	// Check if the mutable is disable when adds a new path with the same url of another already added
+	for i := range paths {
+		p := paths[i]
+
+		r.mutable(true)
+
+		err := catchPanic(func() {
+			r.handlePath(p)
+		})
+
+		if err == nil {
+			t.Errorf("(Method: %s) Panic expected, Mutable must be disabled", p.method)
+		}
+	}
+}
+
+func TestRouter_NewGroupPath(t *testing.T) {
+	r := newRouter(testLog, nil)
+	g := r.NewGroupPath("/fast")
+
+	if g.parent != r {
+		t.Errorf("Group router parent == '%p', want %p", g.parent, r)
+	}
+
+	if g.prefix != "/fast" {
+		t.Errorf("Group router prefix == '%s', want '%s'", g.prefix, "/fast")
+	}
+
+	if g.router == nil {
+		t.Error("Group router instance is nil")
+	}
+
+	if g.routerMutable != r.routerMutable {
+		t.Errorf("Group router routerMutable == '%v', want '%v'", g.routerMutable, r.routerMutable)
+	}
+
+	if g.handleOPTIONS != r.handleOPTIONS {
+		t.Errorf("Group router handleOPTIONS == '%v', want '%v'", g.handleOPTIONS, r.handleOPTIONS)
+	}
+
+	if reflect.ValueOf(g.errorView).Pointer() != reflect.ValueOf(r.errorView).Pointer() {
+		t.Errorf("Group router log == %p, want %p", g.errorView, r.errorView)
+	}
+
+	if reflect.ValueOf(g.log).Pointer() != reflect.ValueOf(r.log).Pointer() {
+		t.Errorf("Group router log == %p, want %p", g.log, r.log)
+	}
+}
+
+func TestRouter_ListPaths(t *testing.T) {
+	server := New(testAtreugoConfig)
+
+	server.Path("GET", "/foo", func(ctx *RequestCtx) error { return nil })
+	server.Path("GET", "/bar", func(ctx *RequestCtx) error { return nil })
+
+	static := server.NewGroupPath("/static")
+	static.Static("/buzz", "./docs")
+
+	if !reflect.DeepEqual(server.ListPaths(), server.router.List()) {
+		t.Errorf("Router.List() == %v, want %v", server.ListPaths(), server.router.List())
 	}
 }
 
@@ -906,8 +873,6 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 		test.args.fn(path, viewFn)
 	}
 
-	r.init()
-
 	for _, test := range tests {
 		tt := test
 
@@ -924,6 +889,169 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 				t.Errorf("The path is not registered with method %s", tt.args.method)
 			}
 		})
+	}
+}
+
+func TestRouter_Static(t *testing.T) {
+	type args struct {
+		url      string
+		rootPath string
+	}
+
+	type want struct {
+		routerPath string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want
+	}{
+		{
+			name: "WithoutTrailingSlash",
+			args: args{
+				url:      "/static",
+				rootPath: "/var/www",
+			},
+			want: want{
+				routerPath: "/static/{filepath:*}",
+			},
+		},
+		{
+			name: "WithTrailingSlash",
+			args: args{
+				url:      "/static/",
+				rootPath: "/var/www",
+			},
+			want: want{
+				routerPath: "/static/{filepath:*}",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		tt := test
+		t.Run(tt.name, func(t *testing.T) {
+			r := newRouter(testLog, nil)
+			r.Static(tt.args.url, tt.args.rootPath)
+
+			handler, _ := r.router.Lookup("GET", tt.want.routerPath, &fasthttp.RequestCtx{})
+			if handler == nil {
+				t.Error("Static files is not configured")
+			}
+		})
+	}
+}
+
+func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
+	type args struct {
+		url      string
+		rootPath string
+	}
+
+	type want struct {
+		routerPath string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want
+	}{
+		{
+			name: "WithoutTrailingSlash",
+			args: args{
+				url:      "/static",
+				rootPath: "./docs",
+			},
+			want: want{
+				routerPath: "/static/{filepath:*}",
+			},
+		},
+		{
+			name: "WithTrailingSlash",
+			args: args{
+				url:      "/static/",
+				rootPath: "./docs",
+			},
+			want: want{
+				routerPath: "/static/{filepath:*}",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		tt := test
+
+		t.Run(tt.name, func(t *testing.T) {
+			r := newRouter(testLog, nil)
+
+			pathRewriteCalled := false
+
+			r.StaticCustom(tt.args.url, &StaticFS{
+				Root:               tt.args.rootPath,
+				GenerateIndexPages: true,
+				AcceptByteRange:    true,
+				PathRewrite: func(ctx *RequestCtx) []byte {
+					pathRewriteCalled = true
+					return ctx.Path()
+				},
+				PathNotFound: func(ctx *RequestCtx) error {
+					return ctx.TextResponse("File not found", 404)
+				},
+			})
+
+			ctx := new(fasthttp.RequestCtx)
+			handler, _ := r.router.Lookup("GET", tt.want.routerPath, ctx)
+			if handler == nil {
+				t.Fatal("Static files is not configured")
+			}
+
+			handler(ctx)
+
+			if !pathRewriteCalled {
+				t.Error("Custom path rewrite function is not called")
+			}
+		})
+	}
+}
+
+func TestRouter_ServeFile(t *testing.T) {
+	type args struct {
+		url      string
+		filePath string
+	}
+
+	filePath := "./README.md"
+	body, err := ioutil.ReadFile(filePath)
+
+	if err != nil {
+		panic(err)
+	}
+
+	test := struct {
+		args args
+	}{
+		args: args{
+			url:      "/readme",
+			filePath: filePath,
+		},
+	}
+
+	r := newRouter(testLog, nil)
+	r.ServeFile(test.args.url, test.args.filePath)
+
+	ctx := new(fasthttp.RequestCtx)
+	handler, _ := r.router.Lookup("GET", test.args.url, ctx)
+
+	if handler == nil {
+		t.Error("ServeFile() is not configured")
+	}
+
+	handler(ctx)
+
+	if string(ctx.Response.Body()) != string(body) {
+		t.Fatal("Invalid response")
 	}
 }
 
@@ -1086,202 +1214,11 @@ func TestRouter_Path(t *testing.T) { //nolint:funlen
 				r.Path(tt.args.method, tt.args.url, tt.args.viewFn)
 			}
 
-			r.init()
-
 			handler, _ := r.router.Lookup("GET", tt.args.url, ctx)
 			if handler == nil {
 				t.Fatal("Path() is not configured")
 			}
-
-			// ctx.Request.SetRequestURI(tt.args.url)
-
-			// ctx.Request.Header.SetMethod(tt.args.method)
-			// handler(ctx)
-
-			// if string(ctx.Response.Body()) != "Test" {
-			// 	t.Error("Error")
-			// }
 		})
-	}
-}
-
-func TestRouter_Static(t *testing.T) {
-	type args struct {
-		url      string
-		rootPath string
-	}
-
-	type want struct {
-		routerPath string
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want
-	}{
-		{
-			name: "WithoutTrailingSlash",
-			args: args{
-				url:      "/static",
-				rootPath: "/var/www",
-			},
-			want: want{
-				routerPath: "/static/{filepath:*}",
-			},
-		},
-		{
-			name: "WithTrailingSlash",
-			args: args{
-				url:      "/static/",
-				rootPath: "/var/www",
-			},
-			want: want{
-				routerPath: "/static/{filepath:*}",
-			},
-		},
-	}
-
-	for _, test := range tests {
-		tt := test
-		t.Run(tt.name, func(t *testing.T) {
-			r := newRouter(testLog, nil)
-			r.Static(tt.args.url, tt.args.rootPath)
-			r.init()
-
-			handler, _ := r.router.Lookup("GET", tt.want.routerPath, &fasthttp.RequestCtx{})
-			if handler == nil {
-				t.Error("Static files is not configured")
-			}
-		})
-	}
-}
-
-func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
-	type args struct {
-		url      string
-		rootPath string
-	}
-
-	type want struct {
-		routerPath string
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want
-	}{
-		{
-			name: "WithoutTrailingSlash",
-			args: args{
-				url:      "/static",
-				rootPath: "./docs",
-			},
-			want: want{
-				routerPath: "/static/{filepath:*}",
-			},
-		},
-		{
-			name: "WithTrailingSlash",
-			args: args{
-				url:      "/static/",
-				rootPath: "./docs",
-			},
-			want: want{
-				routerPath: "/static/{filepath:*}",
-			},
-		},
-	}
-
-	for _, test := range tests {
-		tt := test
-
-		t.Run(tt.name, func(t *testing.T) {
-			r := newRouter(testLog, nil)
-
-			pathRewriteCalled := false
-
-			r.StaticCustom(tt.args.url, &StaticFS{
-				Root:               tt.args.rootPath,
-				GenerateIndexPages: true,
-				AcceptByteRange:    true,
-				PathRewrite: func(ctx *RequestCtx) []byte {
-					pathRewriteCalled = true
-					return ctx.Path()
-				},
-				PathNotFound: func(ctx *RequestCtx) error {
-					return ctx.TextResponse("File not found", 404)
-				},
-			})
-			r.init()
-
-			ctx := new(fasthttp.RequestCtx)
-			handler, _ := r.router.Lookup("GET", tt.want.routerPath, ctx)
-			if handler == nil {
-				t.Fatal("Static files is not configured")
-			}
-
-			handler(ctx)
-
-			if !pathRewriteCalled {
-				t.Error("Custom path rewrite function is not called")
-			}
-		})
-	}
-}
-
-func TestRouter_ServeFile(t *testing.T) {
-	type args struct {
-		url      string
-		filePath string
-	}
-
-	filePath := "./README.md"
-	body, err := ioutil.ReadFile(filePath)
-
-	if err != nil {
-		panic(err)
-	}
-
-	test := struct {
-		args args
-	}{
-		args: args{
-			url:      "/readme",
-			filePath: filePath,
-		},
-	}
-
-	r := newRouter(testLog, nil)
-	r.ServeFile(test.args.url, test.args.filePath)
-	r.init()
-
-	ctx := new(fasthttp.RequestCtx)
-	handler, _ := r.router.Lookup("GET", test.args.url, ctx)
-
-	if handler == nil {
-		t.Error("ServeFile() is not configured")
-	}
-
-	handler(ctx)
-
-	if string(ctx.Response.Body()) != string(body) {
-		t.Fatal("Invalid response")
-	}
-}
-
-func TestRouter_ListPaths(t *testing.T) {
-	server := New(testAtreugoConfig)
-
-	server.Path("GET", "/foo", func(ctx *RequestCtx) error { return nil })
-	server.Path("GET", "/bar", func(ctx *RequestCtx) error { return nil })
-
-	static := server.NewGroupPath("/static")
-	static.Static("/buzz", "./docs")
-
-	if !reflect.DeepEqual(server.ListPaths(), server.router.List()) {
-		t.Errorf("Router.List() == %v, want %v", server.ListPaths(), server.router.List())
 	}
 }
 
@@ -1303,7 +1240,6 @@ func Benchmark_handler(b *testing.B) {
 func Benchmark_RouterHandler(b *testing.B) {
 	r := newRouter(testLog, nil)
 	r.GET("/", func(ctx *RequestCtx) error { return nil })
-	r.init()
 
 	ctx := new(fasthttp.RequestCtx)
 	ctx.Request.Header.SetMethod("GET")

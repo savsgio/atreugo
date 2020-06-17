@@ -13,6 +13,8 @@ import (
 func (p *Path) Middlewares(middlewares Middlewares) *Path {
 	p.middlewares = middlewares
 
+	p.router.handlePath(p)
+
 	return p
 }
 
@@ -20,6 +22,8 @@ func (p *Path) Middlewares(middlewares Middlewares) *Path {
 // only before the execution of the view.
 func (p *Path) UseBefore(fns ...Middleware) *Path {
 	p.middlewares.Before = append(p.middlewares.Before, fns...)
+
+	p.router.handlePath(p)
 
 	return p
 }
@@ -29,12 +33,16 @@ func (p *Path) UseBefore(fns ...Middleware) *Path {
 func (p *Path) UseAfter(fns ...Middleware) *Path {
 	p.middlewares.After = append(p.middlewares.After, fns...)
 
+	p.router.handlePath(p)
+
 	return p
 }
 
 // SkipMiddlewares registers the middlewares that you want to skip only when executing the view.
 func (p *Path) SkipMiddlewares(fns ...Middleware) *Path {
 	p.middlewares.Skip = append(p.middlewares.Skip, fns...)
+
+	p.router.handlePath(p)
 
 	return p
 }
@@ -52,6 +60,8 @@ func (p *Path) Timeout(timeout time.Duration, msg string) *Path {
 	p.timeoutMsg = msg
 	p.timeoutCode = fasthttp.StatusRequestTimeout
 
+	p.router.handlePath(p)
+
 	return p
 }
 
@@ -67,6 +77,8 @@ func (p *Path) TimeoutCode(timeout time.Duration, msg string, statusCode int) *P
 	p.timeout = timeout
 	p.timeoutMsg = msg
 	p.timeoutCode = statusCode
+
+	p.router.handlePath(p)
 
 	return p
 }

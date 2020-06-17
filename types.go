@@ -24,47 +24,6 @@ type Atreugo struct {
 	*Router
 }
 
-// Router dispatchs requests to different
-// views via configurable routes (paths)
-//
-// It is prohibited copying Router values. Create new values instead.
-type Router struct {
-	noCopy nocopy.NoCopy // nolint:structcheck,unused
-
-	router    *fastrouter.Router
-	parent    *Router
-	beginPath string
-
-	handleOPTIONS bool
-
-	errorView ErrorView
-
-	paths             []*Path
-	customOptionsURLS []string
-	middlewares       Middlewares
-
-	log *logger.Logger
-}
-
-// Path configuration of the registered view
-//
-// It is prohibited copying Path values.
-type Path struct {
-	noCopy nocopy.NoCopy // nolint:structcheck,unused
-
-	handlerBuilder func(View, Middlewares) fasthttp.RequestHandler
-
-	method      string
-	url         string
-	view        View
-	middlewares Middlewares
-
-	withTimeout bool
-	timeout     time.Duration
-	timeoutMsg  string
-	timeoutCode int
-}
-
 // Config configuration to run server
 //
 // Default settings should satisfy the majority of Server users.
@@ -430,6 +389,47 @@ type RequestCtx struct {
 	searchingOnAttachedCtx bool
 
 	*fasthttp.RequestCtx
+}
+
+// Router dispatchs requests to different
+// views via configurable routes (paths)
+//
+// It is prohibited copying Router values. Create new values instead.
+type Router struct {
+	noCopy nocopy.NoCopy // nolint:structcheck,unused
+
+	parent *Router
+	prefix string
+
+	router        *fastrouter.Router
+	routerMutable bool
+	handleOPTIONS bool
+	customOPTIONS []string
+
+	middlewares Middlewares
+	errorView   ErrorView
+
+	log *logger.Logger
+}
+
+// Path configuration of the registered view
+//
+// It is prohibited copying Path values.
+type Path struct { // nolint:maligned
+	noCopy nocopy.NoCopy // nolint:structcheck,unused
+
+	router     *Router
+	registered bool
+
+	method      string
+	url         string
+	view        View
+	middlewares Middlewares
+
+	withTimeout bool
+	timeout     time.Duration
+	timeoutMsg  string
+	timeoutCode int
 }
 
 // View must process incoming requests.

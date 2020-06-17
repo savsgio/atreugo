@@ -96,14 +96,13 @@ func Test_AttachContext(t *testing.T) {
 		t.Error("ctx.AttachContext() the context is not attached")
 	}
 
-	defer func() {
-		err := recover()
-		if err == nil {
-			t.Error("Panic expected when attachs to itself")
-		}
-	}()
+	err := catchPanic(func() {
+		actx.AttachContext(actx)
+	})
 
-	actx.AttachContext(actx)
+	if err == nil {
+		t.Error("Panic expected when attachs to itself")
+	}
 }
 
 func Test_AttachedContext(t *testing.T) {

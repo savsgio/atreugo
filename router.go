@@ -2,6 +2,7 @@ package atreugo
 
 import (
 	"net/http"
+	"sort"
 	"strings"
 
 	fastrouter "github.com/fasthttp/router"
@@ -19,83 +20,52 @@ func emptyView(ctx *RequestCtx) error {
 	return nil
 }
 
-func buildOptionsView(url string, paths []*Path, fn View) View {
+func buildOptionsView(url string, fn View, paths map[string][]string) View {
 	allow := make([]string, 0)
 
-	for _, p := range paths {
-		if p.url != url || p.method == fasthttp.MethodOptions {
+	for method, urls := range paths {
+		if method == fasthttp.MethodOptions || !gotils.StringSliceInclude(urls, url) {
 			continue
 		}
 
-		allow = append(allow, p.method)
+		allow = append(allow, method)
 	}
 
 	if len(allow) == 0 {
 		allow = append(allow, fasthttp.MethodOptions)
 	}
 
+	sort.Strings(allow)
 	allowValue := strings.Join(allow, ", ")
 
 	return func(ctx *RequestCtx) error {
-		ctx.Response.Header.Set("Allow", allowValue)
+		ctx.Response.Header.Set(fasthttp.HeaderAllow, allowValue)
 
 		return fn(ctx)
 	}
 }
 
 func newRouter(log *logger.Logger, errorView ErrorView) *Router {
-	r := new(Router)
-	r.router = fastrouter.New()
-	r.router.HandleOPTIONS = false
-	r.handleOPTIONS = true
-
-	r.beginPath = "/"
-	r.log = log
-
 	if errorView == nil {
 		errorView = defaultErrorView
 	}
 
-	r.errorView = errorView
+	router := fastrouter.New()
+	router.HandleOPTIONS = false
 
-	return r
+	return &Router{
+		router:        router,
+		handleOPTIONS: true,
+		errorView:     errorView,
+		log:           log,
+	}
 }
 
-func (r *Router) init() {
-	if r.parent != nil {
-		panic("Could not be executed by group router")
+func (r *Router) mutable(v bool) {
+	if v != r.routerMutable {
+		r.routerMutable = v
+		r.router.Mutable(v)
 	}
-
-	optionsURLsHandled := make([]string, 0)
-
-	for _, p := range r.paths {
-		view := p.view
-
-		if p.method == fasthttp.MethodOptions {
-			view = buildOptionsView(p.url, r.paths, view)
-			optionsURLsHandled = append(optionsURLsHandled, p.url)
-		}
-
-		handler := p.handlerBuilder(view, p.middlewares)
-		if p.withTimeout {
-			handler = fasthttp.TimeoutWithCodeHandler(handler, p.timeout, p.timeoutMsg, p.timeoutCode)
-		}
-
-		r.router.Handle(p.method, p.url, handler)
-
-		handleOPTIONS := !gotils.StringSliceInclude(append(r.customOptionsURLS, optionsURLsHandled...), p.url)
-
-		if r.handleOPTIONS && handleOPTIONS {
-			view = buildOptionsView(p.url, r.paths, emptyView)
-			handler = p.handlerBuilder(view, p.middlewares)
-
-			r.router.Handle(fasthttp.MethodOptions, p.url, handler)
-
-			optionsURLsHandled = append(optionsURLsHandled, p.url)
-		}
-	}
-
-	r.paths = nil
 }
 
 func (r *Router) buildMiddlewaresChain(skip ...Middleware) Middlewares {
@@ -127,44 +97,11 @@ func (r *Router) buildMiddlewaresChain(skip ...Middleware) Middlewares {
 }
 
 func (r *Router) getGroupFullPath(path string) string {
-	if r.beginPath != "/" {
-		path = r.beginPath + path
-	}
-
 	if r.parent != nil {
-		path = r.parent.getGroupFullPath(path)
+		path = r.parent.getGroupFullPath(r.prefix + path)
 	}
 
 	return path
-}
-
-func (r *Router) appendPath(p *Path) {
-	if r.parent != nil {
-		r.parent.appendPath(p)
-		return
-	}
-
-	r.paths = append(r.paths, p)
-
-	if p.method == fasthttp.MethodOptions {
-		r.customOptionsURLS = append(r.customOptionsURLS, p.url)
-	}
-}
-
-func (r *Router) addPath(method, url string, fn View) *Path {
-	if method != strings.ToUpper(method) {
-		panic("The http method '" + method + "' must be in uppercase")
-	}
-
-	p := &Path{
-		handlerBuilder: r.handler,
-		method:         method,
-		url:            r.getGroupFullPath(url),
-		view:           fn,
-	}
-	r.appendPath(p)
-
-	return p
 }
 
 func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
@@ -207,20 +144,52 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 	}
 }
 
+func (r *Router) handlePath(p *Path) {
+	isOPTIONS := p.method == fasthttp.MethodOptions
+
+	switch {
+	case p.registered:
+		r.mutable(true)
+	case isOPTIONS:
+		mutable := !gotils.StringSliceInclude(r.customOPTIONS, p.url)
+		r.mutable(mutable)
+	case r.routerMutable:
+		r.mutable(false)
+	}
+
+	view := p.view
+	if isOPTIONS {
+		view = buildOptionsView(p.url, view, r.ListPaths())
+		r.customOPTIONS = gotils.StringUniqueAppend(r.customOPTIONS, p.url)
+	}
+
+	handler := r.handler(view, p.middlewares)
+	if p.withTimeout {
+		handler = fasthttp.TimeoutWithCodeHandler(handler, p.timeout, p.timeoutMsg, p.timeoutCode)
+	}
+
+	r.router.Handle(p.method, p.url, handler)
+
+	if r.handleOPTIONS && !p.registered && !isOPTIONS {
+		view = buildOptionsView(p.url, emptyView, r.ListPaths())
+		handler = r.handler(view, p.middlewares)
+
+		r.mutable(true)
+		r.router.Handle(fasthttp.MethodOptions, p.url, handler)
+	}
+}
+
 // NewGroupPath returns a new router to group paths.
 func (r *Router) NewGroupPath(path string) *Router {
-	g := new(Router)
-	g.router = r.router
-	g.router.HandleOPTIONS = false
-	g.handleOPTIONS = r.handleOPTIONS
-
-	g.parent = r
-
-	g.beginPath = path
-	g.log = r.log
-	g.errorView = r.errorView
-
-	return g
+	return &Router{
+		parent:        r,
+		prefix:        path,
+		router:        r.router,
+		routerMutable: r.routerMutable,
+		handleOPTIONS: r.handleOPTIONS,
+		errorView:     r.errorView,
+		log:           r.log,
+	}
 }
 
 // ListPaths returns all registered routes grouped by method.
@@ -415,5 +384,20 @@ func (r *Router) ServeFile(url, filePath string) *Path {
 // frequently used, non-standardized or custom methods (e.g. for internal
 // communication with a proxy).
 func (r *Router) Path(method, url string, viewFn View) *Path {
-	return r.addPath(method, url, viewFn)
+	if method != strings.ToUpper(method) {
+		panic("The http method '" + method + "' must be in uppercase")
+	}
+
+	p := &Path{
+		router: r,
+		method: method,
+		url:    r.getGroupFullPath(url),
+		view:   viewFn,
+	}
+
+	r.handlePath(p)
+
+	p.registered = true
+
+	return p
 }
