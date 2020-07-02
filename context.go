@@ -34,15 +34,12 @@ func AcquireRequestCtx(ctx *fasthttp.RequestCtx) *RequestCtx {
 // It is forbidden accessing ctx and/or its' members after returning
 // it to request pool.
 func ReleaseRequestCtx(ctx *RequestCtx) {
-	ctx.reset()
-	requestCtxPool.Put(ctx)
-}
-
-func (ctx *RequestCtx) reset() {
 	ctx.next = false
 	ctx.skipView = false
 	ctx.searchingOnAttachedCtx = false
 	ctx.RequestCtx = nil
+
+	requestCtxPool.Put(ctx)
 }
 
 // RequestID returns the "X-Request-ID" header value.

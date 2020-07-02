@@ -21,23 +21,13 @@ func Test_ReleaseRequestCtx(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
 	actx := AcquireRequestCtx(ctx)
 
-	ReleaseRequestCtx(actx)
-
-	if actx.RequestCtx != nil {
-		t.Errorf("ReleaseRequestCtx() *fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)
-	}
-}
-
-func TestRequestCtx_reset(t *testing.T) {
-	ctx := new(fasthttp.RequestCtx)
-	actx := AcquireRequestCtx(ctx)
-
 	if err := actx.Next(); err != nil {
 		t.Fatalf("Error calling next. %+v", err)
 	}
 
 	actx.SkipView()
-	actx.reset()
+
+	ReleaseRequestCtx(actx)
 
 	if actx.next {
 		t.Errorf("reset() next is not 'false'")
@@ -49,6 +39,10 @@ func TestRequestCtx_reset(t *testing.T) {
 
 	if actx.RequestCtx != nil {
 		t.Errorf("reset() *fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)
+	}
+
+	if actx.RequestCtx != nil {
+		t.Errorf("ReleaseRequestCtx() *fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)
 	}
 }
 

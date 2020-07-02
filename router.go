@@ -117,11 +117,12 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 		return ctx.Next()
 	})
 	chain = append(chain, middle.After...)
+	chainLen := len(chain)
 
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := AcquireRequestCtx(ctx)
 
-		for i := range chain {
+		for i := 0; i < chainLen; i++ {
 			if err := chain[i](actx); err != nil {
 				statusCode := actx.Response.StatusCode()
 				if statusCode == fasthttp.StatusOK {
