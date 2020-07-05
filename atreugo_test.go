@@ -3,6 +3,9 @@ package atreugo
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"math/rand"
+	"net"
 	"reflect"
 	"testing"
 	"time"
@@ -160,61 +163,45 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 }
 
 func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
-	type args struct {
-		compress bool
-	}
-
-	type want struct {
-		compress bool
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "NotCompress",
-			args: args{
-				compress: false,
-			},
-			want: want{
-				compress: false,
-			},
+	cfg := Config{
+		Name: "test",
+		HeaderReceived: func(header *fasthttp.RequestHeader) fasthttp.RequestConfig {
+			return fasthttp.RequestConfig{}
 		},
-		{
-			name: "Compress",
-			args: args{
-				compress: true,
-			},
-			want: want{
-				compress: true,
-			},
-		},
+		Concurrency:                        rand.Int(), // nolint:gosec
+		DisableKeepalive:                   true,
+		ReadBufferSize:                     rand.Int(),                // nolint:gosec
+		WriteBufferSize:                    rand.Int(),                // nolint:gosec
+		ReadTimeout:                        time.Duration(rand.Int()), // nolint:gosec
+		WriteTimeout:                       time.Duration(rand.Int()), // nolint:gosec
+		IdleTimeout:                        time.Duration(rand.Int()), // nolint:gosec
+		MaxConnsPerIP:                      rand.Int(),                // nolint:gosec
+		MaxRequestsPerConn:                 rand.Int(),                // nolint:gosec
+		MaxRequestBodySize:                 rand.Int(),                // nolint:gosec
+		ReduceMemoryUsage:                  true,
+		GetOnly:                            true,
+		DisablePreParseMultipartForm:       true,
+		LogAllErrors:                       true,
+		DisableHeaderNamesNormalizing:      true,
+		SleepWhenConcurrencyLimitsExceeded: time.Duration(rand.Int()), // nolint:gosec
+		NoDefaultServerHeader:              true,
+		NoDefaultDate:                      true,
+		NoDefaultContentType:               true,
+		ConnState:                          func(net.Conn, fasthttp.ConnState) {},
+		KeepHijackedConns:                  true,
 	}
 
-	handler := func(ctx *fasthttp.RequestCtx) {}
+	srv := newFasthttpServer(cfg, testLog)
 
-	for _, test := range tests {
-		tt := test
-
-		t.Run(tt.name, func(t *testing.T) {
-			cfg := Config{
-				LogLevel: "fatal",
-				Compress: tt.args.compress,
-			}
-			srv := newFasthttpServer(cfg, handler, testLog)
-
-			if (reflect.ValueOf(handler).Pointer() == reflect.ValueOf(srv.Handler).Pointer()) == tt.want.compress {
-				t.Error("The handler has not been wrapped by compression handler")
-			}
-		})
+	if srv == nil {
+		t.Fatal("newFasthttpServer() == nil")
 	}
-}
 
-func TestAtreugo_ConfigFasthttpFields(t *testing.T) {
 	fasthttpServerType := reflect.TypeOf(fasthttp.Server{})
 	configType := reflect.TypeOf(Config{})
+
+	fasthttpServerValue := reflect.ValueOf(*srv) // nolint:govet
+	configValue := reflect.ValueOf(cfg)
 
 	for i := 0; i < fasthttpServerType.NumField(); i++ {
 		field := fasthttpServerType.Field(i)
@@ -229,6 +216,121 @@ func TestAtreugo_ConfigFasthttpFields(t *testing.T) {
 		if !exist {
 			t.Errorf("The field '%s' does not exist in atreugo.Config", field.Name)
 		}
+
+		v1 := fmt.Sprint(fasthttpServerValue.FieldByName(field.Name).Interface())
+		v2 := fmt.Sprint(configValue.FieldByName(field.Name).Interface())
+
+		if v1 != v2 {
+			t.Errorf("fasthttp.Server.%s == %s, want %s", field.Name, v1, v2)
+		}
+	}
+
+	if srv.Handler != nil {
+		t.Error("fasthttp.Server.Handler must be nil")
+	}
+
+	if !isEqual(srv.Logger, testLog) {
+		t.Errorf("fasthttp.Server.Logger == %p, want %p", srv.Logger, testLog)
+	}
+}
+
+func TestAtreugo_handler(t *testing.T) { // nolint:funlen,gocognit
+	type args struct {
+		cfg   Config
+		hosts []string
+	}
+
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "Default",
+			args: args{
+				cfg: Config{},
+			},
+		},
+		{
+			name: "Compress",
+			args: args{
+				cfg: Config{Compress: true},
+			},
+		},
+		{
+			name: "MultiHost",
+			args: args{
+				cfg:   Config{},
+				hosts: []string{"localhost", "example.com"},
+			},
+		},
+		{
+			name: "MultiHostCompress",
+			args: args{
+				cfg:   Config{Compress: true},
+				hosts: []string{"localhost", "example.com"},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		tt := test
+
+		t.Run(tt.name, func(t *testing.T) {
+			testView := func(ctx *RequestCtx) error {
+				return ctx.JSONResponse(JSON{"data": gotils.RandBytes(make([]byte, 300))})
+			}
+			testPath := "/"
+
+			s := New(tt.args.cfg)
+			s.GET(testPath, testView)
+
+			for _, hostname := range tt.args.hosts {
+				vHost := s.NewVirtualHost(hostname)
+				vHost.GET(testPath, testView)
+			}
+
+			handler := s.handler()
+
+			if handler == nil {
+				t.Errorf("handler is nil")
+			}
+
+			newHostname := string(gotils.RandBytes(make([]byte, 10))) + ".com"
+
+			hosts := tt.args.hosts
+			hosts = append(hosts, newHostname)
+
+			for _, hostname := range hosts {
+				for _, path := range []string{testPath, "/notfound"} {
+					ctx := new(fasthttp.RequestCtx)
+					ctx.Request.Header.Set(fasthttp.HeaderAcceptEncoding, "gzip")
+					ctx.Request.Header.Set(fasthttp.HeaderHost, hostname)
+					ctx.Request.URI().SetHost(hostname)
+					ctx.Request.SetRequestURI(path)
+
+					handler(ctx)
+
+					statusCode := ctx.Response.StatusCode()
+					wantStatusCode := fasthttp.StatusOK
+
+					if path != testPath {
+						wantStatusCode = fasthttp.StatusNotFound
+					}
+
+					if statusCode != wantStatusCode {
+						t.Errorf("Host %s - Path %s, Status code == %d, want %d", hostname, path, statusCode, wantStatusCode)
+					}
+
+					if wantStatusCode == fasthttp.StatusNotFound {
+						continue
+					}
+
+					if tt.args.cfg.Compress && len(ctx.Response.Header.Peek(fasthttp.HeaderContentEncoding)) == 0 {
+						t.Errorf("The header '%s' is not setted", fasthttp.HeaderContentEncoding)
+					}
+				}
+			}
+		})
 	}
 }
 
@@ -359,6 +461,10 @@ func TestAtreugo_Serve(t *testing.T) {
 	if s.cfg.Network != lnNetwork {
 		t.Errorf("Atreugo.Config.Network = %s, want %s", s.cfg.Network, lnNetwork)
 	}
+
+	if s.server.Handler == nil {
+		t.Error("Atreugo.server.Handler is nil")
+	}
 }
 
 func TestAtreugo_SetLogOutput(t *testing.T) {
@@ -370,5 +476,72 @@ func TestAtreugo_SetLogOutput(t *testing.T) {
 
 	if len(output.Bytes()) == 0 {
 		t.Error("SetLogOutput() log output was not changed")
+	}
+}
+
+func TestAtreugo_NewVirtualHost(t *testing.T) {
+	hostname := "localhost"
+	s := New(testAtreugoConfig)
+
+	if s.virtualHosts != nil {
+		t.Error("Atreugo.virtualHosts must be nil before register a new virtual host")
+	}
+
+	vHost := s.NewVirtualHost(hostname)
+	if vHost == nil {
+		t.Fatal("Atreugo.NewVirtualHost() returned a nil router")
+	}
+
+	if !isEqual(vHost.router.NotFound, s.router.NotFound) {
+		t.Errorf("VirtualHost router.NotFound == %p, want %p", vHost.router.NotFound, s.router.NotFound)
+	}
+
+	if !isEqual(vHost.router.MethodNotAllowed, s.router.MethodNotAllowed) {
+		t.Errorf(
+			"VirtualHost router.MethodNotAllowed == %p, want %p",
+			vHost.router.MethodNotAllowed,
+			s.router.MethodNotAllowed,
+		)
+	}
+
+	if !isEqual(vHost.router.PanicHandler, s.router.PanicHandler) {
+		t.Errorf("VirtualHost router.PanicHandler == %p, want %p", vHost.router.PanicHandler, s.router.PanicHandler)
+	}
+
+	if h := s.virtualHosts[hostname]; h == nil {
+		t.Error("The new virtual host is not registeded")
+	}
+
+	defer func() {
+		err := recover()
+		if err == nil {
+			t.Error("Expected panic when a virtual host is duplicated")
+		}
+
+		wantErrString := fmt.Sprintf("a router is already registered for virtual host '%s'", hostname)
+		if err != wantErrString {
+			t.Errorf("Error string == %s, want %s", err, wantErrString)
+		}
+	}()
+
+	// panic when a virtual host is duplicated
+	s.NewVirtualHost(hostname)
+}
+
+// Benchmarks.
+func Benchmark_Handler(b *testing.B) {
+	s := New(testAtreugoConfig)
+	s.GET("/", func(ctx *RequestCtx) error { return nil })
+
+	ctx := new(fasthttp.RequestCtx)
+	ctx.Request.Header.SetMethod("GET")
+	ctx.Request.SetRequestURI("/")
+
+	handler := s.handler()
+
+	b.ResetTimer()
+
+	for i := 0; i <= b.N; i++ {
+		handler(ctx)
 	}
 }

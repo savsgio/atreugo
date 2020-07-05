@@ -1,10 +1,15 @@
 package atreugo
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/valyala/fasthttp"
 )
+
+func panicf(s string, args ...interface{}) {
+	panic(fmt.Sprintf(s, args...))
+}
 
 func viewToHandler(view View, errorView ErrorView) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {

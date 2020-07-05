@@ -61,7 +61,7 @@ func New(cfg Config) *Atreugo {
 	}
 
 	server := &Atreugo{
-		server: newFasthttpServer(cfg, r.router.Handler, log),
+		server: newFasthttpServer(cfg, log),
 		log:    log,
 		cfg:    cfg,
 		Router: r,
@@ -70,14 +70,9 @@ func New(cfg Config) *Atreugo {
 	return server
 }
 
-func newFasthttpServer(cfg Config, handler fasthttp.RequestHandler, log fasthttp.Logger) *fasthttp.Server {
-	if cfg.Compress {
-		handler = fasthttp.CompressHandler(handler)
-	}
-
+func newFasthttpServer(cfg Config, log fasthttp.Logger) *fasthttp.Server {
 	return &fasthttp.Server{
 		Name:                               cfg.Name,
-		Handler:                            handler,
 		HeaderReceived:                     cfg.HeaderReceived,
 		Concurrency:                        cfg.Concurrency,
 		DisableKeepalive:                   cfg.DisableKeepalive,
@@ -102,6 +97,28 @@ func newFasthttpServer(cfg Config, handler fasthttp.RequestHandler, log fasthttp
 		KeepHijackedConns:                  cfg.KeepHijackedConns,
 		Logger:                             log,
 	}
+}
+
+func (s *Atreugo) handler() fasthttp.RequestHandler {
+	handler := s.router.Handler
+
+	if len(s.virtualHosts) > 0 {
+		handler = func(ctx *fasthttp.RequestCtx) {
+			hostname := gotils.B2S(ctx.URI().Host())
+
+			if h := s.virtualHosts[hostname]; h != nil {
+				h(ctx)
+			} else {
+				s.router.Handler(ctx)
+			}
+		}
+	}
+
+	if s.cfg.Compress {
+		handler = fasthttp.CompressHandler(handler)
+	}
+
+	return handler
 }
 
 // SaveMatchedRoutePath if enabled, adds the matched route path onto the ctx.UserValue context
@@ -184,6 +201,7 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 
 	s.cfg.Addr = ln.Addr().String()
 	s.cfg.Network = ln.Addr().Network()
+	s.server.Handler = s.handler()
 
 	if gotils.StringSliceInclude(tcpNetworks, s.cfg.Network) {
 		schema := "http"
@@ -206,4 +224,30 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 // SetLogOutput set log output of server.
 func (s *Atreugo) SetLogOutput(output io.Writer) {
 	s.log.SetOutput(output)
+}
+
+// NewVirtualHost returns a new sub-router for running more than one web site
+// (such as company1.example.com and company2.example.com) on a single atreugo instance.
+// Virtual hosts can be "IP-based", meaning that you have a different IP address
+// for every web site, or "name-based", meaning that you have multiple names
+// running on each IP address.
+//
+// The fact that they are running on the same atreugo instance is not apparent to the end user.
+func (s *Atreugo) NewVirtualHost(hostname string) *Router {
+	if s.virtualHosts == nil {
+		s.virtualHosts = make(map[string]fasthttp.RequestHandler)
+	}
+
+	vHost := newRouter(s.log, s.cfg.ErrorView)
+	vHost.router.NotFound = s.router.NotFound
+	vHost.router.MethodNotAllowed = s.router.MethodNotAllowed
+	vHost.router.PanicHandler = s.router.PanicHandler
+
+	if s.virtualHosts[hostname] != nil {
+		panicf("a router is already registered for virtual host '%s'", hostname)
+	}
+
+	s.virtualHosts[hostname] = vHost.router.Handler
+
+	return vHost
 }

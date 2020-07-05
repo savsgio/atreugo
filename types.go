@@ -21,6 +21,8 @@ type Atreugo struct {
 	log    *logger.Logger
 	cfg    Config
 
+	virtualHosts map[string]fasthttp.RequestHandler
+
 	*Router
 }
 
