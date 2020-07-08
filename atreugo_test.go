@@ -479,7 +479,7 @@ func TestAtreugo_SetLogOutput(t *testing.T) {
 	}
 }
 
-func TestAtreugo_NewVirtualHost(t *testing.T) {
+func TestAtreugo_NewVirtualHost(t *testing.T) { //nolint:funlen
 	hostname := "localhost"
 
 	s := New(testAtreugoConfig)
