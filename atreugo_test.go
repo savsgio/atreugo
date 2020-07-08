@@ -481,6 +481,7 @@ func TestAtreugo_SetLogOutput(t *testing.T) {
 
 func TestAtreugo_NewVirtualHost(t *testing.T) {
 	hostname := "localhost"
+
 	s := New(testAtreugoConfig)
 
 	if s.virtualHosts != nil {
@@ -512,20 +513,41 @@ func TestAtreugo_NewVirtualHost(t *testing.T) {
 		t.Error("The new virtual host is not registeded")
 	}
 
-	defer func() {
-		err := recover()
+	type conflictArgs struct {
+		hostnames  []string
+		wantErrMsg string
+	}
+
+	conflictHosts := []conflictArgs{
+		{
+			hostnames:  []string{hostname},
+			wantErrMsg: fmt.Sprintf("a router is already registered for virtual host '%s'", hostname),
+		},
+		{
+			hostnames:  []string{},
+			wantErrMsg: "At least 1 hostname is required",
+		},
+		{
+			hostnames:  []string{"localhost", "localhost"},
+			wantErrMsg: fmt.Sprintf("a router is already registered for virtual host '%s'", hostname),
+		},
+	}
+
+	for _, test := range conflictHosts {
+		tt := test
+
+		err := catchPanic(func() {
+			s.NewVirtualHost(tt.hostnames...)
+		})
+
 		if err == nil {
 			t.Error("Expected panic when a virtual host is duplicated")
 		}
 
-		wantErrString := fmt.Sprintf("a router is already registered for virtual host '%s'", hostname)
-		if err != wantErrString {
-			t.Errorf("Error string == %s, want %s", err, wantErrString)
+		if err != tt.wantErrMsg {
+			t.Errorf("Error string == %s, want %s", err, tt.wantErrMsg)
 		}
-	}()
-
-	// panic when a virtual host is duplicated
-	s.NewVirtualHost(hostname)
+	}
 }
 
 // Benchmarks.

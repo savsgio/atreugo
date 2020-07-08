@@ -233,7 +233,13 @@ func (s *Atreugo) SetLogOutput(output io.Writer) {
 // running on each IP address.
 //
 // The fact that they are running on the same atreugo instance is not apparent to the end user.
-func (s *Atreugo) NewVirtualHost(hostname string) *Router {
+//
+// If you pass multiples hostnames, all of them will have the same behaviour.
+func (s *Atreugo) NewVirtualHost(hostnames ...string) *Router {
+	if len(hostnames) == 0 {
+		panic("At least 1 hostname is required")
+	}
+
 	if s.virtualHosts == nil {
 		s.virtualHosts = make(map[string]fasthttp.RequestHandler)
 	}
@@ -243,11 +249,13 @@ func (s *Atreugo) NewVirtualHost(hostname string) *Router {
 	vHost.router.MethodNotAllowed = s.router.MethodNotAllowed
 	vHost.router.PanicHandler = s.router.PanicHandler
 
-	if s.virtualHosts[hostname] != nil {
-		panicf("a router is already registered for virtual host '%s'", hostname)
-	}
+	for _, name := range hostnames {
+		if s.virtualHosts[name] != nil {
+			panicf("a router is already registered for virtual host '%s'", name)
+		}
 
-	s.virtualHosts[hostname] = vHost.router.Handler
+		s.virtualHosts[name] = vHost.router.Handler
+	}
 
 	return vHost
 }
