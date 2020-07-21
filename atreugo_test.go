@@ -429,6 +429,10 @@ func TestAtreugo_ServeConn(t *testing.T) {
 	if err := <-errCh; err == nil {
 		t.Fatalf("Expected error: %v", err)
 	}
+
+	if s.server.Handler == nil {
+		t.Error("Atreugo.server.Handler is nil")
+	}
 }
 
 func TestAtreugo_Serve(t *testing.T) {

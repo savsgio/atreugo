@@ -187,6 +187,8 @@ func (s *Atreugo) HandleOPTIONS(v bool) {
 //
 // ServeConn closes c before returning.
 func (s *Atreugo) ServeConn(c net.Conn) error {
+	s.server.Handler = s.handler()
+
 	return s.server.ServeConn(c)
 }
 
