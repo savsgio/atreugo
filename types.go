@@ -58,7 +58,7 @@ type Config struct { // nolint:maligned
 	// WARNING: using prefork prevents the use of any global state!
 	// Things like in-memory caches won't work.
 	//
-	// WARNING: In Windows OS only is supportted when 'Reuseport' is enabled.
+	// WARNING: In Windows OS it's only supported when 'Reuseport' is enabled.
 	Prefork bool
 
 	// Run server with a TCP listener with SO_REUSEPORT option set.
