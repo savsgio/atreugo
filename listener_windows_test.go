@@ -1,7 +1,8 @@
+// +build windows
+
 package atreugo
 
 import (
-	"runtime"
 	"testing"
 )
 
@@ -17,8 +18,6 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		network string
 		err     bool
 	}
-
-	const unixNetwork = "unix"
 
 	tests := []struct {
 		name string
@@ -53,31 +52,7 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 			name: "Unix",
 			args: args{
 				addr:    "/tmp/test.sock",
-				network: unixNetwork,
-			},
-			want: want{
-				addr:    "/tmp/test.sock",
-				network: unixNetwork,
-				err:     false,
-			},
-		},
-		{
-			name: "UnixRemoveError",
-			args: args{
-				addr:    "/bin/sh",
-				network: unixNetwork,
-			},
-			want: want{
-				addr:    "/bin/sh",
 				network: "unix",
-				err:     true,
-			},
-		},
-		{
-			name: "UnixChmodError",
-			args: args{
-				addr:    "345&%·%&%&/%&(",
-				network: unixNetwork,
 			},
 			want: want{
 				err: true,
@@ -95,10 +70,6 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 	}
 	for _, test := range tests {
 		tt := test
-
-		if runtime.GOOS == "windows" && tt.args.network == unixNetwork {
-			continue
-		}
 
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := Config{

@@ -557,11 +557,17 @@ func TestAtreugo_NewVirtualHost(t *testing.T) { //nolint:funlen
 // Benchmarks.
 func Benchmark_Handler(b *testing.B) {
 	s := New(testAtreugoConfig)
-	s.GET("/", func(ctx *RequestCtx) error { return nil })
+	s.GET("/plaintext", func(ctx *RequestCtx) error { return nil })
+	s.GET("/json", func(ctx *RequestCtx) error { return nil })
+	s.GET("/db", func(ctx *RequestCtx) error { return nil })
+	s.GET("/queries", func(ctx *RequestCtx) error { return nil })
+	s.GET("/cached-worlds", func(ctx *RequestCtx) error { return nil })
+	s.GET("/fortunes", func(ctx *RequestCtx) error { return nil })
+	s.GET("/updates", func(ctx *RequestCtx) error { return nil })
 
 	ctx := new(fasthttp.RequestCtx)
 	ctx.Request.Header.SetMethod("GET")
-	ctx.Request.SetRequestURI("/")
+	ctx.Request.SetRequestURI("/updates")
 
 	handler := s.handler()
 
