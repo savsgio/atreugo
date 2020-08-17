@@ -50,6 +50,7 @@ func (ctx *RequestCtx) RequestID() []byte {
 // Next pass control to the next middleware/view function.
 func (ctx *RequestCtx) Next() error {
 	ctx.next = true
+
 	return nil
 }
 

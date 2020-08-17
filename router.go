@@ -114,6 +114,7 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 				return err
 			}
 		}
+
 		return ctx.Next()
 	})
 	chain = append(chain, middle.After...)
@@ -277,6 +278,7 @@ func (r *Router) ANY(url string, viewFn View) *Path {
 func (r *Router) RequestHandlerPath(method, url string, handler fasthttp.RequestHandler) *Path {
 	viewFn := func(ctx *RequestCtx) error {
 		handler(ctx.RequestCtx)
+
 		return nil
 	}
 
@@ -372,6 +374,7 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 func (r *Router) ServeFile(url, filePath string) *Path {
 	viewFn := func(ctx *RequestCtx) error {
 		fasthttp.ServeFile(ctx.RequestCtx, filePath)
+
 		return nil
 	}
 

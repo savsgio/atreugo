@@ -13,6 +13,7 @@ func Test_viewToHandler(t *testing.T) {
 
 	view := func(ctx *RequestCtx) error {
 		called = true
+
 		return err
 	}
 

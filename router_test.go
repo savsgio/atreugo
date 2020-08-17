@@ -2,10 +2,11 @@ package atreugo
 
 import (
 	"bytes"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
+	"math/big"
 	"net/http"
 	"reflect"
 	"testing"
@@ -32,7 +33,12 @@ var httpMethods = []string{
 }
 
 func randomHTTPMethod() string {
-	return httpMethods[rand.Intn(len(httpMethods)-1)]
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(len(httpMethods)-1)))
+	if err != nil {
+		panic(err)
+	}
+
+	return httpMethods[n.Int64()]
 }
 
 func catchPanic(testFunc func()) (recv interface{}) {
@@ -248,21 +254,25 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 
 	skipMiddlewareGlobal := func(ctx *RequestCtx) error {
 		skipMiddlewareGlobalCalled = true
+
 		return ctx.Next()
 	}
 	skipMiddlewareGroup := func(ctx *RequestCtx) error {
 		skipMiddlewareGroupCalled = true
+
 		return ctx.Next()
 	}
 
 	s.UseBefore(func(ctx *RequestCtx) error {
 		index++
 		callOrder["globalBefore"] = index
+
 		return ctx.Next()
 	}, skipMiddlewareGlobal)
 	s.UseAfter(func(ctx *RequestCtx) error {
 		index++
 		callOrder["globalAfter"] = index
+
 		return ctx.Next()
 	})
 
@@ -270,11 +280,13 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 	v1.UseBefore(func(ctx *RequestCtx) error {
 		index++
 		callOrder["groupBefore"] = index
+
 		return ctx.Next()
 	})
 	v1.UseAfter(func(ctx *RequestCtx) error {
 		index++
 		callOrder["groupAfter"] = index
+
 		return ctx.Next()
 	}, skipMiddlewareGroup)
 
@@ -282,14 +294,17 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 
 	v1.Path(method, url, func(ctx *RequestCtx) error {
 		viewCalled = true
+
 		return nil
 	}).UseBefore(func(ctx *RequestCtx) error {
 		index++
 		callOrder["viewBefore"] = index
+
 		return ctx.Next()
 	}).UseAfter(func(ctx *RequestCtx) error {
 		index++
 		callOrder["viewAfter"] = index
+
 		return ctx.Next()
 	}).SkipMiddlewares(skipMiddlewareGroup)
 
@@ -377,17 +392,20 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 
 	viewFn := func(ctx *RequestCtx) error {
 		handlerCounter.viewCalled = true
+
 		return ctx.TextResponse("Ok")
 	}
 	before := []Middleware{
 		func(ctx *RequestCtx) error {
 			handlerCounter.beforeMiddlewares++
+
 			return ctx.Next()
 		},
 	}
 	after := []Middleware{
 		func(ctx *RequestCtx) error {
 			handlerCounter.afterMiddlewares++
+
 			return ctx.Next()
 		},
 	}
@@ -395,12 +413,14 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 		Before: []Middleware{
 			func(ctx *RequestCtx) error {
 				handlerCounter.beforeViewMiddlewares++
+
 				return ctx.Next()
 			},
 		},
 		After: []Middleware{
 			func(ctx *RequestCtx) error {
 				handlerCounter.afterViewMiddlewares++
+
 				return ctx.Next()
 			},
 		},
@@ -484,6 +504,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 				before: []Middleware{
 					func(ctx *RequestCtx) error {
 						handlerCounter.beforeMiddlewares++
+
 						return ctx.ErrorResponse(err, fasthttp.StatusBadRequest)
 					},
 				},
@@ -511,12 +532,14 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 					Before: []Middleware{
 						func(ctx *RequestCtx) error {
 							handlerCounter.beforeViewMiddlewares++
+
 							return ctx.ErrorResponse(err, fasthttp.StatusBadRequest)
 						},
 					},
 					After: []Middleware{
 						func(ctx *RequestCtx) error {
 							handlerCounter.afterViewMiddlewares++
+
 							return ctx.Next()
 						},
 					},
@@ -543,12 +566,14 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 					Before: []Middleware{
 						func(ctx *RequestCtx) error {
 							handlerCounter.beforeViewMiddlewares++
+
 							return ctx.Next()
 						},
 					},
 					After: []Middleware{
 						func(ctx *RequestCtx) error {
 							handlerCounter.afterViewMiddlewares++
+
 							return ctx.ErrorResponse(err, fasthttp.StatusBadRequest)
 						},
 					},
@@ -573,6 +598,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 				after: []Middleware{
 					func(ctx *RequestCtx) error {
 						handlerCounter.afterMiddlewares++
+
 						return ctx.ErrorResponse(err, fasthttp.StatusBadRequest)
 					},
 				},
@@ -596,6 +622,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 				before: []Middleware{
 					func(ctx *RequestCtx) error {
 						handlerCounter.beforeMiddlewares++
+
 						return nil
 					},
 				},
@@ -998,6 +1025,7 @@ func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
 				AcceptByteRange:    true,
 				PathRewrite: func(ctx *RequestCtx) []byte {
 					pathRewriteCalled = true
+
 					return ctx.Path()
 				},
 				PathNotFound: func(ctx *RequestCtx) error {
