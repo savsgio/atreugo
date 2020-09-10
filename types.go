@@ -1,6 +1,7 @@
 package atreugo
 
 import (
+	"io"
 	"net"
 	"os"
 	"time"
@@ -46,6 +47,9 @@ type Config struct { // nolint:maligned
 
 	// See levels in https://github.com/savsgio/go-logger#levels
 	LogLevel string
+
+	// Default: os.Stderr
+	LogOutput io.Writer
 
 	// Kind of network listener (default: tcp4)
 	// The network must be "tcp", "tcp4", "tcp6" or "unix".
