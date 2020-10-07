@@ -265,3 +265,11 @@ func (s *Atreugo) NewVirtualHost(hostnames ...string) *Router {
 
 	return vHost
 }
+// Shutdown expose fasthttp server shutdown function
+func (s *Atreugo) Shutdown() error {
+     return  s.server.Shutdown()
+}
+// Server return fasthttp server instance
+func (s *Atreugo) Server() *fasthttp.Server {
+     return  s.server
+}
