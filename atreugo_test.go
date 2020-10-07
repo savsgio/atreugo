@@ -435,6 +435,65 @@ func TestAtreugo_ServeConn(t *testing.T) {
 	}
 }
 
+func TestAtreugo_Shutdown(t *testing.T) {
+	cfg := Config{
+		LogLevel:    "fatal",
+		ReadTimeout: 1 * time.Second,
+	}
+	s := New(cfg)
+
+	c := &mock.Conn{ErrRead: errors.New("Read error")}
+	errCh := make(chan error, 1)
+
+	go func() {
+		errCh <- s.ServeConn(c)
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+
+	if err := s.Shutdown(); err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if err := <-errCh; err == nil {
+		t.Fatalf("Expected error: %v", err)
+	}
+
+	if s.server.Handler == nil {
+		t.Error("Atreugo.server.Handler is nil")
+	}
+}
+func TestAtreugo_Server(t *testing.T) {
+	cfg := Config{
+		LogLevel:    "fatal",
+		ReadTimeout: 1 * time.Second,
+	}
+	s := New(cfg)
+
+	c := &mock.Conn{ErrRead: errors.New("Read error")}
+	errCh := make(chan error, 1)
+
+	go func() {
+		errCh <- s.ServeConn(c)
+	}()
+	if s.Server() == nil {
+		t.Fatal("Unexpected error: server is nil")
+	}
+	time.Sleep(100 * time.Millisecond)
+
+	if err := s.Shutdown(); err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if err := <-errCh; err == nil {
+		t.Fatalf("Expected error: %v", err)
+	}
+
+	if s.server.Handler == nil {
+		t.Error("Atreugo.server.Handler is nil")
+	}
+}
+
 func TestAtreugo_Serve(t *testing.T) {
 	cfg := Config{LogLevel: "fatal"}
 	s := New(cfg)
