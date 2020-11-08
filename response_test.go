@@ -360,7 +360,7 @@ func Test_ErrorResponse(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
 			actx := AcquireRequestCtx(ctx)
 
-			if actx.ErrorResponse(err, tt.args.statusCode...) != err {
+			if !errors.Is(actx.ErrorResponse(err, tt.args.statusCode...), err) {
 				t.Errorf("Unexpected error == %v", err)
 			}
 
@@ -384,7 +384,7 @@ func Benchmark_FileResponse(b *testing.B) {
 
 	for i := 0; i <= b.N; i++ {
 		if err := actx.FileResponse("hola", path, "text/plain"); err != nil {
-			b.Fatalf("Error calling FileResponse. %+v", err)
+			b.Fatalf("Error calling FileResponse: %v", err)
 		}
 	}
 }

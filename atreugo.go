@@ -43,7 +43,6 @@ func New(cfg Config) *Atreugo {
 		cfg.ReadTimeout = defaultReadTimeout
 	}
 
-	cfg.socketFileMode = 0666
 	log := logger.New(cfg.LogName, cfg.LogLevel, cfg.LogOutput)
 
 	r := newRouter(log, cfg.ErrorView)

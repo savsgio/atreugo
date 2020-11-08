@@ -2,6 +2,7 @@ package atreugo
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/valyala/bytebufferpool"
 	"github.com/valyala/fasthttp"
@@ -17,7 +18,7 @@ func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
 
 	data, err := json.Marshal(body)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal response body: %w", err)
 	}
 
 	ctx.Response.SetBody(data)

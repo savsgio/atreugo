@@ -3,6 +3,7 @@
 package atreugo
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -62,7 +63,7 @@ func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 		s.log.Infof("Shutdown signal received")
 
 		if err := s.server.Shutdown(); err != nil {
-			return err
+			return fmt.Errorf("failed to shutdown: %w", err)
 		}
 
 		s.log.Infof("Server gracefully stopped")

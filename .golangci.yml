@@ -8,3 +8,4 @@ linters:
     - goerr113
     - nolintlint
     - gofumpt
+    - exhaustivestruct
