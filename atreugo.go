@@ -43,6 +43,8 @@ func New(cfg Config) *Atreugo {
 		cfg.ReadTimeout = defaultReadTimeout
 	}
 
+	cfg.chmodUnixSocket = chmodFileToSocket
+
 	log := logger.New(cfg.LogName, cfg.LogLevel, cfg.LogOutput)
 
 	r := newRouter(log, cfg.ErrorView)

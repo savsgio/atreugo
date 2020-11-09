@@ -96,7 +96,7 @@ func TestRouter_buildOptionsView(t *testing.T) {
 
 	ctx := AcquireRequestCtx(new(fasthttp.RequestCtx))
 
-	if err := h(ctx); !errors.Is(err, errOptionsView) {
+	if err := h(ctx); err != errOptionsView { // nolint:errorlint
 		t.Errorf("Error == %v, want %v", err, errOptionsView)
 	}
 

@@ -2,6 +2,7 @@ package atreugo
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/valyala/fasthttp"
@@ -45,4 +46,12 @@ func appendMiddlewares(dst, src []Middleware, skip ...Middleware) []Middleware {
 	}
 
 	return dst
+}
+
+func chmodFileToSocket(filepath string) error {
+	if err := os.Chmod(filepath, os.ModeSocket); err != nil {
+		return fmt.Errorf("cannot chmod %#o for %q: %w", os.ModeSocket, filepath, err)
+	}
+
+	return nil
 }

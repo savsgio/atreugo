@@ -130,6 +130,10 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 				t.Errorf("Log level = %v, want %v", cfg.LogLevel, tt.want.logLevel)
 			}
 
+			if !isEqual(s.cfg.chmodUnixSocket, chmodFileToSocket) {
+				t.Errorf("Config.chmodUnixSocket func = %p, want %p", s.cfg.chmodUnixSocket, chmodFileToSocket)
+			}
+
 			if s.router == nil {
 				t.Fatal("Atreugo router instance is nil")
 			}

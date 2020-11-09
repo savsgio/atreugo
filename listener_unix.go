@@ -27,8 +27,8 @@ func (s *Atreugo) getListener() (net.Listener, error) {
 	}
 
 	if s.cfg.Network == "unix" {
-		if err := os.Chmod(s.cfg.Addr, os.ModeSocket); err != nil {
-			return nil, fmt.Errorf("cannot chmod %#o for %q: %w", os.ModeSocket, s.cfg.Addr, err)
+		if err := s.cfg.chmodUnixSocket(s.cfg.Addr); err != nil {
+			return nil, err
 		}
 	}
 

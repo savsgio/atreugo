@@ -360,7 +360,7 @@ func Test_ErrorResponse(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
 			actx := AcquireRequestCtx(ctx)
 
-			if !errors.Is(actx.ErrorResponse(err, tt.args.statusCode...), err) {
+			if actx.ErrorResponse(err, tt.args.statusCode...) != err { // nolint:errorlint
 				t.Errorf("Unexpected error == %v", err)
 			}
 

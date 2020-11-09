@@ -3,7 +3,7 @@
 package atreugo
 
 import (
-	"os"
+	"errors"
 	"testing"
 )
 
@@ -18,15 +18,6 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		addr    string
 		network string
 		err     bool
-	}
-
-	forceRemoveFile := func(addr string) {
-		for {
-			err := os.Remove(addr)
-			if err == nil {
-				return
-			}
-		}
 	}
 
 	const unixNetwork = "unix"
@@ -130,7 +121,9 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 			s := New(cfg)
 
 			if tt.name == "UnixChmodError" {
-				go forceRemoveFile(tt.args.addr)
+				s.cfg.chmodUnixSocket = func(addr string) error {
+					return errors.New("chmod error")
+				}
 			}
 
 			ln, err := s.getListener()

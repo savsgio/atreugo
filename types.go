@@ -110,6 +110,9 @@ type Config struct { // nolint:maligned
 	// unrecovered panics.
 	PanicView PanicView
 
+	// it's dirty, but useful for testing
+	chmodUnixSocket func(addr string) error
+
 	//
 	// --- fasthttp server configuration ---
 	//
