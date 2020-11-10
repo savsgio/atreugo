@@ -96,7 +96,7 @@ func TestRouter_buildOptionsView(t *testing.T) {
 
 	ctx := AcquireRequestCtx(new(fasthttp.RequestCtx))
 
-	if err := h(ctx); err != errOptionsView { // nolint:errorlint
+	if err := h(ctx); !errorIs(err, errOptionsView) {
 		t.Errorf("Error == %v, want %v", err, errOptionsView)
 	}
 
@@ -1055,8 +1055,8 @@ func TestRouter_ServeFile(t *testing.T) {
 	}
 
 	filePath := "./README.md"
-	body, err := ioutil.ReadFile(filePath)
 
+	body, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		panic(err)
 	}

@@ -84,9 +84,9 @@ func Test_appendMiddlewares(t *testing.T) {
 }
 
 func Test_chmodFileToSocket(t *testing.T) {
-	filepath := "/tmp/atreugo-test-" + string(gotils.RandBytes(make([]byte, 10))) + ".sock"
-	f, err := os.Create(filepath)
+	filepath := "atreugo-test-" + string(gotils.RandBytes(make([]byte, 10))) + ".sock"
 
+	f, err := os.Create(filepath)
 	if err != nil {
 		panic(err)
 	}

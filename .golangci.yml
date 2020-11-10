@@ -6,6 +6,4 @@ linters:
     - gochecknoglobals
     - testpackage
     - goerr113
-    - nolintlint
-    - gofumpt
     - exhaustivestruct

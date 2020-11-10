@@ -147,7 +147,7 @@ func TestResponses(t *testing.T) { // nolint:funlen
 		},
 	}
 
-	var checkResponse = func(wantBody, wantContentType string, wantStatusCode int) {
+	checkResponse := func(wantBody, wantContentType string, wantStatusCode int) {
 		responseBody := string(bytes.TrimSpace(actx.Response.Body()))
 		if responseBody != wantBody {
 			t.Errorf("body: '%v', want: '%v'", responseBody, wantBody)
@@ -360,7 +360,7 @@ func Test_ErrorResponse(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
 			actx := AcquireRequestCtx(ctx)
 
-			if actx.ErrorResponse(err, tt.args.statusCode...) != err { // nolint:errorlint
+			if !errorIs(actx.ErrorResponse(err, tt.args.statusCode...), err) {
 				t.Errorf("Unexpected error == %v", err)
 			}
 

@@ -4,11 +4,12 @@ import (
 	"time"
 )
 
-const defaultNetwork = "tcp4"
-
-const defaultLogName = "atreugo"
-const defaultServerName = "Atreugo"
-const defaultReadTimeout = 20 * time.Second
+const (
+	defaultNetwork     = "tcp4"
+	defaultLogName     = "atreugo"
+	defaultServerName  = "Atreugo"
+	defaultReadTimeout = 20 * time.Second
+)
 
 // XRequestIDHeader header name of request id.
 const XRequestIDHeader = "X-Request-ID"

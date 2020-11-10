@@ -10,8 +10,10 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-var tcpNetworks = []string{"tcp", "tcp4", "tcp6"}
-var validNetworks = append(tcpNetworks, []string{"unix"}...)
+var (
+	tcpNetworks   = []string{"tcp", "tcp4", "tcp6"}
+	validNetworks = append(tcpNetworks, []string{"unix"}...)
+)
 
 // New create a new instance of Atreugo Server.
 func New(cfg Config) *Atreugo {
