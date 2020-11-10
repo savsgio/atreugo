@@ -3,6 +3,7 @@ package atreugo
 import (
 	"errors"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/savsgio/gotils"
@@ -84,7 +85,11 @@ func Test_appendMiddlewares(t *testing.T) {
 }
 
 func Test_chmodFileToSocket(t *testing.T) {
-	filepath := "atreugo-test-" + string(gotils.RandBytes(make([]byte, 10))) + ".sock"
+	if runtime.GOOS == "windows" {
+		t.Skip()
+	}
+
+	filepath := "/tmp/atreugo-test-" + string(gotils.RandBytes(make([]byte, 10))) + ".sock"
 
 	f, err := os.Create(filepath)
 	if err != nil {
