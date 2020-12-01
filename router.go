@@ -299,7 +299,7 @@ func (r *Router) RequestHandlerPath(method, url string, handler fasthttp.Request
 //       fasthttp/atreugo handler.
 //
 // So it is advisable using this function only for quick net/http -> fasthttp
-// switching. Then manually convert net/http handlers to fasthttp handlers
+// switching. Then manually convert net/http handlers to fasthttp handlers.
 // according to https://github.com/valyala/fasthttp#switching-from-nethttp-to-fasthttp.
 func (r *Router) NetHTTPPath(method, url string, handler http.Handler) *Path {
 	h := fasthttpadaptor.NewFastHTTPHandler(handler)

@@ -7,3 +7,4 @@ linters:
     - testpackage
     - goerr113
     - exhaustivestruct
+    - paralleltest
