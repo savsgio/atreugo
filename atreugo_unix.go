@@ -22,7 +22,7 @@ func (s *Atreugo) newPreforkServer() *prefork.Prefork {
 		Network:          s.cfg.Network,
 		Reuseport:        s.cfg.Reuseport,
 		RecoverThreshold: runtime.GOMAXPROCS(0) / 2,
-		Logger:           s.log,
+		Logger:           s.cfg.Logger,
 		ServeFunc:        s.Serve,
 	}
 
@@ -59,13 +59,13 @@ func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	case err := <-listenErr:
 		return err
 	case <-osSignals:
-		s.log.Infof("Shutdown signal received")
+		s.cfg.Logger.Print("Shutdown signal received")
 
 		if err := s.server.Shutdown(); err != nil {
 			return wrapError(err, "failed to shutdown")
 		}
 
-		s.log.Infof("Server gracefully stopped")
+		s.cfg.Logger.Print("Server gracefully stopped")
 	}
 
 	return nil

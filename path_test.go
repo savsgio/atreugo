@@ -44,7 +44,7 @@ func assertHandle(t *testing.T, p *Path) {
 
 func newTestPath() *Path {
 	return &Path{
-		router: newRouter(testLog, nil),
+		router: testRouter(),
 		method: fasthttp.MethodGet,
 		url:    "/test",
 		view:   func(ctx *RequestCtx) error { return nil },

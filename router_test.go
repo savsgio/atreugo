@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/big"
 	"net/http"
 	"reflect"
@@ -13,11 +14,8 @@ import (
 	"time"
 
 	fastrouter "github.com/fasthttp/router"
-	logger "github.com/savsgio/go-logger/v2"
 	"github.com/valyala/fasthttp"
 )
-
-var testLog = logger.New("test", "fatal", nil)
 
 var httpMethods = []string{
 	fasthttp.MethodGet,
@@ -30,6 +28,10 @@ var httpMethods = []string{
 	fasthttp.MethodOptions,
 	fasthttp.MethodTrace,
 	fastrouter.MethodWild,
+}
+
+func testRouter() *Router {
+	return newRouter(testConfig)
 }
 
 func randomHTTPMethod() string {
@@ -127,7 +129,7 @@ func TestRouter_buildOptionsView(t *testing.T) {
 }
 
 func TestRouter_newRouter(t *testing.T) {
-	r := newRouter(testLog, nil)
+	r := newRouter(testConfig)
 
 	if r.router == nil {
 		t.Error("Router instance is nil")
@@ -141,19 +143,19 @@ func TestRouter_newRouter(t *testing.T) {
 		t.Error("Router handleOPTIONS is false")
 	}
 
-	if reflect.ValueOf(r.errorView).Pointer() != reflect.ValueOf(defaultErrorView).Pointer() {
-		t.Errorf("Router log == %p, want %p", r.errorView, defaultErrorView)
+	if !isEqual(r.cfg.errorView, testConfig.ErrorView) {
+		t.Errorf("Router log == %p, want %p", r.cfg.errorView, testConfig.ErrorView)
 	}
 
-	if reflect.ValueOf(r.log).Pointer() != reflect.ValueOf(testLog).Pointer() {
-		t.Errorf("Router log == %p, want %p", r.log, testLog)
+	if !isEqual(r.cfg.logger, testConfig.Logger) {
+		t.Errorf("Router log == %p, want %p", r.cfg.logger, testConfig.Logger)
 	}
 }
 
 func TestRouter_mutable(t *testing.T) {
 	handler := func(ctx *fasthttp.RequestCtx) {}
 
-	r := newRouter(testLog, nil)
+	r := testRouter()
 	r.router.GET("/", handler)
 
 	values := []bool{true, false, false, true, true, false}
@@ -177,8 +179,6 @@ func TestRouter_mutable(t *testing.T) {
 }
 
 func TestRouter_buildMiddlewares(t *testing.T) {
-	logLevels := []string{"fatal", "debug"}
-
 	middleware1 := func(ctx *RequestCtx) error { return ctx.Next() }
 	middleware2 := func(ctx *RequestCtx) error { return ctx.Next() }
 	middleware3 := func(ctx *RequestCtx) error { return ctx.Next() }
@@ -191,8 +191,10 @@ func TestRouter_buildMiddlewares(t *testing.T) {
 		Skip: []Middleware{middleware1},
 	}
 
-	for _, level := range logLevels {
-		s := New(Config{LogLevel: level})
+	for _, debug := range []bool{false, true} {
+		s := New(Config{
+			Debug: debug,
+		})
 		s.Middlewares(middle)
 
 		result := s.buildMiddlewares(m)
@@ -203,7 +205,7 @@ func TestRouter_buildMiddlewares(t *testing.T) {
 		}
 
 		wantBeforeLen := len(middle.Before) - len(m.Skip)
-		if s.log.DebugEnabled() {
+		if s.cfg.Debug {
 			wantBeforeLen++
 		}
 
@@ -211,7 +213,7 @@ func TestRouter_buildMiddlewares(t *testing.T) {
 			t.Errorf("Middlewares.Before length == %d, want %d", len(result.Before), wantBeforeLen)
 		}
 
-		if s.log.DebugEnabled() && isEqual(result.Before[0], middle.Before[1]) {
+		if s.cfg.Debug && isEqual(result.Before[0], middle.Before[1]) {
 			t.Error("First before middleware must be the logger middleware")
 		}
 
@@ -223,7 +225,7 @@ func TestRouter_buildMiddlewares(t *testing.T) {
 }
 
 func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
-	s := New(testAtreugoConfig)
+	s := New(testConfig)
 
 	method := randomHTTPMethod()
 	url := "/foo"
@@ -337,7 +339,7 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 }
 
 func TestRouter_getGroupFullPath(t *testing.T) {
-	r := newRouter(testLog, nil)
+	r := testRouter()
 	foo := r.NewGroupPath("/foo")
 	bar := foo.NewGroupPath("/bar")
 	buz := bar.NewGroupPath("/buz")
@@ -656,9 +658,13 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 
 		t.Run(tt.name, func(t *testing.T) {
 			logOutput := &bytes.Buffer{}
-			log := logger.New(tt.name, "debug", logOutput)
+			log := log.New(logOutput, "", log.LstdFlags)
 
-			r := newRouter(log, nil)
+			r := newRouter(Config{
+				Logger:    log,
+				Debug:     true,
+				ErrorView: defaultErrorView,
+			})
 			r.UseBefore(tt.args.before...)
 			r.UseAfter(tt.args.after...)
 			r.Path(method, path, tt.args.viewFn).Middlewares(tt.args.middlewares)
@@ -704,7 +710,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 }
 
 func TestRouter_handlePath(t *testing.T) {
-	r := newRouter(testLog, nil)
+	r := testRouter()
 
 	path := &Path{
 		router:      r,
@@ -761,7 +767,7 @@ func TestRouter_handlePath(t *testing.T) {
 }
 
 func TestRouter_NewGroupPath(t *testing.T) {
-	r := newRouter(testLog, nil)
+	r := testRouter()
 	g := r.NewGroupPath("/fast")
 
 	if g.parent != r {
@@ -784,17 +790,13 @@ func TestRouter_NewGroupPath(t *testing.T) {
 		t.Errorf("Group router handleOPTIONS == '%v', want '%v'", g.handleOPTIONS, r.handleOPTIONS)
 	}
 
-	if reflect.ValueOf(g.errorView).Pointer() != reflect.ValueOf(r.errorView).Pointer() {
-		t.Errorf("Group router log == %p, want %p", g.errorView, r.errorView)
-	}
-
-	if reflect.ValueOf(g.log).Pointer() != reflect.ValueOf(r.log).Pointer() {
-		t.Errorf("Group router log == %p, want %p", g.log, r.log)
+	if !isEqual(g.cfg, r.cfg) {
+		t.Errorf("Group router config == %p, want %p", g.cfg, r.cfg)
 	}
 }
 
 func TestRouter_ListPaths(t *testing.T) {
-	server := New(testAtreugoConfig)
+	server := New(testConfig)
 
 	server.Path("GET", "/foo", func(ctx *RequestCtx) error { return nil })
 	server.Path("GET", "/bar", func(ctx *RequestCtx) error { return nil })
@@ -808,7 +810,7 @@ func TestRouter_ListPaths(t *testing.T) {
 }
 
 func TestRouter_Middlewares(t *testing.T) {
-	r := newRouter(testLog, nil)
+	r := testRouter()
 	r.Middlewares(Middlewares{Before: middlewareFns, After: middlewareFns, Skip: middlewareFns})
 
 	if len(r.middlewares.Before) != len(middlewareFns) {
@@ -825,7 +827,7 @@ func TestRouter_Middlewares(t *testing.T) {
 }
 
 func TestRouter_UseBefore(t *testing.T) {
-	r := newRouter(testLog, nil)
+	r := testRouter()
 	r.UseBefore(middlewareFns...)
 
 	if len(r.middlewares.Before) != len(middlewareFns) {
@@ -834,7 +836,7 @@ func TestRouter_UseBefore(t *testing.T) {
 }
 
 func TestRouter_UseAfter(t *testing.T) {
-	r := newRouter(testLog, nil)
+	r := testRouter()
 	r.UseAfter(middlewareFns...)
 
 	if len(r.middlewares.After) != len(middlewareFns) {
@@ -843,7 +845,7 @@ func TestRouter_UseAfter(t *testing.T) {
 }
 
 func TestRouter_SkipMiddlewares(t *testing.T) {
-	r := newRouter(testLog, nil)
+	r := testRouter()
 	r.SkipMiddlewares(middlewareFns...)
 
 	if len(r.middlewares.Skip) != len(middlewareFns) {
@@ -855,7 +857,7 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 	path := "/"
 	viewFn := func(ctx *RequestCtx) error { return nil }
 
-	r := newRouter(testLog, nil)
+	r := testRouter()
 
 	type args struct {
 		method string
@@ -963,7 +965,7 @@ func TestRouter_Static(t *testing.T) {
 	for _, test := range tests {
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
-			r := newRouter(testLog, nil)
+			r := testRouter()
 			r.Static(tt.args.url, tt.args.rootPath)
 
 			handler, _ := r.router.Lookup("GET", tt.want.routerPath, &fasthttp.RequestCtx{})
@@ -1015,7 +1017,7 @@ func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			r := newRouter(testLog, nil)
+			r := testRouter()
 
 			pathRewriteCalled := false
 
@@ -1070,7 +1072,7 @@ func TestRouter_ServeFile(t *testing.T) {
 		},
 	}
 
-	r := newRouter(testLog, nil)
+	r := testRouter()
 	r.ServeFile(test.args.url, test.args.filePath)
 
 	ctx := new(fasthttp.RequestCtx)
@@ -1226,7 +1228,7 @@ func TestRouter_Path(t *testing.T) { //nolint:funlen
 			}()
 
 			ctx := new(fasthttp.RequestCtx)
-			r := newRouter(testLog, nil)
+			r := testRouter()
 
 			switch {
 			case tt.args.netHTTPHandler != nil:
@@ -1256,7 +1258,7 @@ func TestRouter_Path(t *testing.T) { //nolint:funlen
 
 // Benchmarks.
 func Benchmark_handler(b *testing.B) {
-	r := newRouter(testLog, nil)
+	r := testRouter()
 
 	h := r.handler(func(ctx *RequestCtx) error { return nil }, Middlewares{})
 
@@ -1270,7 +1272,7 @@ func Benchmark_handler(b *testing.B) {
 }
 
 func Benchmark_RouterHandler(b *testing.B) {
-	r := newRouter(testLog, nil)
+	r := testRouter()
 	r.GET("/", func(ctx *RequestCtx) error { return nil })
 
 	ctx := new(fasthttp.RequestCtx)

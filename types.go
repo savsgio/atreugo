@@ -1,15 +1,19 @@
 package atreugo
 
 import (
-	"io"
 	"net"
 	"time"
 
 	fastrouter "github.com/fasthttp/router"
-	logger "github.com/savsgio/go-logger/v2"
 	"github.com/savsgio/gotils/nocopy"
 	"github.com/valyala/fasthttp"
 )
+
+// Logger is used for logging messages.
+type Logger interface {
+	Print(v ...interface{})
+	Printf(format string, args ...interface{})
+}
 
 // Atreugo implements high performance HTTP server
 //
@@ -18,7 +22,6 @@ type Atreugo struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
 	server *fasthttp.Server
-	log    *logger.Logger
 	cfg    Config
 
 	virtualHosts map[string]fasthttp.RequestHandler
@@ -41,14 +44,11 @@ type Config struct { // nolint:maligned
 	// Server name for sending in response headers. (default: Atreugo)
 	Name string
 
-	// Default: atreugo
-	LogName string
+	// Logger (optional)
+	Logger Logger
 
-	// See levels in https://github.com/savsgio/go-logger#levels
-	LogLevel string
-
-	// Default: os.Stderr
-	LogOutput io.Writer
+	// Log debug traces
+	Debug bool
 
 	// Kind of network listener (default: tcp4)
 	// The network must be "tcp", "tcp4", "tcp6" or "unix".
@@ -397,6 +397,13 @@ type RequestCtx struct {
 	*fasthttp.RequestCtx
 }
 
+type routerConfig struct {
+	errorView ErrorView
+
+	debug  bool
+	logger Logger
+}
+
 // Router dispatchs requests to different
 // views via configurable routes (paths)
 //
@@ -413,9 +420,8 @@ type Router struct {
 	customOPTIONS []string
 
 	middlewares Middlewares
-	errorView   ErrorView
 
-	log *logger.Logger
+	cfg *routerConfig
 }
 
 // Path configuration of the registered view

@@ -1,9 +1,10 @@
 package atreugo
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"math/rand"
 	"net"
 	"reflect"
@@ -12,14 +13,16 @@ import (
 	"unicode"
 
 	"github.com/atreugo/mock"
-	logger "github.com/savsgio/go-logger/v2"
 	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttputil"
 )
 
-var testAtreugoConfig = Config{
-	LogLevel: "fatal",
+var testLog = log.New(ioutil.Discard, "", log.LstdFlags)
+
+var testConfig = Config{
+	Logger:    testLog,
+	ErrorView: defaultErrorView,
 }
 
 var notConfigFasthttpFields = []string{
@@ -34,14 +37,12 @@ var notConfigFasthttpFields = []string{
 func Test_New(t *testing.T) { //nolint:funlen,gocognit
 	type args struct {
 		network              string
-		logLevel             string
 		notFoundView         View
 		methodNotAllowedView View
 		panicView            PanicView
 	}
 
 	type want struct {
-		logLevel             string
 		notFoundView         bool
 		methodNotAllowedView bool
 		panicView            bool
@@ -69,7 +70,6 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			name: "Default",
 			args: args{},
 			want: want{
-				logLevel:             logger.INFO,
 				notFoundView:         false,
 				methodNotAllowedView: false,
 				panicView:            false,
@@ -79,13 +79,11 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			name: "Custom",
 			args: args{
 				network:              "unix",
-				logLevel:             logger.WARNING,
 				notFoundView:         notFoundView,
 				methodNotAllowedView: methodNotAllowedView,
 				panicView:            panicView,
 			},
 			want: want{
-				logLevel:             logger.WARNING,
 				notFoundView:         true,
 				methodNotAllowedView: true,
 				panicView:            true,
@@ -119,19 +117,22 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 
 			cfg := Config{
 				Network:              tt.args.network,
-				LogLevel:             tt.args.logLevel,
 				NotFoundView:         tt.args.notFoundView,
 				MethodNotAllowedView: tt.args.methodNotAllowedView,
 				PanicView:            tt.args.panicView,
 			}
 			s := New(cfg)
 
-			if s.cfg.LogLevel != tt.want.logLevel {
-				t.Errorf("Log level = %v, want %v", cfg.LogLevel, tt.want.logLevel)
-			}
-
 			if !isEqual(s.cfg.chmodUnixSocket, chmodFileToSocket) {
 				t.Errorf("Config.chmodUnixSocket func = %p, want %p", s.cfg.chmodUnixSocket, chmodFileToSocket)
+			}
+
+			if !isEqual(s.cfg.Logger, defaultLogger) {
+				t.Errorf("Logger == %p, want %p", s.cfg.Logger, defaultLogger)
+			}
+
+			if !isEqual(s.cfg.ErrorView, defaultErrorView) {
+				t.Errorf("Error view == %p, want %p", s.cfg.ErrorView, defaultErrorView)
 			}
 
 			if s.router == nil {
@@ -168,7 +169,8 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 
 func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 	cfg := Config{
-		Name: "test",
+		Name:   "test",
+		Logger: testLog,
 		HeaderReceived: func(header *fasthttp.RequestHeader) fasthttp.RequestConfig {
 			return fasthttp.RequestConfig{}
 		},
@@ -195,7 +197,7 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 		KeepHijackedConns:                  true,
 	}
 
-	srv := newFasthttpServer(cfg, testLog)
+	srv := newFasthttpServer(cfg)
 
 	if srv == nil {
 		t.Fatal("newFasthttpServer() == nil")
@@ -376,7 +378,7 @@ func TestAtreugo_RouterConfiguration(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(testAtreugoConfig)
+			s := New(testConfig)
 			s.SaveMatchedRoutePath(tt.args.v)
 			s.RedirectTrailingSlash(tt.args.v)
 			s.RedirectFixedPath(tt.args.v)
@@ -412,7 +414,7 @@ func TestAtreugo_RouterConfiguration(t *testing.T) { //nolint:funlen
 
 func TestAtreugo_ServeConn(t *testing.T) {
 	cfg := Config{
-		LogLevel:    "fatal",
+		Logger:      testLog,
 		ReadTimeout: 1 * time.Second,
 	}
 	s := New(cfg)
@@ -440,8 +442,7 @@ func TestAtreugo_ServeConn(t *testing.T) {
 }
 
 func TestAtreugo_Serve(t *testing.T) {
-	cfg := Config{LogLevel: "fatal"}
-	s := New(cfg)
+	s := New(testConfig)
 
 	ln := fasthttputil.NewInmemoryListener()
 	errCh := make(chan error, 1)
@@ -475,22 +476,10 @@ func TestAtreugo_Serve(t *testing.T) {
 	}
 }
 
-func TestAtreugo_SetLogOutput(t *testing.T) {
-	s := New(Config{LogLevel: "info"})
-	output := new(bytes.Buffer)
-
-	s.SetLogOutput(output)
-	s.log.Info("Test")
-
-	if len(output.Bytes()) == 0 {
-		t.Error("SetLogOutput() log output was not changed")
-	}
-}
-
 func TestAtreugo_NewVirtualHost(t *testing.T) { //nolint:funlen
 	hostname := "localhost"
 
-	s := New(testAtreugoConfig)
+	s := New(testConfig)
 
 	if s.virtualHosts != nil {
 		t.Error("Atreugo.virtualHosts must be nil before register a new virtual host")
@@ -560,7 +549,7 @@ func TestAtreugo_NewVirtualHost(t *testing.T) { //nolint:funlen
 
 // Benchmarks.
 func Benchmark_Handler(b *testing.B) {
-	s := New(testAtreugoConfig)
+	s := New(testConfig)
 	s.GET("/plaintext", func(ctx *RequestCtx) error { return nil })
 	s.GET("/json", func(ctx *RequestCtx) error { return nil })
 	s.GET("/db", func(ctx *RequestCtx) error { return nil })

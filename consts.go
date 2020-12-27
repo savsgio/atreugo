@@ -6,7 +6,6 @@ import (
 
 const (
 	defaultNetwork     = "tcp4"
-	defaultLogName     = "atreugo"
 	defaultServerName  = "Atreugo"
 	defaultReadTimeout = 20 * time.Second
 )

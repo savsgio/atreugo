@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	fastrouter "github.com/fasthttp/router"
-	logger "github.com/savsgio/go-logger/v2"
 	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
@@ -45,19 +44,18 @@ func buildOptionsView(url string, fn View, paths map[string][]string) View {
 	}
 }
 
-func newRouter(log *logger.Logger, errorView ErrorView) *Router {
-	if errorView == nil {
-		errorView = defaultErrorView
-	}
-
+func newRouter(cfg Config) *Router {
 	router := fastrouter.New()
 	router.HandleOPTIONS = false
 
 	return &Router{
 		router:        router,
 		handleOPTIONS: true,
-		errorView:     errorView,
-		log:           log,
+		cfg: &routerConfig{
+			errorView: cfg.ErrorView,
+			debug:     cfg.Debug,
+			logger:    cfg.Logger,
+		},
 	}
 }
 
@@ -81,9 +79,9 @@ func (r *Router) buildMiddlewares(m Middlewares) Middlewares {
 	switch {
 	case r.parent != nil:
 		return r.parent.buildMiddlewares(m2)
-	case r.log.DebugEnabled():
+	case r.cfg.debug:
 		debugMiddleware := func(ctx *RequestCtx) error {
-			r.log.Debugf("%s %s", ctx.Method(), ctx.URI())
+			r.cfg.logger.Printf("%s %s", ctx.Method(), ctx.URI())
 
 			return ctx.Next()
 		}
@@ -130,8 +128,8 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 					statusCode = fasthttp.StatusInternalServerError
 				}
 
-				r.log.Error(err)
-				r.errorView(actx, err, statusCode)
+				r.cfg.logger.Printf("error view: %s", err)
+				r.cfg.errorView(actx, err, statusCode)
 
 				break
 			} else if !actx.next {
@@ -188,8 +186,7 @@ func (r *Router) NewGroupPath(path string) *Router {
 		router:        r.router,
 		routerMutable: r.routerMutable,
 		handleOPTIONS: r.handleOPTIONS,
-		errorView:     r.errorView,
-		log:           r.log,
+		cfg:           r.cfg,
 	}
 }
 
@@ -340,7 +337,7 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 	}
 
 	if fs.PathNotFound != nil {
-		ffs.PathNotFound = viewToHandler(fs.PathNotFound, r.errorView)
+		ffs.PathNotFound = viewToHandler(fs.PathNotFound, r.cfg.errorView)
 	}
 
 	if fs.PathRewrite != nil {

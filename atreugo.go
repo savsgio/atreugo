@@ -1,11 +1,10 @@
 package atreugo
 
 import (
-	"io"
+	"log"
 	"net"
 	"os"
 
-	logger "github.com/savsgio/go-logger/v2"
 	"github.com/savsgio/gotils"
 	"github.com/valyala/fasthttp"
 )
@@ -13,6 +12,8 @@ import (
 var (
 	tcpNetworks   = []string{"tcp", "tcp4", "tcp6"}
 	validNetworks = append(tcpNetworks, []string{"unix"}...)
+
+	defaultLogger Logger = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 // New create a new instance of Atreugo Server.
@@ -29,34 +30,28 @@ func New(cfg Config) *Atreugo {
 		cfg.Name = defaultServerName
 	}
 
-	if cfg.LogName == "" {
-		cfg.LogName = defaultLogName
-	}
-
-	if cfg.LogLevel == "" {
-		cfg.LogLevel = logger.INFO
-	}
-
-	if cfg.LogOutput == nil {
-		cfg.LogOutput = os.Stderr
+	if cfg.Logger == nil {
+		cfg.Logger = defaultLogger
 	}
 
 	if cfg.GracefulShutdown && cfg.ReadTimeout <= 0 {
 		cfg.ReadTimeout = defaultReadTimeout
 	}
 
+	if cfg.ErrorView == nil {
+		cfg.ErrorView = defaultErrorView
+	}
+
 	cfg.chmodUnixSocket = chmodFileToSocket
 
-	log := logger.New(cfg.LogName, cfg.LogLevel, cfg.LogOutput)
-
-	r := newRouter(log, cfg.ErrorView)
+	r := newRouter(cfg)
 
 	if cfg.NotFoundView != nil {
-		r.router.NotFound = viewToHandler(cfg.NotFoundView, r.errorView)
+		r.router.NotFound = viewToHandler(cfg.NotFoundView, r.cfg.errorView)
 	}
 
 	if cfg.MethodNotAllowedView != nil {
-		r.router.MethodNotAllowed = viewToHandler(cfg.MethodNotAllowedView, r.errorView)
+		r.router.MethodNotAllowed = viewToHandler(cfg.MethodNotAllowedView, r.cfg.errorView)
 	}
 
 	if cfg.PanicView != nil {
@@ -68,8 +63,7 @@ func New(cfg Config) *Atreugo {
 	}
 
 	server := &Atreugo{
-		server: newFasthttpServer(cfg, log),
-		log:    log,
+		server: newFasthttpServer(cfg),
 		cfg:    cfg,
 		Router: r,
 	}
@@ -77,7 +71,7 @@ func New(cfg Config) *Atreugo {
 	return server
 }
 
-func newFasthttpServer(cfg Config, log fasthttp.Logger) *fasthttp.Server {
+func newFasthttpServer(cfg Config) *fasthttp.Server {
 	return &fasthttp.Server{
 		Name:                               cfg.Name,
 		HeaderReceived:                     cfg.HeaderReceived,
@@ -102,7 +96,7 @@ func newFasthttpServer(cfg Config, log fasthttp.Logger) *fasthttp.Server {
 		NoDefaultContentType:               cfg.NoDefaultContentType,
 		ConnState:                          cfg.ConnState,
 		KeepHijackedConns:                  cfg.KeepHijackedConns,
-		Logger:                             log,
+		Logger:                             cfg.Logger,
 	}
 }
 
@@ -218,9 +212,9 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 			schema = "https"
 		}
 
-		s.log.Infof("Listening on: %s://%s/", schema, s.cfg.Addr)
+		s.cfg.Logger.Printf("Listening on: %s://%s/", schema, s.cfg.Addr)
 	} else {
-		s.log.Infof("Listening on (network: %s): %s ", s.cfg.Network, s.cfg.Addr)
+		s.cfg.Logger.Printf("Listening on (network: %s): %s ", s.cfg.Network, s.cfg.Addr)
 	}
 
 	if s.cfg.TLSEnable {
@@ -228,11 +222,6 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 	}
 
 	return s.server.Serve(ln)
-}
-
-// SetLogOutput set log output of server.
-func (s *Atreugo) SetLogOutput(output io.Writer) {
-	s.log.SetOutput(output)
 }
 
 // NewVirtualHost returns a new sub-router for running more than one web site
@@ -253,7 +242,7 @@ func (s *Atreugo) NewVirtualHost(hostnames ...string) *Router {
 		s.virtualHosts = make(map[string]fasthttp.RequestHandler)
 	}
 
-	vHost := newRouter(s.log, s.cfg.ErrorView)
+	vHost := newRouter(s.cfg)
 	vHost.router.NotFound = s.router.NotFound
 	vHost.router.MethodNotAllowed = s.router.MethodNotAllowed
 	vHost.router.PanicHandler = s.router.PanicHandler

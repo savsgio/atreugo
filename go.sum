@@ -6,8 +6,6 @@ github.com/fasthttp/router v1.3.4 h1:JvqoHwFpId8DzaKubQLafpZSkJTmbExIJrf+YhB4tio
 github.com/fasthttp/router v1.3.4/go.mod h1:f6W2miwVcZFqrtr6M7I04TAdq1TnlMnMc7Z4fwICuQ4=
 github.com/klauspost/compress v1.10.7 h1:7rix8v8GpI3ZBb0nSozFRgbtXKv+hOe+qfEpZqybrAg=
 github.com/klauspost/compress v1.10.7/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
-github.com/savsgio/go-logger/v2 v2.1.0 h1:aPvUruuyAU3FZD8MuxXlBchAjzUPxW0ZPP1jIjmfpDI=
-github.com/savsgio/go-logger/v2 v2.1.0/go.mod h1:fog+sZsg75Or4EENyd1jrS/Ps44s39hd6lccqALz0C8=
 github.com/savsgio/gotils v0.0.0-20200909101946-939aa3fc74fb h1:XPJCVf85HPE2jMVEQ7QWrazaZo1lc94GbUWaQ8Yv5sM=
 github.com/savsgio/gotils v0.0.0-20200909101946-939aa3fc74fb/go.mod h1:TWNAOTaVzGOXq8RbEvHnhzA/A2sLZzgn0m6URjnukY8=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=

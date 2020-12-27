@@ -5,6 +5,7 @@ package atreugo
 import (
 	"bytes"
 	"errors"
+	"log"
 	"runtime"
 	"syscall"
 	"testing"
@@ -23,7 +24,7 @@ func Test_IsPreforkChild(t *testing.T) {
 
 func TestAtreugo_newPreforkServer(t *testing.T) {
 	cfg := Config{
-		LogLevel:         "fatal",
+		Logger:           testLog,
 		GracefulShutdown: false,
 	}
 
@@ -43,8 +44,8 @@ func TestAtreugo_newPreforkServer(t *testing.T) {
 		t.Errorf("Prefork.RecoverThreshold == %d, want %d", sPrefork.RecoverThreshold, recoverThreshold)
 	}
 
-	if !isEqual(sPrefork.Logger, s.log) {
-		t.Errorf("Prefork.Logger == %p, want %p", sPrefork.Logger, s.log)
+	if !isEqual(sPrefork.Logger, s.cfg.Logger) {
+		t.Errorf("Prefork.Logger == %p, want %p", sPrefork.Logger, s.cfg.Logger)
 	}
 
 	if !isEqual(sPrefork.ServeFunc, s.Serve) {
@@ -125,10 +126,10 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 			defer ln.Listener.Close()
 
 			logOutput := &bytes.Buffer{}
+			log := log.New(logOutput, "", log.LstdFlags)
 
-			cfg := Config{LogLevel: "fatal"}
+			cfg := Config{Logger: log}
 			s := New(cfg)
-			s.SetLogOutput(logOutput)
 
 			errCh := make(chan error, 1)
 
@@ -262,8 +263,8 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 
 		t.Run(tt.name, func(t *testing.T) {
 			s := New(Config{
+				Logger:           testLog,
 				Addr:             tt.args.addr,
-				LogLevel:         "error",
 				TLSEnable:        tt.args.tlsEnable,
 				GracefulShutdown: tt.args.graceful,
 				Prefork:          tt.args.prefork,
