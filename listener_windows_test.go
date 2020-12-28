@@ -80,15 +80,6 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := Config{
-				Logger:    testLog,
-				Addr:      tt.args.addr,
-				Reuseport: tt.args.reuseport,
-			}
-			if tt.args.network != "" {
-				cfg.Network = tt.args.network
-			}
-
 			defer func() {
 				err := recover()
 
@@ -99,7 +90,7 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 				}
 			}()
 
-			s := New(cfg)
+			s := New(tt.args)
 
 			ln, err := s.getListener()
 			if err != nil {
