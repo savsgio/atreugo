@@ -18,6 +18,8 @@ var middlewareFns = []Middleware{
 }
 
 func assertTimeoutFields(t *testing.T, p *Path, timeout time.Duration, msg string, statusCode int) {
+	t.Helper()
+
 	if !p.withTimeout {
 		t.Error("Path.withTimeout is not true")
 	}
@@ -36,6 +38,8 @@ func assertTimeoutFields(t *testing.T, p *Path, timeout time.Duration, msg strin
 }
 
 func assertHandle(t *testing.T, p *Path) {
+	t.Helper()
+
 	h, _ := p.router.router.Lookup(p.method, p.url, nil)
 	if h == nil {
 		t.Error("Path not updated")
