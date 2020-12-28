@@ -8,36 +8,52 @@ import (
 )
 
 func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
-	type args struct {
-		addr      string
-		tlsEnable bool
-		// reuseport bool
-	}
-
 	type want struct {
 		getErr bool
 	}
 
 	tests := []struct {
 		name string
-		args args
+		args Config
 		want want
 	}{
 		{
 			name: "NormalOk",
-			args: args{
-				addr:      "localhost:8081",
-				tlsEnable: false,
+			args: Config{
+				Addr:      "localhost:8083",
+				TLSEnable: false,
 			},
 			want: want{
 				getErr: false,
 			},
 		},
 		{
+			name: "Reuseport",
+			args: Config{
+				Addr:      "localhost:8083",
+				TLSEnable: false,
+				Reuseport: true,
+			},
+			want: want{
+				getErr: false,
+			},
+		},
+		{
+			name: "ReuseportError",
+			args: Config{
+				Addr:      "invalid",
+				TLSEnable: false,
+				Reuseport: true,
+			},
+			want: want{
+				getErr: true,
+			},
+		},
+		{
 			name: "TLSError",
-			args: args{
-				addr:      "localhost:8081",
-				tlsEnable: true,
+			args: Config{
+				Addr:      "localhost:8081",
+				TLSEnable: true,
 			},
 			want: want{
 				getErr: true,
@@ -45,8 +61,8 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "InvalidAddr",
-			args: args{
-				addr: "0101:999999999999999999",
+			args: Config{
+				Addr: "0101:999999999999999999",
 			},
 			want: want{
 				getErr: true,
@@ -58,11 +74,9 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(Config{
-				Addr:      tt.args.addr,
-				LogLevel:  "error",
-				TLSEnable: tt.args.tlsEnable,
-			})
+			tt.args.Logger = testLog
+
+			s := New(tt.args)
 
 			errCh := make(chan error, 1)
 			go func() {
