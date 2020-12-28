@@ -84,6 +84,8 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 		IdleTimeout:                        cfg.IdleTimeout,
 		MaxConnsPerIP:                      cfg.MaxConnsPerIP,
 		MaxRequestsPerConn:                 cfg.MaxRequestsPerConn,
+		TCPKeepalive:                       cfg.TCPKeepalive,
+		TCPKeepalivePeriod:                 cfg.TCPKeepalivePeriod,
 		MaxRequestBodySize:                 cfg.MaxRequestBodySize,
 		ReduceMemoryUsage:                  cfg.ReduceMemoryUsage,
 		GetOnly:                            cfg.GetOnly,

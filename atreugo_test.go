@@ -28,9 +28,6 @@ var testConfig = Config{
 var notConfigFasthttpFields = []string{
 	"Handler",
 	"ErrorHandler",
-	"TCPKeepalive",
-	"TCPKeepalivePeriod",
-	"Logger",
 	"MaxKeepaliveDuration", // Deprecated: Use IdleTimeout instead.
 }
 

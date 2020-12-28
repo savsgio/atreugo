@@ -4,15 +4,10 @@ package atreugo
 
 import (
 	"testing"
+	"time"
 )
 
 func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
-	type args struct {
-		addr      string
-		network   string
-		reuseport bool
-	}
-
 	type want struct {
 		addr    string
 		network string
@@ -21,13 +16,26 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 
 	tests := []struct {
 		name string
-		args args
+		args Config
 		want want
 	}{
 		{
 			name: "Ok",
-			args: args{
-				addr: "127.0.0.1:8000",
+			args: Config{
+				Addr: "127.0.0.1:8000",
+			},
+			want: want{
+				addr:    "127.0.0.1:8000",
+				network: "tcp",
+				err:     false,
+			},
+		},
+		{
+			name: "TCPKeepAlive",
+			args: Config{
+				Addr:               "127.0.0.1:8000",
+				TCPKeepalive:       true,
+				TCPKeepalivePeriod: 10 * time.Second,
 			},
 			want: want{
 				addr:    "127.0.0.1:8000",
@@ -37,10 +45,10 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		},
 		{
 			name: "Reuseport",
-			args: args{
-				addr:      "127.0.0.1:8000",
-				network:   "tcp4",
-				reuseport: true,
+			args: Config{
+				Addr:      "127.0.0.1:8000",
+				Network:   "tcp4",
+				Reuseport: true,
 			},
 			want: want{
 				addr:    "127.0.0.1:8000",
@@ -50,9 +58,9 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		},
 		{
 			name: "Unix",
-			args: args{
-				addr:    "/tmp/test.sock",
-				network: "unix",
+			args: Config{
+				Addr:    "/tmp/test.sock",
+				Network: "unix",
 			},
 			want: want{
 				err: true,
@@ -60,8 +68,8 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		},
 		{
 			name: "Error",
-			args: args{
-				network: "fake",
+			args: Config{
+				Network: "fake",
 			},
 			want: want{
 				err: true,
@@ -106,6 +114,16 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 			lnNetwork := ln.Addr().Network()
 			if lnNetwork != tt.want.network {
 				t.Errorf("Listener network: '%s', want '%s'", lnNetwork, tt.want.network)
+			}
+
+			if tt.args.TCPKeepalive {
+				tcpLn, ok := ln.(tcpKeepaliveListener)
+
+				if !ok {
+					t.Error("Listener is not wrapped as tcpKeepaliveListener")
+				} else if tcpLn.keepalivePeriod != tt.args.TCPKeepalivePeriod {
+					t.Errorf("tcpKeepaliveListener.keepalivePeriod == %d, want %d", tcpLn.keepalivePeriod, tt.args.TCPKeepalivePeriod)
+				}
 			}
 
 			ln.Close()

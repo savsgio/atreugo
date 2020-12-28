@@ -173,29 +173,22 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 }
 
 func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
-	type args struct {
-		addr      string
-		graceful  bool
-		tlsEnable bool
-		prefork   bool
-	}
-
 	type want struct {
 		getErr bool
 	}
 
 	tests := []struct {
 		name string
-		args args
+		args Config
 		want want
 	}{
 		{
 			name: "NormalOk",
-			args: args{
-				addr:      "localhost:8081",
-				graceful:  false,
-				tlsEnable: false,
-				prefork:   false,
+			args: Config{
+				Addr:             "localhost:8081",
+				GracefulShutdown: false,
+				TLSEnable:        false,
+				Prefork:          false,
 			},
 			want: want{
 				getErr: false,
@@ -203,11 +196,11 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "GracefulOk",
-			args: args{
-				addr:      "localhost:8081",
-				graceful:  true,
-				tlsEnable: false,
-				prefork:   false,
+			args: Config{
+				Addr:             "localhost:8081",
+				GracefulShutdown: true,
+				TLSEnable:        false,
+				Prefork:          false,
 			},
 			want: want{
 				getErr: false,
@@ -215,11 +208,11 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "PreforkError",
-			args: args{
-				addr:      "invalid",
-				graceful:  false,
-				tlsEnable: false,
-				prefork:   true,
+			args: Config{
+				Addr:             "invalid",
+				GracefulShutdown: false,
+				TLSEnable:        false,
+				Prefork:          true,
 			},
 			want: want{
 				getErr: true,
@@ -227,11 +220,11 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "PreforkGracefulError",
-			args: args{
-				addr:      "invalid",
-				graceful:  true,
-				tlsEnable: false,
-				prefork:   true,
+			args: Config{
+				Addr:             "invalid",
+				GracefulShutdown: true,
+				TLSEnable:        false,
+				Prefork:          true,
 			},
 			want: want{
 				getErr: true,
@@ -239,9 +232,9 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "TLSError",
-			args: args{
-				addr:      "localhost:8081",
-				tlsEnable: true,
+			args: Config{
+				Addr:      "localhost:8081",
+				TLSEnable: true,
 			},
 			want: want{
 				getErr: true,
@@ -249,8 +242,8 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		},
 		{
 			name: "InvalidAddr",
-			args: args{
-				addr: "0101:999999999999999999",
+			args: Config{
+				Addr: "0101:999999999999999999",
 			},
 			want: want{
 				getErr: true,
@@ -262,13 +255,9 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			s := New(Config{
-				Logger:           testLog,
-				Addr:             tt.args.addr,
-				TLSEnable:        tt.args.tlsEnable,
-				GracefulShutdown: tt.args.graceful,
-				Prefork:          tt.args.prefork,
-			})
+			tt.args.Logger = testLog
+
+			s := New(tt.args)
 
 			errCh := make(chan error, 1)
 			go func() {

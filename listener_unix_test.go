@@ -5,15 +5,12 @@ package atreugo
 import (
 	"errors"
 	"testing"
+	"time"
+
+	"github.com/savsgio/gotils"
 )
 
-func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
-	type args struct {
-		addr      string
-		network   string
-		reuseport bool
-	}
-
+func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
 	type want struct {
 		addr    string
 		network string
@@ -24,13 +21,26 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 
 	tests := []struct {
 		name string
-		args args
+		args Config
 		want want
 	}{
 		{
 			name: "Ok",
-			args: args{
-				addr: "127.0.0.1:8000",
+			args: Config{
+				Addr: "127.0.0.1:8000",
+			},
+			want: want{
+				addr:    "127.0.0.1:8000",
+				network: "tcp",
+				err:     false,
+			},
+		},
+		{
+			name: "TCPKeepAlive",
+			args: Config{
+				Addr:               "127.0.0.1:8000",
+				TCPKeepalive:       true,
+				TCPKeepalivePeriod: 10 * time.Second,
 			},
 			want: want{
 				addr:    "127.0.0.1:8000",
@@ -40,10 +50,10 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		},
 		{
 			name: "Reuseport",
-			args: args{
-				addr:      "127.0.0.1:8000",
-				network:   "tcp4",
-				reuseport: true,
+			args: Config{
+				Addr:      "127.0.0.1:8000",
+				Network:   "tcp4",
+				Reuseport: true,
 			},
 			want: want{
 				addr:    "127.0.0.1:8000",
@@ -53,9 +63,9 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		},
 		{
 			name: "Unix",
-			args: args{
-				addr:    "/tmp/test.sock",
-				network: unixNetwork,
+			args: Config{
+				Addr:    "/tmp/test.sock",
+				Network: unixNetwork,
 			},
 			want: want{
 				addr:    "/tmp/test.sock",
@@ -65,9 +75,9 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		},
 		{
 			name: "UnixRemoveError",
-			args: args{
-				addr:    "/bin/sh",
-				network: unixNetwork,
+			args: Config{
+				Addr:    "/bin/sh",
+				Network: unixNetwork,
 			},
 			want: want{
 				addr:    "/bin/sh",
@@ -77,9 +87,9 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		},
 		{
 			name: "UnixChmodError",
-			args: args{
-				addr:    "/tmp/test.sock",
-				network: unixNetwork,
+			args: Config{
+				Addr:    "/tmp/test.sock",
+				Network: unixNetwork,
 			},
 			want: want{
 				err: true,
@@ -87,8 +97,8 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		},
 		{
 			name: "Error",
-			args: args{
-				network: "fake",
+			args: Config{
+				Network: "fake",
 			},
 			want: want{
 				err: true,
@@ -99,15 +109,6 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := Config{
-				Logger:    testLog,
-				Addr:      tt.args.addr,
-				Reuseport: tt.args.reuseport,
-			}
-			if tt.args.network != "" {
-				cfg.Network = tt.args.network
-			}
-
 			defer func() {
 				err := recover()
 
@@ -118,7 +119,7 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 				}
 			}()
 
-			s := New(cfg)
+			s := New(tt.args)
 
 			if tt.name == "UnixChmodError" {
 				s.cfg.chmodUnixSocket = func(addr string) error {
@@ -139,6 +140,16 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 			lnNetwork := ln.Addr().Network()
 			if lnNetwork != tt.want.network {
 				t.Errorf("Listener network: '%s', want '%s'", lnNetwork, tt.want.network)
+			}
+
+			if tt.args.TCPKeepalive && gotils.StringSliceInclude(tcpNetworks, lnNetwork) {
+				tcpLn, ok := ln.(tcpKeepaliveListener)
+
+				if !ok {
+					t.Error("Listener is not wrapped as tcpKeepaliveListener")
+				} else if tcpLn.keepalivePeriod != tt.args.TCPKeepalivePeriod {
+					t.Errorf("tcpKeepaliveListener.keepalivePeriod == %d, want %d", tcpLn.keepalivePeriod, tt.args.TCPKeepalivePeriod)
+				}
 			}
 
 			ln.Close()
