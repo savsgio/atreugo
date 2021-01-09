@@ -118,6 +118,8 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			ln := &mock.Listener{
 				Listener:    fasthttputil.NewInmemoryListener(),
 				AcceptError: tt.args.lnAcceptError,
@@ -255,6 +257,8 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			tt.args.Logger = testLog
 
 			s := New(tt.args)

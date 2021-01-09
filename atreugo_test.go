@@ -102,6 +102,8 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			defer func() {
 				r := recover()
 
@@ -280,6 +282,8 @@ func TestAtreugo_handler(t *testing.T) { // nolint:funlen,gocognit
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			testView := func(ctx *RequestCtx) error {
 				return ctx.JSONResponse(JSON{"data": bytes.Rand(make([]byte, 300))})
 			}
@@ -376,6 +380,8 @@ func TestAtreugo_RouterConfiguration(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			s := New(testConfig)
 			s.SaveMatchedRoutePath(tt.args.v)
 			s.RedirectTrailingSlash(tt.args.v)

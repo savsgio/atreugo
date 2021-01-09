@@ -119,6 +119,8 @@ func TestTCPKeepaliveListener_Accept(t *testing.T) { // nolint:funlen
 		test := tests[i]
 
 		t.Run(test.name, func(t *testing.T) {
+			t.Helper()
+
 			tcpln := &mockTCPListener{
 				errAcceptTCP:          test.args.errAcceptTCP,
 				errSetKeepAlive:       test.args.errSetKeepAlive,

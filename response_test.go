@@ -61,6 +61,8 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			ctx := new(fasthttp.RequestCtx)
 			actx := AcquireRequestCtx(ctx)
 
@@ -171,6 +173,8 @@ func TestResponses(t *testing.T) { // nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			if err := tt.args.fn(body, statusCode); err != nil {
 				t.Errorf("%sResponse() error: %v", tt.name, err)
 			}
@@ -230,6 +234,8 @@ func TestFileResponse(t *testing.T) { // nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			if err := ioutil.WriteFile(tt.args.filePath, testFileContent, 0600); err != nil {
 				t.Fatalf("Error writing file %s", tt.args.filePath)
 			}
@@ -298,6 +304,8 @@ func TestRedirectResponse(t *testing.T) {
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			ctx := new(fasthttp.RequestCtx)
 			actx := AcquireRequestCtx(ctx)
 
@@ -357,6 +365,8 @@ func Test_ErrorResponse(t *testing.T) {
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			ctx := new(fasthttp.RequestCtx)
 			actx := AcquireRequestCtx(ctx)
 

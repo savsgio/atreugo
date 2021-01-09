@@ -657,6 +657,8 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen
 		handlerCounter.afterMiddlewares = 0
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			logOutput := &bytes.Buffer{}
 			log := log.New(logOutput, "", log.LstdFlags)
 
@@ -910,6 +912,8 @@ func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			reqMethod := tt.args.method
 			for reqMethod == fastrouter.MethodWild {
 				reqMethod = randomHTTPMethod()
@@ -965,6 +969,8 @@ func TestRouter_Static(t *testing.T) {
 	for _, test := range tests {
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			r := testRouter()
 			r.Static(tt.args.url, tt.args.rootPath)
 
@@ -1017,6 +1023,8 @@ func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			r := testRouter()
 
 			pathRewriteCalled := false
@@ -1217,6 +1225,8 @@ func TestRouter_Path(t *testing.T) { //nolint:funlen
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			defer func() {
 				r := recover()
 

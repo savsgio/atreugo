@@ -108,6 +108,8 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
 			defer func() {
 				err := recover()
 
