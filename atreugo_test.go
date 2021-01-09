@@ -13,7 +13,8 @@ import (
 	"unicode"
 
 	"github.com/atreugo/mock"
-	"github.com/savsgio/gotils"
+	"github.com/savsgio/gotils/bytes"
+	"github.com/savsgio/gotils/strings"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttputil"
 )
@@ -211,7 +212,7 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 
 		if !unicode.IsUpper(rune(field.Name[0])) { // Check if the field is public
 			continue
-		} else if gotils.StringSliceInclude(notConfigFasthttpFields, field.Name) {
+		} else if strings.Include(notConfigFasthttpFields, field.Name) {
 			continue
 		}
 
@@ -280,7 +281,7 @@ func TestAtreugo_handler(t *testing.T) { // nolint:funlen,gocognit
 
 		t.Run(tt.name, func(t *testing.T) {
 			testView := func(ctx *RequestCtx) error {
-				return ctx.JSONResponse(JSON{"data": gotils.RandBytes(make([]byte, 300))})
+				return ctx.JSONResponse(JSON{"data": bytes.Rand(make([]byte, 300))})
 			}
 			testPath := "/"
 
@@ -298,7 +299,7 @@ func TestAtreugo_handler(t *testing.T) { // nolint:funlen,gocognit
 				t.Errorf("handler is nil")
 			}
 
-			newHostname := string(gotils.RandBytes(make([]byte, 10))) + ".com"
+			newHostname := string(bytes.Rand(make([]byte, 10))) + ".com"
 
 			hosts := tt.args.hosts
 			hosts = append(hosts, newHostname)
@@ -563,7 +564,9 @@ func Benchmark_Handler(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i <= b.N; i++ {
-		handler(ctx)
-	}
+	b.RunParallel(func(p *testing.PB) {
+		for p.Next() {
+			handler(ctx)
+		}
+	})
 }

@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/savsgio/gotils"
+	"github.com/savsgio/gotils/bytes"
 	"github.com/valyala/fasthttp"
 )
 
@@ -89,7 +89,7 @@ func Test_chmodFileToSocket(t *testing.T) {
 		t.Skip()
 	}
 
-	filepath := "/tmp/atreugo-test-" + string(gotils.RandBytes(make([]byte, 10))) + ".sock"
+	filepath := "/tmp/atreugo-test-" + string(bytes.Rand(make([]byte, 10))) + ".sock"
 
 	f, err := os.Create(filepath)
 	if err != nil {

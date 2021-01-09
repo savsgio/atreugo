@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/savsgio/gotils"
+	"github.com/savsgio/gotils/bytes"
 	"github.com/valyala/fasthttp"
 )
 
-var attachedCtxKey = fmt.Sprintf("__attachedCtx::%s__", gotils.RandBytes(make([]byte, 15)))
+var attachedCtxKey = fmt.Sprintf("__attachedCtx::%s__", bytes.Rand(make([]byte, 15)))
 
 var requestCtxPool = &sync.Pool{
 	New: func() interface{} {

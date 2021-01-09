@@ -5,7 +5,8 @@ import (
 	"net"
 	"os"
 
-	"github.com/savsgio/gotils"
+	"github.com/savsgio/gotils/strconv"
+	"github.com/savsgio/gotils/strings"
 	"github.com/valyala/fasthttp"
 )
 
@@ -18,7 +19,7 @@ var (
 
 // New create a new instance of Atreugo Server.
 func New(cfg Config) *Atreugo {
-	if cfg.Network != "" && !gotils.StringSliceInclude(validNetworks, cfg.Network) {
+	if cfg.Network != "" && !strings.Include(validNetworks, cfg.Network) {
 		panic("Invalid network: " + cfg.Network)
 	}
 
@@ -107,7 +108,7 @@ func (s *Atreugo) handler() fasthttp.RequestHandler {
 
 	if len(s.virtualHosts) > 0 {
 		handler = func(ctx *fasthttp.RequestCtx) {
-			hostname := gotils.B2S(ctx.URI().Host())
+			hostname := strconv.B2S(ctx.URI().Host())
 
 			if h := s.virtualHosts[hostname]; h != nil {
 				h(ctx)
@@ -208,7 +209,7 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 	s.cfg.Network = ln.Addr().Network()
 	s.server.Handler = s.handler()
 
-	if gotils.StringSliceInclude(tcpNetworks, s.cfg.Network) {
+	if strings.Include(tcpNetworks, s.cfg.Network) {
 		schema := "http"
 		if s.cfg.TLSEnable {
 			schema = "https"

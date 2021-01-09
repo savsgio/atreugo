@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	fastrouter "github.com/fasthttp/router"
-	"github.com/savsgio/gotils"
+	gstrings "github.com/savsgio/gotils/strings"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
@@ -23,7 +23,7 @@ func buildOptionsView(url string, fn View, paths map[string][]string) View {
 	allow := make([]string, 0)
 
 	for method, urls := range paths {
-		if method == fasthttp.MethodOptions || !gotils.StringSliceInclude(urls, url) {
+		if method == fasthttp.MethodOptions || !gstrings.Include(urls, url) {
 			continue
 		}
 
@@ -150,7 +150,7 @@ func (r *Router) handlePath(p *Path) {
 	case p.registered:
 		r.mutable(true)
 	case isOPTIONS:
-		mutable := !gotils.StringSliceInclude(r.customOPTIONS, p.url)
+		mutable := !gstrings.Include(r.customOPTIONS, p.url)
 		r.mutable(mutable)
 	case r.routerMutable:
 		r.mutable(false)
@@ -159,7 +159,7 @@ func (r *Router) handlePath(p *Path) {
 	view := p.view
 	if isOPTIONS {
 		view = buildOptionsView(p.url, view, r.ListPaths())
-		r.customOPTIONS = gotils.StringUniqueAppend(r.customOPTIONS, p.url)
+		r.customOPTIONS = gstrings.UniqueAppend(r.customOPTIONS, p.url)
 	}
 
 	handler := r.handler(view, p.middlewares)
