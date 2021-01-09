@@ -145,8 +145,10 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
 
 			tcpLn, ok := ln.(*tcpKeepaliveListener)
 
-			if !ok && (strings.HasPrefix(lnNetwork, "tcp") && !s.cfg.Reuseport) {
-				t.Error("Listener is not wrapped as tcpKeepaliveListener")
+			if !ok {
+				if strings.HasPrefix(lnNetwork, "tcp") && !s.cfg.Reuseport {
+					t.Error("Listener is not wrapped as tcpKeepaliveListener")
+				}
 			} else if tcpLn.keepalivePeriod != tt.args.TCPKeepalivePeriod {
 				t.Errorf("tcpKeepaliveListener.keepalivePeriod == %d, want %d", tcpLn.keepalivePeriod, tt.args.TCPKeepalivePeriod)
 			}
