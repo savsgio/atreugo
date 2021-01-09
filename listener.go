@@ -6,13 +6,13 @@ func (ln *tcpListener) AcceptTCP() (netTCPConn, error) {
 	return ln.TCPListener.AcceptTCP()
 }
 
-func (ln tcpKeepaliveListener) Accept() (net.Conn, error) {
+func (ln *tcpKeepaliveListener) Accept() (net.Conn, error) {
 	tc, err := ln.AcceptTCP()
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 
-	if err := tc.SetKeepAlive(true); err != nil {
+	if err := tc.SetKeepAlive(ln.keepalive); err != nil {
 		tc.Close() //nolint:errcheck
 
 		return nil, err //nolint:wrapcheck

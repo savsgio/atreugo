@@ -4,10 +4,9 @@ package atreugo
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
-
-	"github.com/savsgio/gotils"
 )
 
 func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
@@ -142,14 +141,12 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
 				t.Errorf("Listener network: '%s', want '%s'", lnNetwork, tt.want.network)
 			}
 
-			if tt.args.TCPKeepalive && gotils.StringSliceInclude(tcpNetworks, lnNetwork) {
-				tcpLn, ok := ln.(tcpKeepaliveListener)
+			tcpLn, ok := ln.(*tcpKeepaliveListener)
 
-				if !ok {
-					t.Error("Listener is not wrapped as tcpKeepaliveListener")
-				} else if tcpLn.keepalivePeriod != tt.args.TCPKeepalivePeriod {
-					t.Errorf("tcpKeepaliveListener.keepalivePeriod == %d, want %d", tcpLn.keepalivePeriod, tt.args.TCPKeepalivePeriod)
-				}
+			if !ok && (strings.HasPrefix(lnNetwork, "tcp") && !s.cfg.Reuseport) {
+				t.Error("Listener is not wrapped as tcpKeepaliveListener")
+			} else if tcpLn.keepalivePeriod != tt.args.TCPKeepalivePeriod {
+				t.Errorf("tcpKeepaliveListener.keepalivePeriod == %d, want %d", tcpLn.keepalivePeriod, tt.args.TCPKeepalivePeriod)
 			}
 
 			ln.Close()

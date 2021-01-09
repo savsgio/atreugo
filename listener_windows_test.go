@@ -107,14 +107,12 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 				t.Errorf("Listener network: '%s', want '%s'", lnNetwork, tt.want.network)
 			}
 
-			if tt.args.TCPKeepalive {
-				tcpLn, ok := ln.(tcpKeepaliveListener)
+			tcpLn, ok := ln.(*tcpKeepaliveListener)
 
-				if !ok {
-					t.Error("Listener is not wrapped as tcpKeepaliveListener")
-				} else if tcpLn.keepalivePeriod != tt.args.TCPKeepalivePeriod {
-					t.Errorf("tcpKeepaliveListener.keepalivePeriod == %d, want %d", tcpLn.keepalivePeriod, tt.args.TCPKeepalivePeriod)
-				}
+			if !ok && !s.cfg.Reuseport {
+				t.Error("Listener is not wrapped as tcpKeepaliveListener")
+			} else if tcpLn.keepalivePeriod != tt.args.TCPKeepalivePeriod {
+				t.Errorf("tcpKeepaliveListener.keepalivePeriod == %d, want %d", tcpLn.keepalivePeriod, tt.args.TCPKeepalivePeriod)
 			}
 
 			ln.Close()

@@ -18,12 +18,11 @@ func (s *Atreugo) getListener() (net.Listener, error) {
 		return nil, wrapError(err, "failed to announce on the local network address")
 	}
 
-	if s.cfg.TCPKeepalive {
-		if tcpln, ok := ln.(*net.TCPListener); ok {
-			ln = tcpKeepaliveListener{
-				netTCPListener:  &tcpListener{TCPListener: tcpln},
-				keepalivePeriod: s.cfg.TCPKeepalivePeriod,
-			}
+	if tcpln, ok := ln.(*net.TCPListener); ok {
+		ln = &tcpKeepaliveListener{
+			netTCPListener:  &tcpListener{TCPListener: tcpln},
+			keepalive:       s.cfg.TCPKeepalive,
+			keepalivePeriod: s.cfg.TCPKeepalivePeriod,
 		}
 	}
 

@@ -519,5 +519,6 @@ type tcpListener struct {
 // eventually go away.
 type tcpKeepaliveListener struct {
 	netTCPListener
+	keepalive       bool
 	keepalivePeriod time.Duration
 }
