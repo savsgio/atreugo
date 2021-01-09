@@ -48,6 +48,7 @@ type Config struct { // nolint:maligned
 	Logger Logger
 
 	// Log debug traces
+	// Disabled by default
 	Debug bool
 
 	// Kind of network listener (default: tcp4)
