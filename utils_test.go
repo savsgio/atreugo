@@ -39,8 +39,8 @@ func Test_viewToHandler(t *testing.T) {
 }
 
 func Test_isEqual(t *testing.T) {
-	v1 := func() {}
-	v2 := func() {}
+	v1 := func() {} // nolint:ifshort
+	v2 := func() {} // nolint:ifshort
 
 	if !isEqual(v1, v1) {
 		t.Errorf("Values are equals")

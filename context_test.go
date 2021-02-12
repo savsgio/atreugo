@@ -10,7 +10,7 @@ import (
 
 func Test_AcquireRequestCtx(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
-	actx := AcquireRequestCtx(ctx)
+	actx := AcquireRequestCtx(ctx) // nolint:ifshort
 
 	if actx.RequestCtx != ctx {
 		t.Errorf("AcquireRequestCtx() = %p, want %p", actx.RequestCtx, ctx)

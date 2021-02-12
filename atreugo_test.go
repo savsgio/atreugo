@@ -465,8 +465,7 @@ func TestAtreugo_Serve(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	lnAddr := ln.Addr().String()
-	if s.cfg.Addr != lnAddr {
+	if lnAddr := ln.Addr().String(); s.cfg.Addr != lnAddr {
 		t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
 	}
 

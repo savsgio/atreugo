@@ -49,7 +49,7 @@ func TestTCPListener_AcceptTCP(t *testing.T) {
 	tcpln := new(net.TCPListener)
 	ln := &tcpListener{TCPListener: tcpln}
 
-	conn, _ := ln.AcceptTCP()
+	conn, _ := ln.AcceptTCP() // nolint:ifshort
 
 	_, ok := conn.(*net.TCPConn)
 	if !ok {
