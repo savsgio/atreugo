@@ -169,11 +169,11 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 
 func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 	cfg := Config{
-		Name:   "test",
-		Logger: testLog,
+		Name: "test",
 		HeaderReceived: func(header *fasthttp.RequestHeader) fasthttp.RequestConfig {
 			return fasthttp.RequestConfig{}
 		},
+		ContinueHandler:                    func(header *fasthttp.RequestHeader) bool { return true },
 		Concurrency:                        rand.Int(), // nolint:gosec
 		DisableKeepalive:                   true,
 		ReadBufferSize:                     rand.Int(),                // nolint:gosec
@@ -183,6 +183,8 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 		IdleTimeout:                        time.Duration(rand.Int()), // nolint:gosec
 		MaxConnsPerIP:                      rand.Int(),                // nolint:gosec
 		MaxRequestsPerConn:                 rand.Int(),                // nolint:gosec
+		TCPKeepalive:                       true,
+		TCPKeepalivePeriod:                 time.Duration(rand.Int()), // nolint:gosec
 		MaxRequestBodySize:                 rand.Int(),                // nolint:gosec
 		ReduceMemoryUsage:                  true,
 		GetOnly:                            true,
@@ -195,6 +197,9 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 		NoDefaultContentType:               true,
 		ConnState:                          func(net.Conn, fasthttp.ConnState) {},
 		KeepHijackedConns:                  true,
+		CloseOnShutdown:                    true,
+		StreamRequestBody:                  true,
+		Logger:                             testLog,
 	}
 
 	srv := newFasthttpServer(cfg)

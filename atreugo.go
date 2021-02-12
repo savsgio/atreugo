@@ -76,6 +76,7 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 	return &fasthttp.Server{
 		Name:                               cfg.Name,
 		HeaderReceived:                     cfg.HeaderReceived,
+		ContinueHandler:                    cfg.ContinueHandler,
 		Concurrency:                        cfg.Concurrency,
 		DisableKeepalive:                   cfg.DisableKeepalive,
 		ReadBufferSize:                     cfg.ReadBufferSize,
@@ -99,6 +100,8 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 		NoDefaultContentType:               cfg.NoDefaultContentType,
 		ConnState:                          cfg.ConnState,
 		KeepHijackedConns:                  cfg.KeepHijackedConns,
+		CloseOnShutdown:                    cfg.CloseOnShutdown,
+		StreamRequestBody:                  cfg.StreamRequestBody,
 		Logger:                             cfg.Logger,
 	}
 }
