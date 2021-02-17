@@ -9,3 +9,4 @@ linters:
     - exhaustivestruct
     - paralleltest
     - nolintlint
+    - cyclop
