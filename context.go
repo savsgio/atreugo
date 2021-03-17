@@ -23,7 +23,7 @@ var requestCtxPool = &sync.Pool{
 // no longer needed. This allows RequestCtx recycling, reduces GC pressure
 // and usually improves performance.
 func AcquireRequestCtx(ctx *fasthttp.RequestCtx) *RequestCtx {
-	actx := requestCtxPool.Get().(*RequestCtx)
+	actx, _ := requestCtxPool.Get().(*RequestCtx)
 	actx.RequestCtx = ctx
 
 	return actx
