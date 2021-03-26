@@ -76,7 +76,7 @@ func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 // Pass custom listener to Serve/ServeGracefully if you want to use it.
 func (s *Atreugo) ListenAndServe() error {
 	if s.cfg.Prefork {
-		return s.newPreforkServer().ListenAndServe(s.cfg.Addr)
+		return s.newPreforkServer().ListenAndServe(s.cfg.Addr) // nolint:wrapcheck
 	}
 
 	ln, err := s.getListener()

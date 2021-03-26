@@ -196,7 +196,7 @@ func (s *Atreugo) HandleOPTIONS(v bool) {
 func (s *Atreugo) ServeConn(c net.Conn) error {
 	s.server.Handler = s.handler()
 
-	return s.server.ServeConn(c)
+	return s.server.ServeConn(c) // nolint:wrapcheck
 }
 
 // Serve serves incoming connections from the given listener.
@@ -224,10 +224,10 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 	}
 
 	if s.cfg.TLSEnable {
-		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey)
+		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey) // nolint:wrapcheck
 	}
 
-	return s.server.Serve(ln)
+	return s.server.Serve(ln) // nolint:wrapcheck
 }
 
 // NewVirtualHost returns a new sub-router for running more than one web site

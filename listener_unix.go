@@ -11,7 +11,7 @@ import (
 
 func (s *Atreugo) getListener() (net.Listener, error) {
 	if s.cfg.Reuseport {
-		return reuseport.Listen(s.cfg.Network, s.cfg.Addr)
+		return reuseport.Listen(s.cfg.Network, s.cfg.Addr) // nolint:wrapcheck
 	}
 
 	if s.cfg.Network == "unix" {

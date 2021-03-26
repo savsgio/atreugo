@@ -3,7 +3,7 @@ package atreugo
 import "net"
 
 func (ln *tcpListener) AcceptTCP() (netTCPConn, error) {
-	return ln.TCPListener.AcceptTCP()
+	return ln.TCPListener.AcceptTCP() // nolint:wrapcheck
 }
 
 func (ln *tcpKeepaliveListener) Accept() (net.Conn, error) {
