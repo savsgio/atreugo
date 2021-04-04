@@ -251,6 +251,14 @@ type Config struct { // nolint:maligned
 	// are suppressed in order to limit output log traffic.
 	LogAllErrors bool
 
+	// Will not log potentially sensitive content in error logs
+	//
+	// This option is useful for servers that handle sensitive data
+	// in the request/response.
+	//
+	// Server logs all full errors by default.
+	SecureErrorLogMessage bool
+
 	// Header names are passed as-is without normalization
 	// if this option is set.
 	//

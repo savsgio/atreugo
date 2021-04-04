@@ -93,6 +93,7 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 		GetOnly:                            cfg.GetOnly,
 		DisablePreParseMultipartForm:       cfg.DisablePreParseMultipartForm,
 		LogAllErrors:                       cfg.LogAllErrors,
+		SecureErrorLogMessage:              cfg.SecureErrorLogMessage,
 		DisableHeaderNamesNormalizing:      cfg.DisableHeaderNamesNormalizing,
 		SleepWhenConcurrencyLimitsExceeded: cfg.SleepWhenConcurrencyLimitsExceeded,
 		NoDefaultServerHeader:              cfg.NoDefaultServerHeader,

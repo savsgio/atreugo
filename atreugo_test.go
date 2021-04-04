@@ -225,7 +225,7 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 
 		_, exist := configType.FieldByName(field.Name)
 		if !exist {
-			t.Errorf("The field '%s' does not exist in atreugo.Config", field.Name)
+			t.Fatalf("The field '%s' does not exist in atreugo.Config", field.Name)
 		}
 
 		v1 := fmt.Sprint(fasthttpServerValue.FieldByName(field.Name).Interface())
