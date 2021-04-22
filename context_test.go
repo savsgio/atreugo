@@ -122,8 +122,6 @@ func Test_AttachedContext(t *testing.T) {
 }
 
 func Test_MatchedRoutePath(t *testing.T) {
-	type key struct{}
-
 	ctx := new(fasthttp.RequestCtx)
 	actx := AcquireRequestCtx(ctx)
 
