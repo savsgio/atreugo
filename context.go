@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/fasthttp/router"
 	"github.com/savsgio/gotils/bytes"
+	"github.com/savsgio/gotils/strconv"
 	"github.com/valyala/fasthttp"
 )
 
@@ -76,6 +78,16 @@ func (ctx *RequestCtx) AttachContext(extraCtx context.Context) {
 func (ctx *RequestCtx) AttachedContext() context.Context {
 	if extraCtx, ok := ctx.UserValue(attachedCtxKey).(context.Context); ok {
 		return extraCtx
+	}
+
+	return nil
+}
+
+// MatchedRoutePath returns the matched route path
+// if Atreugo.SaveMatchedRoutePath() is enabled.
+func (ctx *RequestCtx) MatchedRoutePath() []byte {
+	if value, ok := ctx.UserValue(router.MatchedRoutePathParam).(string); ok {
+		return strconv.S2B(value)
 	}
 
 	return nil

@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 )
 
@@ -117,6 +118,27 @@ func Test_AttachedContext(t *testing.T) {
 
 	if reflect.ValueOf(attachedCtx).Pointer() != reflect.ValueOf(otherCtx).Pointer() {
 		t.Errorf("ctx.AttachedContext() == %p, want %p", attachedCtx, otherCtx)
+	}
+}
+
+func Test_MatchedRoutePath(t *testing.T) {
+	type key struct{}
+
+	ctx := new(fasthttp.RequestCtx)
+	actx := AcquireRequestCtx(ctx)
+
+	result := actx.MatchedRoutePath()
+	if result != nil {
+		t.Errorf("ctx.MatchedRoutePathParam() == %s, want %v", result, nil)
+	}
+
+	matchedRoutePath := "/user/{id}"
+
+	actx.SetUserValue(router.MatchedRoutePathParam, matchedRoutePath)
+
+	result = actx.MatchedRoutePath()
+	if string(result) != matchedRoutePath {
+		t.Errorf("ctx.MatchedRoutePathParam() == %s, want %s", result, matchedRoutePath)
 	}
 }
 
