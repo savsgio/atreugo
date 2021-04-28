@@ -3,6 +3,7 @@ package atreugo
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -10,6 +11,16 @@ import (
 
 	"github.com/valyala/fasthttp"
 )
+
+type customJSON struct {
+	Value string
+}
+
+func (cj customJSON) MarshalJSON() ([]byte, error) {
+	data := fmt.Sprintf(`{"Value":"%s"}`, cj.Value)
+
+	return []byte(data), nil
+}
 
 func TestJSONResponse(t *testing.T) { //nolint:funlen
 	type args struct {
@@ -37,6 +48,19 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 			},
 			want: want{
 				body:        "{\"test\":true}",
+				statusCode:  200,
+				contentType: "application/json",
+				err:         false,
+			},
+		},
+		{
+			name: "BodyAsJsonMarshaler",
+			args: args{
+				body:       customJSON{Value: "test"},
+				statusCode: 200,
+			},
+			want: want{
+				body:        "{\"Value\":\"test\"}",
 				statusCode:  200,
 				contentType: "application/json",
 				err:         false,

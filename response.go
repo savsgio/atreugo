@@ -8,14 +8,21 @@ import (
 )
 
 // JSONResponse return response with body in json format.
-func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
+func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) (err error) {
 	ctx.Response.Header.SetContentType("application/json")
 
 	if len(statusCode) > 0 {
 		ctx.Response.Header.SetStatusCode(statusCode[0])
 	}
 
-	data, err := json.Marshal(body)
+	var data []byte
+
+	if jm, ok := body.(json.Marshaler); ok {
+		data, err = jm.MarshalJSON()
+	} else {
+		data, err = json.Marshal(body)
+	}
+
 	if err != nil {
 		return wrapError(err, "failed to marshal response body")
 	}
