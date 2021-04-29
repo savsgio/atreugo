@@ -123,7 +123,7 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 
 		for i := 0; i < chainLen; i++ {
 			if err := chain[i](actx); err != nil {
-				statusCode := actx.Response.StatusCode()
+				statusCode := actx.Response.Header.StatusCode()
 				if statusCode == fasthttp.StatusOK {
 					statusCode = fasthttp.StatusInternalServerError
 				}
