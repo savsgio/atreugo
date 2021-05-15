@@ -106,7 +106,9 @@ func (r *Router) getGroupFullPath(path string) string {
 func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 	middle = r.buildMiddlewares(middle)
 
-	chain := append(middle.Before, func(ctx *RequestCtx) error {
+	chain := make([]Middleware, 0)
+	chain = append(chain, middle.Before...)
+	chain = append(chain, func(ctx *RequestCtx) error {
 		if !ctx.skipView {
 			if err := fn(ctx); err != nil {
 				return err
