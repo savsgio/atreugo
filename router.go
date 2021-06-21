@@ -324,9 +324,7 @@ func (r *Router) Static(url, rootPath string) *Path {
 // Make sure your program has enough 'max open files' limit aka
 // 'ulimit -n' if root folder contains many files.
 func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
-	if strings.HasSuffix(url, "/") {
-		url = url[:len(url)-1]
-	}
+	url = strings.TrimSuffix(url, "/")
 
 	ffs := &fasthttp.FS{
 		Root:                 fs.Root,
