@@ -50,7 +50,7 @@ func appendMiddlewares(dst, src []Middleware, skip ...Middleware) []Middleware {
 
 func chmodFileToSocket(filepath string) error {
 	if err := os.Chmod(filepath, os.ModeSocket); err != nil {
-		return wrapError(err, "cannot chmod %#o for %q", os.ModeSocket, filepath)
+		return wrapErrorf(err, "cannot chmod %#o for %q", os.ModeSocket, filepath)
 	}
 
 	return nil

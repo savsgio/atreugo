@@ -1,18 +1,15 @@
 package atreugo
 
 import (
-	"errors"
 	"fmt"
 )
 
-func wrapError(err error, message string, args ...interface{}) error {
-	if len(args) > 0 {
-		message = fmt.Sprintf(message, args...)
-	}
-
+func wrapError(err error, message string) error {
 	return fmt.Errorf("%s: %w", message, err)
 }
 
-func errorIs(err, target error) bool {
-	return errors.Is(err, target)
+func wrapErrorf(err error, message string, args ...interface{}) error {
+	message = fmt.Sprintf(message, args...)
+
+	return wrapError(err, message)
 }
