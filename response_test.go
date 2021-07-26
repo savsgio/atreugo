@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/valyala/fasthttp"
@@ -242,7 +243,7 @@ func TestFileResponse(t *testing.T) { // nolint:funlen
 			name: "Ok",
 			args: args{
 				fileName: "test.pdf",
-				filePath: cwd + "testfile.pdf",
+				filePath: path.Join(cwd, "testfile.pdf"),
 				mimeType: "application/pdf",
 			},
 			want: want{
