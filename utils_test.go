@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path"
+	"runtime"
 	"testing"
 
 	"github.com/savsgio/gotils/bytes"
@@ -85,6 +86,10 @@ func Test_appendMiddlewares(t *testing.T) {
 }
 
 func Test_chmodFileToSocket(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skip on windows")
+	}
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("os.Getwd() error: %v", err)
