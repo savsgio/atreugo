@@ -2,13 +2,7 @@
 
 package atreugo
 
-import (
-	"os"
-	"path"
-	"testing"
-
-	"github.com/savsgio/gotils/bytes"
-)
+import "testing"
 
 func Test_chmodFileToSocket(t *testing.T) {
 	if err := chmodFileToSocket("filepath"); err != nil {
