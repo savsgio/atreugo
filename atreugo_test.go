@@ -22,8 +22,9 @@ import (
 var testLog = log.New(ioutil.Discard, "", log.LstdFlags)
 
 var testConfig = Config{
-	Logger:    testLog,
-	ErrorView: defaultErrorView,
+	ReadTimeout: defaultReadTimeout,
+	Logger:      testLog,
+	ErrorView:   defaultErrorView,
 }
 
 var notConfigFasthttpFields = []string{
