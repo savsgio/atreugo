@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"runtime"
+	"path"
 	"testing"
 
 	"github.com/valyala/fasthttp"
@@ -215,10 +215,6 @@ func TestResponses(t *testing.T) { // nolint:funlen
 }
 
 func TestFileResponse(t *testing.T) { // nolint:funlen
-	if runtime.GOOS == "windows" {
-		t.SkipNow()
-	}
-
 	type args struct {
 		fileName string
 		filePath string
@@ -232,6 +228,11 @@ func TestFileResponse(t *testing.T) { // nolint:funlen
 		contentDisposition string
 	}
 
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("os.Getwd() error: %v", err)
+	}
+
 	testFileContent := []byte("Test file content")
 	tests := []struct {
 		name string
@@ -242,7 +243,7 @@ func TestFileResponse(t *testing.T) { // nolint:funlen
 			name: "Ok",
 			args: args{
 				fileName: "test.pdf",
-				filePath: "/tmp/testfile.pdf",
+				filePath: path.Join(cwd, "testfile.pdf"),
 				mimeType: "application/pdf",
 			},
 			want: want{
@@ -394,7 +395,7 @@ func Test_ErrorResponse(t *testing.T) {
 			ctx := new(fasthttp.RequestCtx)
 			actx := AcquireRequestCtx(ctx)
 
-			if !errorIs(actx.ErrorResponse(err, tt.args.statusCode...), err) {
+			if !errors.Is(actx.ErrorResponse(err, tt.args.statusCode...), err) {
 				t.Errorf("Unexpected error == %v", err)
 			}
 

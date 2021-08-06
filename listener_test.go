@@ -133,7 +133,7 @@ func TestTCPKeepaliveListener_Accept(t *testing.T) { // nolint:funlen
 			}
 
 			conn, err := ln.Accept()
-			if !errorIs(err, test.want.err) {
+			if !errors.Is(err, test.want.err) {
 				t.Errorf("Error == %s, want %s", err, test.want.err)
 			}
 

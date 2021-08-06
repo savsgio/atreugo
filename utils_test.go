@@ -2,11 +2,8 @@ package atreugo
 
 import (
 	"errors"
-	"os"
-	"runtime"
 	"testing"
 
-	"github.com/savsgio/gotils/bytes"
 	"github.com/valyala/fasthttp"
 )
 
@@ -81,31 +78,5 @@ func Test_appendMiddlewares(t *testing.T) {
 
 	if !middlewaresInclude(dst, fn) {
 		t.Errorf("The middleware '%p' must be appended in '%p'", fn, dst)
-	}
-}
-
-func Test_chmodFileToSocket(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip()
-	}
-
-	filepath := "/tmp/atreugo-test-" + string(bytes.Rand(make([]byte, 10))) + ".sock"
-
-	f, err := os.Create(filepath)
-	if err != nil {
-		panic(err)
-	}
-
-	defer func() {
-		f.Close()
-		os.Remove(filepath)
-	}()
-
-	if err := chmodFileToSocket(filepath); err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
-	if err := chmodFileToSocket("243sdf$T%&$/"); err == nil {
-		t.Errorf("Expected error for invalid file path")
 	}
 }

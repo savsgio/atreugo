@@ -22,8 +22,9 @@ import (
 var testLog = log.New(ioutil.Discard, "", log.LstdFlags)
 
 var testConfig = Config{
-	Logger:    testLog,
-	ErrorView: defaultErrorView,
+	ReadTimeout: defaultReadTimeout,
+	Logger:      testLog,
+	ErrorView:   defaultErrorView,
 }
 
 var notConfigFasthttpFields = []string{
@@ -35,12 +36,14 @@ var notConfigFasthttpFields = []string{
 func Test_New(t *testing.T) { //nolint:funlen,gocognit
 	type args struct {
 		network              string
+		gracefulShutdown     bool
 		notFoundView         View
 		methodNotAllowedView View
 		panicView            PanicView
 	}
 
 	type want struct {
+		readTimeout          time.Duration
 		notFoundView         bool
 		methodNotAllowedView bool
 		panicView            bool
@@ -68,6 +71,19 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			name: "Default",
 			args: args{},
 			want: want{
+				readTimeout:          0,
+				notFoundView:         false,
+				methodNotAllowedView: false,
+				panicView:            false,
+			},
+		},
+		{
+			name: "DefaultGracefulShutdown",
+			args: args{
+				gracefulShutdown: true,
+			},
+			want: want{
+				readTimeout:          defaultReadTimeout,
 				notFoundView:         false,
 				methodNotAllowedView: false,
 				panicView:            false,
@@ -82,6 +98,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 				panicView:            panicView,
 			},
 			want: want{
+				readTimeout:          0,
 				notFoundView:         true,
 				methodNotAllowedView: true,
 				panicView:            true,
@@ -117,6 +134,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 
 			cfg := Config{
 				Network:              tt.args.network,
+				GracefulShutdown:     tt.args.gracefulShutdown,
 				NotFoundView:         tt.args.notFoundView,
 				MethodNotAllowedView: tt.args.methodNotAllowedView,
 				PanicView:            tt.args.panicView,
@@ -141,6 +159,10 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 
 			if s.router.GlobalOPTIONS != nil {
 				t.Error("GlobalOPTIONS handler is not nil")
+			}
+
+			if tt.want.readTimeout != s.cfg.ReadTimeout {
+				t.Errorf("ReadTimeout == %d, want %d", s.cfg.ReadTimeout, tt.want.readTimeout)
 			}
 
 			if tt.want.notFoundView != (s.router.NotFound != nil) {
@@ -460,7 +482,7 @@ func TestAtreugo_Serve(t *testing.T) {
 		errCh <- s.Serve(ln)
 	}()
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	if err := s.server.Shutdown(); err != nil {
 		t.Fatalf("Unexpected error: %v", err)

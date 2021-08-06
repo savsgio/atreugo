@@ -16,7 +16,7 @@ func (s *Atreugo) getListener() (net.Listener, error) {
 
 	if s.cfg.Network == "unix" {
 		if err := os.Remove(s.cfg.Addr); err != nil && !os.IsNotExist(err) {
-			return nil, wrapError(err, "unexpected error when trying to remove unix socket file %q", s.cfg.Addr)
+			return nil, wrapErrorf(err, "unexpected error when trying to remove unix socket file %q", s.cfg.Addr)
 		}
 	}
 
