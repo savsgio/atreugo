@@ -482,7 +482,7 @@ func TestAtreugo_Serve(t *testing.T) {
 		errCh <- s.Serve(ln)
 	}()
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	if err := s.server.Shutdown(); err != nil {
 		t.Fatalf("Unexpected error: %v", err)
