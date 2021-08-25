@@ -112,6 +112,8 @@ func (ctx *RequestCtx) MatchedRoutePath() []byte {
 //
 // to avoid extra allocation.
 func (ctx *RequestCtx) Value(key interface{}) interface{} {
+	ctx.searchMutex.Lock()
+	defer ctx.searchMutex.Unlock()
 	if !ctx.searchingOnAttachedCtx {
 		if extraCtx := ctx.AttachedContext(); extraCtx != nil {
 			ctx.searchingOnAttachedCtx = true
