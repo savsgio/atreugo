@@ -421,7 +421,7 @@ type RequestCtx struct {
 	skipView bool
 
 	// Flag to avoid stack overflow when this context has been embedded in the attached context
-	searchingOnAttachedCtx bool
+	searchingOnAttachedCtx int64
 
 	*fasthttp.RequestCtx
 }
