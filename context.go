@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/fasthttp/router"
 	"github.com/savsgio/gotils/bytes"
@@ -38,7 +39,7 @@ func AcquireRequestCtx(ctx *fasthttp.RequestCtx) *RequestCtx {
 func ReleaseRequestCtx(ctx *RequestCtx) {
 	ctx.next = false
 	ctx.skipView = false
-	ctx.searchingOnAttachedCtx = false
+	atomic.StoreInt64(&ctx.searchingOnAttachedCtx, 0)
 	ctx.RequestCtx = nil
 
 	requestCtxPool.Put(ctx)
@@ -112,14 +113,10 @@ func (ctx *RequestCtx) MatchedRoutePath() []byte {
 //
 // to avoid extra allocation.
 func (ctx *RequestCtx) Value(key interface{}) interface{} {
-	ctx.searchMutex.Lock()
-	defer ctx.searchMutex.Unlock()
-	if !ctx.searchingOnAttachedCtx {
+	if atomic.CompareAndSwapInt64(&ctx.searchingOnAttachedCtx, 0, 1) {
+		defer atomic.StoreInt64(&ctx.searchingOnAttachedCtx, 0)
 		if extraCtx := ctx.AttachedContext(); extraCtx != nil {
-			ctx.searchingOnAttachedCtx = true
 			val := extraCtx.Value(key)
-			ctx.searchingOnAttachedCtx = false
-
 			return val
 		}
 	}

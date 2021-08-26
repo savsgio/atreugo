@@ -2,7 +2,6 @@ package atreugo
 
 import (
 	"net"
-	"sync"
 	"time"
 
 	fastrouter "github.com/fasthttp/router"
@@ -422,8 +421,7 @@ type RequestCtx struct {
 	skipView bool
 
 	// Flag to avoid stack overflow when this context has been embedded in the attached context
-	searchingOnAttachedCtx bool
-	searchMutex            sync.Mutex
+	searchingOnAttachedCtx int64
 
 	*fasthttp.RequestCtx
 }
