@@ -255,13 +255,15 @@ func TestFileResponse(t *testing.T) { // nolint:funlen
 		},
 	}
 
+	perm := os.FileMode(0600) // nolint:gofumpt
+
 	for _, test := range tests {
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
 			t.Helper()
 
-			if err := ioutil.WriteFile(tt.args.filePath, testFileContent, 0600); err != nil {
+			if err := ioutil.WriteFile(tt.args.filePath, testFileContent, perm); err != nil {
 				t.Fatalf("Error writing file %s", tt.args.filePath)
 			}
 			defer os.Remove(tt.args.filePath)
