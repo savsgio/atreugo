@@ -115,8 +115,11 @@ func (ctx *RequestCtx) MatchedRoutePath() []byte {
 func (ctx *RequestCtx) Value(key interface{}) interface{} {
 	if atomic.CompareAndSwapInt64(&ctx.searchingOnAttachedCtx, 0, 1) {
 		defer atomic.StoreInt64(&ctx.searchingOnAttachedCtx, 0)
-		if extraCtx := ctx.AttachedContext(); extraCtx != nil {
+
+		extraCtx := ctx.AttachedContext()
+		if extraCtx != nil {
 			val := extraCtx.Value(key)
+
 			return val
 		}
 	}
