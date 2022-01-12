@@ -472,7 +472,7 @@ func TestAtreugo_ServeConn(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	if err := s.server.Shutdown(); err != nil {
+	if err := s.engine.Shutdown(); err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
@@ -480,8 +480,8 @@ func TestAtreugo_ServeConn(t *testing.T) {
 		t.Fatalf("Expected error: %v", err)
 	}
 
-	if s.server.Handler == nil {
-		t.Error("Atreugo.server.Handler is nil")
+	if s.engine.Handler == nil {
+		t.Error("Atreugo.engine.Handler is nil")
 	}
 }
 
@@ -497,7 +497,7 @@ func TestAtreugo_Serve(t *testing.T) {
 
 	time.Sleep(500 * time.Millisecond)
 
-	if err := s.server.Shutdown(); err != nil {
+	if err := s.engine.Shutdown(); err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
@@ -514,8 +514,8 @@ func TestAtreugo_Serve(t *testing.T) {
 		t.Errorf("Atreugo.Config.Network = %s, want %s", s.cfg.Network, lnNetwork)
 	}
 
-	if s.server.Handler == nil {
-		t.Error("Atreugo.server.Handler is nil")
+	if s.engine.Handler == nil {
+		t.Error("Atreugo.engine.Handler is nil")
 	}
 }
 

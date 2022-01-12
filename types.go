@@ -23,7 +23,7 @@ type Logger interface {
 type Atreugo struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
-	server *fasthttp.Server
+	engine *fasthttp.Server
 	cfg    Config
 
 	virtualHosts map[string]fasthttp.RequestHandler
@@ -42,6 +42,16 @@ type Config struct { // nolint:maligned
 	TLSEnable bool
 	CertKey   string
 	CertFile  string
+
+	// TLSConfig optionally provides a TLS configuration for use
+	// by Serve when TLSEnable is true.
+	//
+	// Note that this value is cloned by Serve,
+	// so it's not possible to modify the configuration
+	// with methods like tls.Config.SetSessionTicketKeys.
+	// To use SetSessionTicketKeys, use Atreugo.Serve with a TLS Listener
+	// instead.
+	TLSConfig *tls.Config
 
 	// Server name for sending in response headers. (default: Atreugo)
 	Name string
@@ -339,16 +349,6 @@ type Config struct { // nolint:maligned
 	// called when a client connection changes state. See the
 	// ConnState type and associated constants for details.
 	ConnState func(net.Conn, fasthttp.ConnState)
-
-	// TLSConfig optionally provides a TLS configuration for use
-	// by Serve when TLSEnable is true.
-	//
-	// Note that this value is cloned by Serve,
-	// so it's not possible to modify the configuration
-	// with methods like tls.Config.SetSessionTicketKeys.
-	// To use SetSessionTicketKeys, use Atreugo.Serve with a TLS Listener
-	// instead.
-	TLSConfig *tls.Config
 }
 
 // StaticFS represents settings for serving static files

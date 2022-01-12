@@ -56,7 +56,7 @@ func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	case <-osSignals:
 		s.cfg.Logger.Print("Shutdown signal received")
 
-		if err := s.server.Shutdown(); err != nil {
+		if err := s.engine.Shutdown(); err != nil {
 			return wrapError(err, "failed to shutdown")
 		}
 

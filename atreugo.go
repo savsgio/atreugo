@@ -64,7 +64,7 @@ func New(cfg Config) *Atreugo {
 	}
 
 	server := &Atreugo{
-		server: newFasthttpServer(cfg),
+		engine: newFasthttpServer(cfg),
 		cfg:    cfg,
 		Router: r,
 	}
@@ -198,9 +198,9 @@ func (s *Atreugo) HandleOPTIONS(v bool) {
 //
 // ServeConn closes c before returning.
 func (s *Atreugo) ServeConn(c net.Conn) error {
-	s.server.Handler = s.handler()
+	s.engine.Handler = s.handler()
 
-	return s.server.ServeConn(c) // nolint:wrapcheck
+	return s.engine.ServeConn(c) // nolint:wrapcheck
 }
 
 // Serve serves incoming connections from the given listener.
@@ -211,7 +211,7 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 
 	s.cfg.Addr = ln.Addr().String()
 	s.cfg.Network = ln.Addr().Network()
-	s.server.Handler = s.handler()
+	s.engine.Handler = s.handler()
 
 	if strings.Include(tcpNetworks, s.cfg.Network) {
 		schema := "http"
@@ -225,10 +225,10 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 	}
 
 	if s.cfg.TLSEnable {
-		return s.server.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey) // nolint:wrapcheck
+		return s.engine.ServeTLS(ln, s.cfg.CertFile, s.cfg.CertKey) // nolint:wrapcheck
 	}
 
-	return s.server.Serve(ln) // nolint:wrapcheck
+	return s.engine.Serve(ln) // nolint:wrapcheck
 }
 
 // NewVirtualHost returns a new sub-router for running more than one web site
