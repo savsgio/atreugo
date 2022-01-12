@@ -10,3 +10,5 @@ linters:
     - paralleltest
     - nolintlint
     - cyclop
+    - varnamelen
+    - ireturn
