@@ -35,10 +35,6 @@ func New(cfg Config) *Atreugo {
 		cfg.Logger = defaultLogger
 	}
 
-	if cfg.GracefulShutdown && cfg.ReadTimeout <= 0 {
-		cfg.ReadTimeout = defaultReadTimeout
-	}
-
 	if cfg.ErrorView == nil {
 		cfg.ErrorView = defaultErrorView
 	}
@@ -78,7 +74,6 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 		HeaderReceived:                     cfg.HeaderReceived,
 		ContinueHandler:                    cfg.ContinueHandler,
 		Concurrency:                        cfg.Concurrency,
-		DisableKeepalive:                   cfg.DisableKeepalive,
 		ReadBufferSize:                     cfg.ReadBufferSize,
 		WriteBufferSize:                    cfg.WriteBufferSize,
 		ReadTimeout:                        cfg.ReadTimeout,
@@ -86,9 +81,12 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 		IdleTimeout:                        cfg.IdleTimeout,
 		MaxConnsPerIP:                      cfg.MaxConnsPerIP,
 		MaxRequestsPerConn:                 cfg.MaxRequestsPerConn,
-		TCPKeepalive:                       cfg.TCPKeepalive,
+		MaxKeepaliveDuration:               cfg.MaxKeepaliveDuration,
+		MaxIdleWorkerDuration:              cfg.MaxIdleWorkerDuration,
 		TCPKeepalivePeriod:                 cfg.TCPKeepalivePeriod,
 		MaxRequestBodySize:                 cfg.MaxRequestBodySize,
+		DisableKeepalive:                   cfg.DisableKeepalive,
+		TCPKeepalive:                       cfg.TCPKeepalive,
 		ReduceMemoryUsage:                  cfg.ReduceMemoryUsage,
 		GetOnly:                            cfg.GetOnly,
 		DisablePreParseMultipartForm:       cfg.DisablePreParseMultipartForm,
@@ -99,11 +97,12 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 		NoDefaultServerHeader:              cfg.NoDefaultServerHeader,
 		NoDefaultDate:                      cfg.NoDefaultDate,
 		NoDefaultContentType:               cfg.NoDefaultContentType,
-		ConnState:                          cfg.ConnState,
 		KeepHijackedConns:                  cfg.KeepHijackedConns,
 		CloseOnShutdown:                    cfg.CloseOnShutdown,
 		StreamRequestBody:                  cfg.StreamRequestBody,
+		ConnState:                          cfg.ConnState,
 		Logger:                             cfg.Logger,
+		TLSConfig:                          cfg.TLSConfig,
 	}
 }
 
@@ -203,9 +202,6 @@ func (s *Atreugo) ServeConn(c net.Conn) error {
 // Serve serves incoming connections from the given listener.
 //
 // Serve blocks until the given listener returns permanent error.
-//
-// If use a custom Listener, will be updated your atreugo configuration
-// with the Listener address automatically.
 func (s *Atreugo) Serve(ln net.Listener) error {
 	defer ln.Close()
 

@@ -42,11 +42,6 @@ func (s *Atreugo) newPreforkServer() *prefork.Prefork {
 func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	s.cfg.GracefulShutdown = true
 
-	if s.server.ReadTimeout <= 0 {
-		s.server.ReadTimeout = defaultReadTimeout
-		s.cfg.ReadTimeout = defaultReadTimeout
-	}
-
 	listenErr := make(chan error, 1)
 
 	go func() {

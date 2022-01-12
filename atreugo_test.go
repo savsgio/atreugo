@@ -1,6 +1,7 @@
 package atreugo
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -22,9 +23,8 @@ import (
 var testLog = log.New(ioutil.Discard, "", log.LstdFlags)
 
 var testConfig = Config{
-	ReadTimeout: defaultReadTimeout,
-	Logger:      testLog,
-	ErrorView:   defaultErrorView,
+	Logger:    testLog,
+	ErrorView: defaultErrorView,
 }
 
 var notConfigFasthttpFields = []string{
@@ -43,7 +43,6 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 	}
 
 	type want struct {
-		readTimeout          time.Duration
 		notFoundView         bool
 		methodNotAllowedView bool
 		panicView            bool
@@ -71,7 +70,6 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			name: "Default",
 			args: args{},
 			want: want{
-				readTimeout:          0,
 				notFoundView:         false,
 				methodNotAllowedView: false,
 				panicView:            false,
@@ -83,7 +81,6 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 				gracefulShutdown: true,
 			},
 			want: want{
-				readTimeout:          defaultReadTimeout,
 				notFoundView:         false,
 				methodNotAllowedView: false,
 				panicView:            false,
@@ -98,7 +95,6 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 				panicView:            panicView,
 			},
 			want: want{
-				readTimeout:          0,
 				notFoundView:         true,
 				methodNotAllowedView: true,
 				panicView:            true,
@@ -161,10 +157,6 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 				t.Error("GlobalOPTIONS handler is not nil")
 			}
 
-			if tt.want.readTimeout != s.cfg.ReadTimeout {
-				t.Errorf("ReadTimeout == %d, want %d", s.cfg.ReadTimeout, tt.want.readTimeout)
-			}
-
 			if tt.want.notFoundView != (s.router.NotFound != nil) {
 				t.Error("NotFound handler is not setted")
 			}
@@ -196,32 +188,36 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 			return fasthttp.RequestConfig{}
 		},
 		ContinueHandler:                    func(header *fasthttp.RequestHeader) bool { return true },
-		Concurrency:                        rand.Int(), // nolint:gosec
+		Concurrency:                        rand.Int(),                              // nolint:gosec
+		ReadBufferSize:                     rand.Int(),                              // nolint:gosec
+		WriteBufferSize:                    rand.Int(),                              // nolint:gosec
+		ReadTimeout:                        time.Duration(rand.Int()),               // nolint:gosec
+		WriteTimeout:                       time.Duration(rand.Int()),               // nolint:gosec
+		IdleTimeout:                        time.Duration(rand.Int()),               // nolint:gosec
+		MaxConnsPerIP:                      rand.Int(),                              // nolint:gosec
+		MaxRequestsPerConn:                 rand.Int(),                              // nolint:gosec
+		MaxKeepaliveDuration:               time.Duration(rand.Int()) * time.Second, // nolint:gosec
+		MaxIdleWorkerDuration:              time.Duration(rand.Int()) * time.Second, // nolint:gosec
+		TCPKeepalivePeriod:                 time.Duration(rand.Int()),               // nolint:gosec
+		MaxRequestBodySize:                 rand.Int(),                              // nolint:gosec
 		DisableKeepalive:                   true,
-		ReadBufferSize:                     rand.Int(),                // nolint:gosec
-		WriteBufferSize:                    rand.Int(),                // nolint:gosec
-		ReadTimeout:                        time.Duration(rand.Int()), // nolint:gosec
-		WriteTimeout:                       time.Duration(rand.Int()), // nolint:gosec
-		IdleTimeout:                        time.Duration(rand.Int()), // nolint:gosec
-		MaxConnsPerIP:                      rand.Int(),                // nolint:gosec
-		MaxRequestsPerConn:                 rand.Int(),                // nolint:gosec
 		TCPKeepalive:                       true,
-		TCPKeepalivePeriod:                 time.Duration(rand.Int()), // nolint:gosec
-		MaxRequestBodySize:                 rand.Int(),                // nolint:gosec
 		ReduceMemoryUsage:                  true,
 		GetOnly:                            true,
 		DisablePreParseMultipartForm:       true,
 		LogAllErrors:                       true,
+		SecureErrorLogMessage:              true,
 		DisableHeaderNamesNormalizing:      true,
 		SleepWhenConcurrencyLimitsExceeded: time.Duration(rand.Int()), // nolint:gosec
 		NoDefaultServerHeader:              true,
 		NoDefaultDate:                      true,
 		NoDefaultContentType:               true,
-		ConnState:                          func(net.Conn, fasthttp.ConnState) {},
 		KeepHijackedConns:                  true,
 		CloseOnShutdown:                    true,
 		StreamRequestBody:                  true,
+		ConnState:                          func(net.Conn, fasthttp.ConnState) {},
 		Logger:                             testLog,
+		TLSConfig:                          &tls.Config{ServerName: "test", MinVersion: tls.VersionTLS13},
 	}
 
 	srv := newFasthttpServer(cfg)

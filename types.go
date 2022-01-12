@@ -1,6 +1,7 @@
 package atreugo
 
 import (
+	"crypto/tls"
 	"net"
 	"time"
 
@@ -139,14 +140,6 @@ type Config struct { // nolint:maligned
 	// DefaultConcurrency is used if not set.
 	Concurrency int
 
-	// Whether to disable keep-alive connections.
-	//
-	// The server will close all the incoming connections after sending
-	// the first response to client if this option is set to true.
-	//
-	// By default keep-alive connections are enabled.
-	DisableKeepalive bool
-
 	// Per-connection buffer size for requests' reading.
 	// This also limits the maximum header size.
 	//
@@ -195,12 +188,13 @@ type Config struct { // nolint:maligned
 	// By default unlimited number of requests may be served per connection.
 	MaxRequestsPerConn int
 
-	// Whether to enable tcp keep-alive connections.
-	//
-	// Whether the operating system should send tcp keep-alive messages on the tcp connection.
-	//
-	// By default tcp keep-alive connections are disabled.
-	TCPKeepalive bool
+	// MaxKeepaliveDuration is a no-op and only left here for backwards compatibility.
+	// Deprecated: Use IdleTimeout instead.
+	MaxKeepaliveDuration time.Duration
+
+	// MaxIdleWorkerDuration is the maximum idle time of a single worker in the underlying
+	// worker pool of the Server. Idle workers beyond this time will be cleared.
+	MaxIdleWorkerDuration time.Duration
 
 	// Period between tcp keep-alive messages.
 	//
@@ -213,6 +207,21 @@ type Config struct { // nolint:maligned
 	//
 	// Request body size is limited by DefaultMaxRequestBodySize by default.
 	MaxRequestBodySize int
+
+	// Whether to disable keep-alive connections.
+	//
+	// The server will close all the incoming connections after sending
+	// the first response to client if this option is set to true.
+	//
+	// By default keep-alive connections are enabled.
+	DisableKeepalive bool
+
+	// Whether to enable tcp keep-alive connections.
+	//
+	// Whether the operating system should send tcp keep-alive messages on the tcp connection.
+	//
+	// By default tcp keep-alive connections are disabled.
+	TCPKeepalive bool
 
 	// Aggressively reduces memory usage at the cost of higher CPU usage
 	// if set to true.
@@ -279,7 +288,7 @@ type Config struct { // nolint:maligned
 
 	// SleepWhenConcurrencyLimitsExceeded is a duration to be slept of if
 	// the concurrency limit in exceeded (default [when is 0]: don't sleep
-	// and accept new connections immidiatelly).
+	// and accept new connections immediately).
 	SleepWhenConcurrencyLimitsExceeded time.Duration
 
 	// NoDefaultServerHeader, when set to true, causes the default Server header
@@ -305,11 +314,6 @@ type Config struct { // nolint:maligned
 	// set to true, the Content-Type will not be present.
 	NoDefaultContentType bool
 
-	// ConnState specifies an optional callback function that is
-	// called when a client connection changes state. See the
-	// ConnState type and associated constants for details.
-	ConnState func(net.Conn, fasthttp.ConnState)
-
 	// KeepHijackedConns is an opt-in disable of connection
 	// close by fasthttp after connections' HijackHandler returns.
 	// This allows to save goroutines, e.g. when fasthttp used to upgrade
@@ -324,6 +328,21 @@ type Config struct { // nolint:maligned
 	// and calls the handler sooner when given body is
 	// larger then the current limit.
 	StreamRequestBody bool
+
+	// ConnState specifies an optional callback function that is
+	// called when a client connection changes state. See the
+	// ConnState type and associated constants for details.
+	ConnState func(net.Conn, fasthttp.ConnState)
+
+	// TLSConfig optionally provides a TLS configuration for use
+	// by Serve when TLSEnable is true.
+	//
+	// Note that this value is cloned by Serve,
+	// so it's not possible to modify the configuration
+	// with methods like tls.Config.SetSessionTicketKeys.
+	// To use SetSessionTicketKeys, use Atreugo.Serve with a TLS Listener
+	// instead.
+	TLSConfig *tls.Config
 }
 
 // StaticFS represents settings for serving static files

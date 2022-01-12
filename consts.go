@@ -1,13 +1,8 @@
 package atreugo
 
-import (
-	"time"
-)
-
 const (
-	defaultNetwork     = "tcp4"
-	defaultServerName  = "Atreugo"
-	defaultReadTimeout = 20 * time.Second
+	defaultNetwork    = "tcp4"
+	defaultServerName = "Atreugo"
 )
 
 // XRequestIDHeader header name of request id.

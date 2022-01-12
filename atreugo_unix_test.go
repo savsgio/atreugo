@@ -154,14 +154,6 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 				t.Errorf("Config.GracefulShutdown = %v, want %v", cfg.GracefulShutdown, true)
 			}
 
-			if s.server.ReadTimeout != defaultReadTimeout {
-				t.Errorf("fasthttp.Server.ReadTimeout = %v, want %v", s.server.ReadTimeout, defaultReadTimeout)
-			}
-
-			if s.cfg.ReadTimeout != defaultReadTimeout {
-				t.Errorf("Config.ReadTimeout = %v, want %v", s.cfg.ReadTimeout, defaultReadTimeout)
-			}
-
 			lnAddr := ln.Addr().String()
 			if s.cfg.Addr != lnAddr {
 				t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
