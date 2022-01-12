@@ -8,7 +8,9 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"os"
 	"reflect"
+	"syscall"
 	"testing"
 	"time"
 	"unicode"
@@ -35,18 +37,20 @@ var notConfigFasthttpFields = []string{
 
 func Test_New(t *testing.T) { //nolint:funlen,gocognit
 	type args struct {
-		network              string
-		gracefulShutdown     bool
-		notFoundView         View
-		methodNotAllowedView View
-		panicView            PanicView
+		network                 string
+		gracefulShutdown        bool
+		gracefulShutdownSignals []os.Signal
+		notFoundView            View
+		methodNotAllowedView    View
+		panicView               PanicView
 	}
 
 	type want struct {
-		notFoundView         bool
-		methodNotAllowedView bool
-		panicView            bool
-		err                  bool
+		gracefulShutdownSignals []os.Signal
+		notFoundView            bool
+		methodNotAllowedView    bool
+		panicView               bool
+		err                     bool
 	}
 
 	notFoundView := func(ctx *RequestCtx) error {
@@ -70,9 +74,10 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			name: "Default",
 			args: args{},
 			want: want{
-				notFoundView:         false,
-				methodNotAllowedView: false,
-				panicView:            false,
+				gracefulShutdownSignals: nil,
+				notFoundView:            false,
+				methodNotAllowedView:    false,
+				panicView:               false,
 			},
 		},
 		{
@@ -81,23 +86,27 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 				gracefulShutdown: true,
 			},
 			want: want{
-				notFoundView:         false,
-				methodNotAllowedView: false,
-				panicView:            false,
+				gracefulShutdownSignals: defaultGracefulShutdownSignals,
+				notFoundView:            false,
+				methodNotAllowedView:    false,
+				panicView:               false,
 			},
 		},
 		{
 			name: "Custom",
 			args: args{
-				network:              "unix",
-				notFoundView:         notFoundView,
-				methodNotAllowedView: methodNotAllowedView,
-				panicView:            panicView,
+				network:                 "unix",
+				gracefulShutdown:        true,
+				gracefulShutdownSignals: []os.Signal{syscall.SIGKILL},
+				notFoundView:            notFoundView,
+				methodNotAllowedView:    methodNotAllowedView,
+				panicView:               panicView,
 			},
 			want: want{
-				notFoundView:         true,
-				methodNotAllowedView: true,
-				panicView:            true,
+				gracefulShutdownSignals: []os.Signal{syscall.SIGKILL},
+				notFoundView:            true,
+				methodNotAllowedView:    true,
+				panicView:               true,
 			},
 		},
 		{
@@ -129,11 +138,12 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			}()
 
 			cfg := Config{
-				Network:              tt.args.network,
-				GracefulShutdown:     tt.args.gracefulShutdown,
-				NotFoundView:         tt.args.notFoundView,
-				MethodNotAllowedView: tt.args.methodNotAllowedView,
-				PanicView:            tt.args.panicView,
+				Network:                 tt.args.network,
+				GracefulShutdown:        tt.args.gracefulShutdown,
+				GracefulShutdownSignals: tt.args.gracefulShutdownSignals,
+				NotFoundView:            tt.args.notFoundView,
+				MethodNotAllowedView:    tt.args.methodNotAllowedView,
+				PanicView:               tt.args.panicView,
 			}
 			s := New(cfg)
 
@@ -155,6 +165,13 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 
 			if s.router.GlobalOPTIONS != nil {
 				t.Error("GlobalOPTIONS handler is not nil")
+			}
+
+			if !reflect.DeepEqual(tt.want.gracefulShutdownSignals, s.cfg.GracefulShutdownSignals) {
+				t.Errorf(
+					"GracefulShutdownSignals = %v, want %v",
+					s.cfg.GracefulShutdownSignals, tt.want.gracefulShutdownSignals,
+				)
 			}
 
 			if tt.want.notFoundView != (s.router.NotFound != nil) {

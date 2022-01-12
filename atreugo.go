@@ -31,6 +31,10 @@ func New(cfg Config) *Atreugo {
 		cfg.Name = defaultServerName
 	}
 
+	if cfg.GracefulShutdown && len(cfg.GracefulShutdownSignals) == 0 {
+		cfg.GracefulShutdownSignals = append(cfg.GracefulShutdownSignals, defaultGracefulShutdownSignals...)
+	}
+
 	if cfg.Logger == nil {
 		cfg.Logger = defaultLogger
 	}

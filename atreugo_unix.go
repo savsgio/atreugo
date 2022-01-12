@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"syscall"
 
 	"github.com/valyala/fasthttp/prefork"
 )
@@ -49,7 +48,7 @@ func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	}()
 
 	osSignals := make(chan os.Signal, 1)
-	signal.Notify(osSignals, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(osSignals, s.cfg.GracefulShutdownSignals...)
 
 	select {
 	case err := <-listenErr:
