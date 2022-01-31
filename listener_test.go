@@ -51,8 +51,7 @@ func TestTCPListener_AcceptTCP(t *testing.T) {
 
 	conn, _ := ln.AcceptTCP() // nolint:ifshort
 
-	_, ok := conn.(*net.TCPConn)
-	if !ok {
+	if _, ok := conn.(*net.TCPConn); !ok {
 		t.Errorf("conn type == %T, want %T", conn, &net.TCPConn{})
 	}
 }

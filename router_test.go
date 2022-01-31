@@ -368,7 +368,7 @@ func TestRouter_getGroupFullPath(t *testing.T) {
 	}
 }
 
-func TestRouter_handler(t *testing.T) { //nolint:funlen
+func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 	type counter struct {
 		viewCalled            bool
 		beforeMiddlewares     int
