@@ -12,3 +12,12 @@ linters:
     - cyclop
     - varnamelen
     - ireturn
+    - nonamedreturns
+    - exhaustruct
+
+    # Deprecated
+    - maligned
+    - scopelint
+    - golint
+    - interfacer
+
