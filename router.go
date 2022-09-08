@@ -291,11 +291,11 @@ func (r *Router) RequestHandlerPath(method, url string, handler fasthttp.Request
 // it has the following drawbacks comparing to using manually written fasthttp/atreugo,
 // request handler:
 //
-//     * A lot of useful functionality provided by fasthttp/atreugo is missing
-//       from net/http handler.
-//     * net/http -> fasthttp/atreugo handler conversion has some overhead,
-//       so the returned handler will be always slower than manually written
-//       fasthttp/atreugo handler.
+//   - A lot of useful functionality provided by fasthttp/atreugo is missing
+//     from net/http handler.
+//   - net/http -> fasthttp/atreugo handler conversion has some overhead,
+//     so the returned handler will be always slower than manually written
+//     fasthttp/atreugo handler.
 //
 // So it is advisable using this function only for quick net/http -> fasthttp
 // switching. Then manually convert net/http handlers to fasthttp handlers.
@@ -364,8 +364,8 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 //
 // HTTP response may contain uncompressed file contents in the following cases:
 //
-//   * Missing 'Accept-Encoding: gzip' request header.
-//   * No write access to directory containing the file.
+//   - Missing 'Accept-Encoding: gzip' request header.
+//   - No write access to directory containing the file.
 //
 // Directory contents is returned if path points to directory.
 func (r *Router) ServeFile(url, filePath string) *Path {

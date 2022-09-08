@@ -20,4 +20,8 @@ linters:
     - scopelint
     - golint
     - interfacer
-
+    - structcheck
+    - varcheck
+    - nosnakecase
+    - ifshort
+    - deadcode

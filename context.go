@@ -104,12 +104,14 @@ func (ctx *RequestCtx) MatchedRoutePath() []byte {
 // type should be a pointer or interface.
 //
 // If the key is of type string, try to use:
-// 		ctx.SetUserValue("myKey", "myValue")
-//		ctx.UserValue("myKey")
+//
+//	ctx.SetUserValue("myKey", "myValue")
+//	ctx.UserValue("myKey")
 //
 // instead of:
-// 		ctx.AttachContext(context.WithValue(context.Background(), "myKey", "myValue"))
-//		ctx.Value("myKey")
+//
+//	ctx.AttachContext(context.WithValue(context.Background(), "myKey", "myValue"))
+//	ctx.Value("myKey")
 //
 // to avoid extra allocation.
 func (ctx *RequestCtx) Value(key interface{}) interface{} {
