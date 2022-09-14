@@ -531,36 +531,3 @@ type PathRewriteFunc func(ctx *RequestCtx) []byte
 
 // JSON is a map whose key is a string and whose value an interface.
 type JSON map[string]interface{}
-
-// netTCPConn is a generic stream-oriented for tcp network connection.
-//
-// Multiple goroutines may invoke methods on a Conn simultaneously.
-type netTCPConn interface {
-	net.Conn
-
-	SetKeepAlive(keepalive bool) error
-	SetKeepAlivePeriod(d time.Duration) error
-}
-
-// netTCPListener is a generic tcp network listener for stream-oriented protocols.
-//
-// Multiple goroutines may invoke methods on a Listener simultaneously.
-type netTCPListener interface {
-	net.Listener
-
-	AcceptTCP() (netTCPConn, error)
-}
-
-// tcpListener is a TCP network listener wrapper.
-type tcpListener struct {
-	*net.TCPListener
-}
-
-// tcpKeepAliveListener sets TCP keep-alive timeouts on accepted
-// connections. So dead TCP connections (e.g. closing laptop mid-download)
-// eventually go away.
-type tcpKeepaliveListener struct {
-	netTCPListener
-	keepalive       bool
-	keepalivePeriod time.Duration
-}

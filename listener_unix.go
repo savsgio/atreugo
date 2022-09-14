@@ -32,13 +32,5 @@ func (s *Atreugo) getListener() (net.Listener, error) {
 		}
 	}
 
-	if tcpln, ok := ln.(*net.TCPListener); ok {
-		ln = &tcpKeepaliveListener{
-			netTCPListener:  &tcpListener{TCPListener: tcpln},
-			keepalive:       s.cfg.TCPKeepalive,
-			keepalivePeriod: s.cfg.TCPKeepalivePeriod,
-		}
-	}
-
 	return ln, nil
 }

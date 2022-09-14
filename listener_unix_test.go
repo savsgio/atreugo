@@ -5,7 +5,6 @@ package atreugo
 
 import (
 	"errors"
-	"strings"
 	"testing"
 	"time"
 )
@@ -134,6 +133,8 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
 				panic(err)
 			}
 
+			defer ln.Close()
+
 			lnAddress := ln.Addr().String()
 			if lnAddress != tt.want.addr {
 				t.Errorf("Listener address: '%s', want '%s'", lnAddress, tt.want.addr)
@@ -143,18 +144,6 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
 			if lnNetwork != tt.want.network {
 				t.Errorf("Listener network: '%s', want '%s'", lnNetwork, tt.want.network)
 			}
-
-			tcpLn, ok := ln.(*tcpKeepaliveListener)
-
-			if !ok {
-				if strings.HasPrefix(lnNetwork, "tcp") && !s.cfg.Reuseport {
-					t.Error("Listener is not wrapped as tcpKeepaliveListener")
-				}
-			} else if tcpLn.keepalivePeriod != tt.args.TCPKeepalivePeriod {
-				t.Errorf("tcpKeepaliveListener.keepalivePeriod == %d, want %d", tcpLn.keepalivePeriod, tt.args.TCPKeepalivePeriod)
-			}
-
-			ln.Close()
 		})
 	}
 }
