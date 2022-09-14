@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"reflect"
+	"runtime"
 	"syscall"
 	"testing"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"github.com/savsgio/gotils/strings"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttputil"
+	"github.com/valyala/fasthttp/prefork"
 )
 
 var testLog = log.New(ioutil.Discard, "", log.LstdFlags)
@@ -280,6 +282,51 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 	}
 }
 
+func TestAtreugo_newPreforkServer(t *testing.T) {
+	cfg := Config{
+		Logger:           testLog,
+		GracefulShutdown: false,
+	}
+
+	s := New(cfg)
+	sPrefork := s.newPreforkServer()
+
+	if sPrefork.Network != s.cfg.Network {
+		t.Errorf("Prefork.Network == %s, want %s", sPrefork.Network, s.cfg.Network)
+	}
+
+	if sPrefork.Reuseport != s.cfg.Reuseport {
+		t.Errorf("Prefork.Reuseport == %v, want %v", sPrefork.Reuseport, s.cfg.Reuseport)
+	}
+
+	recoverThreshold := runtime.GOMAXPROCS(0) / 2
+	if sPrefork.RecoverThreshold != recoverThreshold {
+		t.Errorf("Prefork.RecoverThreshold == %d, want %d", sPrefork.RecoverThreshold, recoverThreshold)
+	}
+
+	if !isEqual(sPrefork.Logger, s.cfg.Logger) {
+		t.Errorf("Prefork.Logger == %p, want %p", sPrefork.Logger, s.cfg.Logger)
+	}
+
+	if !isEqual(sPrefork.ServeFunc, s.Serve) {
+		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.Serve)
+	}
+
+	// With graceful shutdown
+	cfg.GracefulShutdown = true
+
+	s = New(cfg)
+	sPrefork = s.newPreforkServer()
+
+	if isEqual(sPrefork.ServeFunc, s.Serve) {
+		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.ServeGracefully)
+	}
+
+	if !isEqual(sPrefork.ServeFunc, s.ServeGracefully) {
+		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.ServeGracefully)
+	}
+}
+
 func TestAtreugo_handler(t *testing.T) { // nolint:funlen,gocognit
 	type args struct {
 		cfg   Config
@@ -379,6 +426,12 @@ func TestAtreugo_handler(t *testing.T) { // nolint:funlen,gocognit
 				}
 			}
 		})
+	}
+}
+
+func Test_IsPreforkChild(t *testing.T) {
+	if IsPreforkChild() != prefork.IsChild() {
+		t.Errorf("IsPreforkChild() == %v, want %v", IsPreforkChild(), prefork.IsChild())
 	}
 }
 

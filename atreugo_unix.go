@@ -7,31 +7,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"runtime"
-
-	"github.com/valyala/fasthttp/prefork"
 )
-
-// IsPreforkChild checks if the current thread/process is a child.
-func IsPreforkChild() bool {
-	return prefork.IsChild()
-}
-
-func (s *Atreugo) newPreforkServer() *prefork.Prefork {
-	p := &prefork.Prefork{
-		Network:          s.cfg.Network,
-		Reuseport:        s.cfg.Reuseport,
-		RecoverThreshold: runtime.GOMAXPROCS(0) / 2,
-		Logger:           s.cfg.Logger,
-		ServeFunc:        s.Serve,
-	}
-
-	if s.cfg.GracefulShutdown {
-		p.ServeFunc = s.ServeGracefully
-	}
-
-	return p
-}
 
 // ServeGracefully serves incoming connections from the given listener with graceful shutdown
 //

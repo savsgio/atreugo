@@ -4,10 +4,12 @@ import (
 	"log"
 	"net"
 	"os"
+	"runtime"
 
 	"github.com/savsgio/gotils/strconv"
 	"github.com/savsgio/gotils/strings"
 	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/prefork"
 )
 
 var (
@@ -110,6 +112,22 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 	}
 }
 
+func (s *Atreugo) newPreforkServer() *prefork.Prefork {
+	p := &prefork.Prefork{
+		Network:          s.cfg.Network,
+		Reuseport:        s.cfg.Reuseport,
+		RecoverThreshold: runtime.GOMAXPROCS(0) / 2,
+		Logger:           s.cfg.Logger,
+		ServeFunc:        s.Serve,
+	}
+
+	if s.cfg.GracefulShutdown {
+		p.ServeFunc = s.ServeGracefully
+	}
+
+	return p
+}
+
 func (s *Atreugo) handler() fasthttp.RequestHandler {
 	handler := s.router.Handler
 
@@ -130,6 +148,11 @@ func (s *Atreugo) handler() fasthttp.RequestHandler {
 	}
 
 	return handler
+}
+
+// IsPreforkChild checks if the current thread/process is a child.
+func IsPreforkChild() bool {
+	return prefork.IsChild()
 }
 
 // SaveMatchedRoutePath if enabled, adds the matched route path onto the ctx.UserValue context

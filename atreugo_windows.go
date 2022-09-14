@@ -7,6 +7,10 @@ package atreugo
 //
 // Pass custom listener to Serve/ServeGracefully if you want to use it.
 func (s *Atreugo) ListenAndServe() error {
+	if s.cfg.Prefork {
+		return s.newPreforkServer().ListenAndServe(s.cfg.Addr) // nolint:wrapcheck
+	}
+
 	ln, err := s.getListener()
 	if err != nil {
 		return err
