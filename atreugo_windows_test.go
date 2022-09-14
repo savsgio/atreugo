@@ -8,6 +8,22 @@ import (
 	"time"
 )
 
+func TestAtreugo_newPreforkServer(t *testing.T) {
+	cfg := Config{
+		Logger:           testLog,
+		GracefulShutdown: false,
+	}
+
+	s := New(cfg)
+	sPrefork := s.newPreforkServer()
+
+	testPerforkServer(t, s, sPrefork)
+
+	if !isEqual(sPrefork.ServeFunc, s.Serve) {
+		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.Serve)
+	}
+}
+
 func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 	type want struct {
 		getErr bool

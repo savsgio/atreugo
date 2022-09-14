@@ -282,14 +282,8 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 	}
 }
 
-func TestAtreugo_newPreforkServer(t *testing.T) {
-	cfg := Config{
-		Logger:           testLog,
-		GracefulShutdown: false,
-	}
-
-	s := New(cfg)
-	sPrefork := s.newPreforkServer()
+func testPerforkServer(t *testing.T, s *Atreugo, sPrefork *prefork.Prefork) {
+	t.Helper()
 
 	if sPrefork.Network != s.cfg.Network {
 		t.Errorf("Prefork.Network == %s, want %s", sPrefork.Network, s.cfg.Network)
@@ -307,23 +301,21 @@ func TestAtreugo_newPreforkServer(t *testing.T) {
 	if !isEqual(sPrefork.Logger, s.cfg.Logger) {
 		t.Errorf("Prefork.Logger == %p, want %p", sPrefork.Logger, s.cfg.Logger)
 	}
+}
+
+func TestAtreugo_newBasePreforkServer(t *testing.T) {
+	cfg := Config{
+		Logger:           testLog,
+		GracefulShutdown: false,
+	}
+
+	s := New(cfg)
+	sPrefork := s.newBasePreforkServer()
+
+	testPerforkServer(t, s, sPrefork)
 
 	if !isEqual(sPrefork.ServeFunc, s.Serve) {
 		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.Serve)
-	}
-
-	// With graceful shutdown
-	cfg.GracefulShutdown = true
-
-	s = New(cfg)
-	sPrefork = s.newPreforkServer()
-
-	if isEqual(sPrefork.ServeFunc, s.Serve) {
-		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.ServeGracefully)
-	}
-
-	if !isEqual(sPrefork.ServeFunc, s.ServeGracefully) {
-		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.ServeGracefully)
 	}
 }
 

@@ -7,7 +7,19 @@ import (
 	"net"
 	"os"
 	"os/signal"
+
+	"github.com/valyala/fasthttp/prefork"
 )
+
+func (s *Atreugo) newPreforkServer() *prefork.Prefork {
+	p := s.newBasePreforkServer()
+
+	if s.cfg.GracefulShutdown {
+		p.ServeFunc = s.ServeGracefully
+	}
+
+	return p
+}
 
 // ServeGracefully serves incoming connections from the given listener with graceful shutdown
 //

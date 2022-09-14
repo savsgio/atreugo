@@ -112,17 +112,13 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 	}
 }
 
-func (s *Atreugo) newPreforkServer() *prefork.Prefork {
+func (s *Atreugo) newBasePreforkServer() *prefork.Prefork {
 	p := &prefork.Prefork{
 		Network:          s.cfg.Network,
 		Reuseport:        s.cfg.Reuseport,
 		RecoverThreshold: runtime.GOMAXPROCS(0) / 2,
 		Logger:           s.cfg.Logger,
 		ServeFunc:        s.Serve,
-	}
-
-	if s.cfg.GracefulShutdown {
-		p.ServeFunc = s.ServeGracefully
 	}
 
 	return p
