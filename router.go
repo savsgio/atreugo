@@ -327,17 +327,18 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 	url = strings.TrimSuffix(url, "/")
 
 	ffs := &fasthttp.FS{
-		Root:                 fs.Root,
-		IndexNames:           fs.IndexNames,
-		GenerateIndexPages:   fs.GenerateIndexPages,
-		Compress:             fs.Compress,
-		AcceptByteRange:      fs.AcceptByteRange,
-		CacheDuration:        fs.CacheDuration,
-		CompressedFileSuffix: fs.CompressedFileSuffix,
-	}
-
-	if fs.PathNotFound != nil {
-		ffs.PathNotFound = viewToHandler(fs.PathNotFound, r.cfg.errorView)
+		Root:                   fs.Root,
+		AllowEmptyRoot:         fs.AllowEmptyRoot,
+		IndexNames:             fs.IndexNames,
+		GenerateIndexPages:     fs.GenerateIndexPages,
+		Compress:               fs.Compress,
+		CompressBrotli:         fs.CompressBrotli,
+		CompressRoot:           fs.CompressRoot,
+		AcceptByteRange:        fs.AcceptByteRange,
+		CacheDuration:          fs.CacheDuration,
+		CompressedFileSuffix:   fs.CompressedFileSuffix,
+		CompressedFileSuffixes: fs.CompressedFileSuffixes,
+		CleanStop:              fs.CleanStop,
 	}
 
 	if fs.PathRewrite != nil {
@@ -348,6 +349,10 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 
 			return result
 		}
+	}
+
+	if fs.PathNotFound != nil {
+		ffs.PathNotFound = viewToHandler(fs.PathNotFound, r.cfg.errorView)
 	}
 
 	stripSlashes := strings.Count(r.getGroupFullPath(url), "/")

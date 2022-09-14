@@ -361,6 +361,12 @@ type StaticFS struct {
 	// Path to the root directory to serve files from.
 	Root string
 
+	// AllowEmptyRoot controls what happens when Root is empty. When false (default) it will default to the
+	// current working directory. An empty root is mostly useful when you want to use absolute paths
+	// on windows that are on different filesystems. On linux setting your Root to "/" already allows you to use
+	// absolute paths on any filesystem.
+	AllowEmptyRoot bool
+
 	// List of index file names to try opening during directory access.
 	//
 	// For example:
@@ -394,6 +400,17 @@ type StaticFS struct {
 	// Transparent compression is disabled by default.
 	Compress bool
 
+	// Uses brotli encoding and fallbacks to gzip in responses if set to true, uses gzip if set to false.
+	//
+	// This value has sense only if Compress is set.
+	//
+	// Brotli encoding is disabled by default.
+	CompressBrotli bool
+
+	// Path to the compressed root directory to serve files from. If this value
+	// is empty, Root is used.
+	CompressRoot string
+
 	// Enables byte range requests if set to true.
 	//
 	// Byte range requests are disabled by default.
@@ -423,6 +440,18 @@ type StaticFS struct {
 	//
 	// FSCompressedFileSuffix is used by default.
 	CompressedFileSuffix string
+
+	// Suffixes list to add to compressedFileSuffix depending on encoding
+	//
+	// This value has sense only if Compress is set.
+	//
+	// FSCompressedFileSuffixes is used by default.
+	CompressedFileSuffixes map[string]string
+
+	// If CleanStop is set, the channel can be closed to stop the cleanup handlers
+	// for the FS RequestHandlers created with NewRequestHandler.
+	// NEVER close this channel while the handler is still being used!
+	CleanStop chan struct{}
 }
 
 // RequestCtx context wrapper of fasthttp.RequestCtx to adds extra funtionality
