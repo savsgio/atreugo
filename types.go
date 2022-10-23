@@ -337,7 +337,7 @@ type Config struct { // nolint:maligned
 	// which will close it when needed.
 	KeepHijackedConns bool
 
-	// CloseOnShutdown when true adds a `Connection: close` header when when the server is shutting down.
+	// CloseOnShutdown when true adds a `Connection: close` header when the server is shutting down.
 	CloseOnShutdown bool
 
 	// StreamRequestBody enables request body streaming,
