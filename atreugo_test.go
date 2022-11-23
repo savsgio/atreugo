@@ -4,13 +4,10 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"math/rand"
 	"net"
 	"os"
 	"reflect"
-	"runtime"
 	"syscall"
 	"testing"
 	"time"
@@ -23,13 +20,6 @@ import (
 	"github.com/valyala/fasthttp/fasthttputil"
 	"github.com/valyala/fasthttp/prefork"
 )
-
-var testLog = log.New(ioutil.Discard, "", log.LstdFlags)
-
-var testConfig = Config{
-	Logger:    testLog,
-	ErrorView: defaultErrorView,
-}
 
 var notConfigFasthttpFields = []string{
 	"Handler",
@@ -149,8 +139,12 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit
 			}
 			s := New(cfg)
 
-			if !isEqual(s.cfg.chmodUnixSocket, chmodFileToSocket) {
-				t.Errorf("Config.chmodUnixSocket func = %p, want %p", s.cfg.chmodUnixSocket, chmodFileToSocket)
+			if !isEqual(s.cfg.chmodUnixSocketFunc, chmodFileToSocket) {
+				t.Errorf("Config.chmodUnixSocketFunc func = %p, want %p", s.cfg.chmodUnixSocketFunc, chmodFileToSocket)
+			}
+
+			if !isEqual(s.cfg.newPreforkServerFunc, newPreforkServer) {
+				t.Errorf("Config.newPreforkServerFunc func = %p, want %p", s.cfg.newPreforkServerFunc, newPreforkServer)
 			}
 
 			if !isEqual(s.cfg.Logger, defaultLogger) {
@@ -240,8 +234,7 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 	}
 
 	srv := newFasthttpServer(cfg)
-
-	if srv == nil {
+	if isNil(srv) {
 		t.Fatal("newFasthttpServer() == nil")
 	}
 
@@ -273,49 +266,12 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 		}
 	}
 
-	if srv.Handler != nil {
+	if !isNil(srv.Handler) {
 		t.Error("fasthttp.Server.Handler must be nil")
 	}
 
 	if !isEqual(srv.Logger, testLog) {
 		t.Errorf("fasthttp.Server.Logger == %p, want %p", srv.Logger, testLog)
-	}
-}
-
-func testPerforkServer(t *testing.T, s *Atreugo, sPrefork *prefork.Prefork) {
-	t.Helper()
-
-	if sPrefork.Network != s.cfg.Network {
-		t.Errorf("Prefork.Network == %s, want %s", sPrefork.Network, s.cfg.Network)
-	}
-
-	if sPrefork.Reuseport != s.cfg.Reuseport {
-		t.Errorf("Prefork.Reuseport == %v, want %v", sPrefork.Reuseport, s.cfg.Reuseport)
-	}
-
-	recoverThreshold := runtime.GOMAXPROCS(0) / 2
-	if sPrefork.RecoverThreshold != recoverThreshold {
-		t.Errorf("Prefork.RecoverThreshold == %d, want %d", sPrefork.RecoverThreshold, recoverThreshold)
-	}
-
-	if !isEqual(sPrefork.Logger, s.cfg.Logger) {
-		t.Errorf("Prefork.Logger == %p, want %p", sPrefork.Logger, s.cfg.Logger)
-	}
-}
-
-func TestAtreugo_newBasePreforkServer(t *testing.T) {
-	cfg := Config{
-		Logger:           testLog,
-		GracefulShutdown: false,
-	}
-
-	s := New(cfg)
-	sPrefork := s.newBasePreforkServer()
-
-	testPerforkServer(t, s, sPrefork)
-
-	if !isEqual(sPrefork.ServeFunc, s.Serve) {
-		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.Serve)
 	}
 }
 
@@ -574,7 +530,7 @@ func TestAtreugo_NewVirtualHost(t *testing.T) { //nolint:funlen
 	}
 
 	vHost := s.NewVirtualHost(hostname)
-	if vHost == nil {
+	if isNil(vHost) {
 		t.Fatal("Atreugo.NewVirtualHost() returned a nil router")
 	}
 
@@ -594,7 +550,7 @@ func TestAtreugo_NewVirtualHost(t *testing.T) { //nolint:funlen
 		t.Errorf("VirtualHost router.PanicHandler == %p, want %p", vHost.router.PanicHandler, s.router.PanicHandler)
 	}
 
-	if h := s.virtualHosts[hostname]; h == nil {
+	if h := s.virtualHosts[hostname]; isNil(h) {
 		t.Error("The new virtual host is not registeded")
 	}
 

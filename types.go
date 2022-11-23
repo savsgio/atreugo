@@ -17,6 +17,10 @@ type Logger interface {
 	Printf(format string, args ...interface{})
 }
 
+type preforkServer interface {
+	ListenAndServe(addr string) error
+}
+
 // Atreugo implements high performance HTTP server
 //
 // It is prohibited copying Atreugo values. Create new values instead.
@@ -128,8 +132,9 @@ type Config struct { // nolint:maligned
 	// unrecovered panics.
 	PanicView PanicView
 
-	// it's dirty, but useful for testing
-	chmodUnixSocket func(addr string) error
+	// custom functions
+	chmodUnixSocketFunc  func(filepath string) error
+	newPreforkServerFunc func(s *Atreugo) preforkServer
 
 	//
 	// --- fasthttp server configuration ---

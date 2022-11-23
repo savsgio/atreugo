@@ -5,10 +5,10 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -1066,7 +1066,7 @@ func TestRouter_ServeFile(t *testing.T) {
 
 	filePath := "./README.md"
 
-	body, err := ioutil.ReadFile(filePath)
+	body, err := os.ReadFile(filePath)
 	if err != nil {
 		panic(err)
 	}

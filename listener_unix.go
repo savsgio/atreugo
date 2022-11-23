@@ -27,7 +27,7 @@ func (s *Atreugo) getListener() (net.Listener, error) {
 	}
 
 	if s.cfg.Network == "unix" {
-		if err := s.cfg.chmodUnixSocket(s.cfg.Addr); err != nil {
+		if err := s.cfg.chmodUnixSocketFunc(s.cfg.Addr); err != nil {
 			return nil, err
 		}
 	}

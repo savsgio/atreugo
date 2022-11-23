@@ -3,18 +3,12 @@
 
 package atreugo
 
-import "github.com/valyala/fasthttp/prefork"
-
-func (s *Atreugo) newPreforkServer() *prefork.Prefork {
-	return s.newBasePreforkServer()
-}
-
 // ListenAndServe serves requests from the given network and address in the atreugo configuration.
 //
 // Pass custom listener to Serve/ServeGracefully if you want to use it.
 func (s *Atreugo) ListenAndServe() error {
 	if s.cfg.Prefork {
-		return s.newPreforkServer().ListenAndServe(s.cfg.Addr) // nolint:wrapcheck
+		return s.cfg.newPreforkServerFunc(s).ListenAndServe(s.cfg.Addr) // nolint:wrapcheck
 	}
 
 	ln, err := s.getListener()

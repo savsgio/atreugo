@@ -14,3 +14,13 @@ func chmodFileToSocket(filepath string) error {
 
 	return nil
 }
+
+func newPreforkServer(s *Atreugo) preforkServer {
+	p := newPreforkServerBase(s)
+
+	if s.cfg.GracefulShutdown {
+		p.ServeFunc = s.ServeGracefully
+	}
+
+	return p
+}

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/savsgio/gotils/bytes"
+	"github.com/valyala/fasthttp/prefork"
 )
 
 func Test_chmodFileToSocket(t *testing.T) {
@@ -36,4 +37,33 @@ func Test_chmodFileToSocket(t *testing.T) {
 	if err := chmodFileToSocket("243sdf$T%&$/"); err == nil {
 		t.Errorf("Expected error for invalid file path")
 	}
+}
+
+func Test_newPreforkServer(t *testing.T) {
+	cfg := Config{
+		Logger:           testLog,
+		GracefulShutdown: false,
+	}
+
+	t.Run("Normal", func(t *testing.T) {
+		s := New(cfg)
+		sPrefork := newPreforkServer(s).(*prefork.Prefork) // nolint:forcetypeassert
+
+		testPerforkServer(t, s, sPrefork)
+
+		if !isEqual(sPrefork.ServeFunc, s.Serve) {
+			t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.ServeGracefully)
+		}
+	})
+
+	t.Run("Graceful", func(t *testing.T) {
+		cfg.GracefulShutdown = true
+
+		s := New(cfg)
+		sPrefork := newPreforkServer(s).(*prefork.Prefork) // nolint:forcetypeassert
+
+		if !isEqual(sPrefork.ServeFunc, s.ServeGracefully) {
+			t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.ServeGracefully)
+		}
+	})
 }

@@ -5,7 +5,6 @@ package atreugo
 
 import (
 	"testing"
-	"time"
 )
 
 func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
@@ -24,19 +23,6 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen
 			name: "Ok",
 			args: Config{
 				Addr: "127.0.0.1:8000",
-			},
-			want: want{
-				addr:    "127.0.0.1:8000",
-				network: "tcp",
-				err:     false,
-			},
-		},
-		{
-			name: "TCPKeepAlive",
-			args: Config{
-				Addr:               "127.0.0.1:8000",
-				TCPKeepalive:       true,
-				TCPKeepalivePeriod: 10 * time.Second,
 			},
 			want: want{
 				addr:    "127.0.0.1:8000",

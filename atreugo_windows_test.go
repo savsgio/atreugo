@@ -4,29 +4,14 @@
 package atreugo
 
 import (
+	"errors"
 	"testing"
 	"time"
 )
 
-func TestAtreugo_newPreforkServer(t *testing.T) {
-	cfg := Config{
-		Logger:           testLog,
-		GracefulShutdown: false,
-	}
-
-	s := New(cfg)
-	sPrefork := s.newPreforkServer()
-
-	testPerforkServer(t, s, sPrefork)
-
-	if !isEqual(sPrefork.ServeFunc, s.Serve) {
-		t.Errorf("Prefork.ServeFunc == %p, want %p", sPrefork.ServeFunc, s.Serve)
-	}
-}
-
 func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 	type want struct {
-		getErr bool
+		err error
 	}
 
 	tests := []struct {
@@ -37,22 +22,51 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 		{
 			name: "NormalOk",
 			args: Config{
-				Addr:      "localhost:8083",
+				Addr:      "localhost:8081",
 				TLSEnable: false,
+				Prefork:   false,
+				Reuseport: false,
 			},
 			want: want{
-				getErr: false,
+				err: nil,
 			},
 		},
 		{
-			name: "Reuseport",
+			name: "ReuseportOk",
 			args: Config{
-				Addr:      "localhost:8083",
+				Addr:      "localhost:8081",
 				TLSEnable: false,
+				Prefork:   false,
 				Reuseport: true,
 			},
 			want: want{
-				getErr: false,
+				err: nil,
+			},
+		},
+		{
+			name: "NormalError",
+			args: Config{
+				Addr:      "invalid",
+				TLSEnable: false,
+				Prefork:   false,
+				Reuseport: false,
+			},
+			want: want{
+				err: errors.New(
+					"failed to announce on the local network address: listen tcp4: address invalid: missing port in address",
+				),
+			},
+		},
+		{
+			name: "PreforkError",
+			args: Config{
+				Addr:      "invalid",
+				TLSEnable: false,
+				Prefork:   true,
+				Reuseport: false,
+			},
+			want: want{
+				err: errors.New("prefork error"),
 			},
 		},
 		{
@@ -60,10 +74,11 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 			args: Config{
 				Addr:      "invalid",
 				TLSEnable: false,
+				Prefork:   false,
 				Reuseport: true,
 			},
 			want: want{
-				getErr: true,
+				err: errors.New("listen tcp4: address invalid: missing port in address"),
 			},
 		},
 		{
@@ -73,45 +88,52 @@ func TestAtreugo_ListenAndServe(t *testing.T) { //nolint:funlen
 				TLSEnable: true,
 			},
 			want: want{
-				getErr: true,
-			},
-		},
-		{
-			name: "InvalidAddr",
-			args: Config{
-				Addr: "0101:999999999999999999",
-			},
-			want: want{
-				getErr: true,
+				err: errors.New("cert or key has not provided"),
 			},
 		},
 	}
 
 	for _, test := range tests {
 		tt := test
+		tt.args.Logger = testLog
+
+		waitTime := 200 * time.Millisecond
+
+		s := New(tt.args)
+		s.cfg.newPreforkServerFunc = func(s *Atreugo) preforkServer {
+			return newPreforkServerMock(s, tt.want.err)
+		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			tt.args.Logger = testLog
-
-			s := New(tt.args)
+			t.Helper()
 
 			errCh := make(chan error, 1)
 			go func() {
 				errCh <- s.ListenAndServe()
 			}()
 
+			var err error
+
 			select {
-			case err := <-errCh:
-				if !tt.want.getErr && err != nil {
-					t.Errorf("Unexpected error: %v", err)
-				}
-			case <-time.After(200 * time.Millisecond):
+			case err = <-errCh:
+			case <-time.After(waitTime):
 				if err := s.engine.Shutdown(); err != nil {
-					t.Errorf("Error shutting down the server %+v", err)
+					t.Errorf("Error shutting down the server: %+v", err)
 				}
-				if tt.want.getErr {
-					t.Error("Error expected")
-				}
+			}
+
+			errMessage := ""
+			if err != nil {
+				errMessage = err.Error()
+			}
+
+			wantErrMessage := ""
+			if tt.want.err != nil {
+				wantErrMessage = tt.want.err.Error()
+			}
+
+			if errMessage != wantErrMessage {
+				t.Errorf("Unexpected error: %s, want: %s", errMessage, wantErrMessage)
 			}
 		})
 	}

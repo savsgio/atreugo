@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -263,7 +262,7 @@ func TestFileResponse(t *testing.T) { // nolint:funlen
 		t.Run(tt.name, func(t *testing.T) {
 			t.Helper()
 
-			if err := ioutil.WriteFile(tt.args.filePath, testFileContent, perm); err != nil {
+			if err := os.WriteFile(tt.args.filePath, testFileContent, perm); err != nil {
 				t.Fatalf("Error writing file %s", tt.args.filePath)
 			}
 			defer os.Remove(tt.args.filePath)

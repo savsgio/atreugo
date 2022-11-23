@@ -4,7 +4,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"runtime"
 
 	"github.com/savsgio/gotils/strconv"
 	"github.com/savsgio/gotils/strings"
@@ -45,7 +44,8 @@ func New(cfg Config) *Atreugo {
 		cfg.ErrorView = defaultErrorView
 	}
 
-	cfg.chmodUnixSocket = chmodFileToSocket
+	cfg.chmodUnixSocketFunc = chmodFileToSocket
+	cfg.newPreforkServerFunc = newPreforkServer
 
 	r := newRouter(cfg)
 
@@ -110,18 +110,6 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 		Logger:                             cfg.Logger,
 		TLSConfig:                          cfg.TLSConfig,
 	}
-}
-
-func (s *Atreugo) newBasePreforkServer() *prefork.Prefork {
-	p := &prefork.Prefork{
-		Network:          s.cfg.Network,
-		Reuseport:        s.cfg.Reuseport,
-		RecoverThreshold: runtime.GOMAXPROCS(0) / 2,
-		Logger:           s.cfg.Logger,
-		ServeFunc:        s.Serve,
-	}
-
-	return p
 }
 
 func (s *Atreugo) handler() fasthttp.RequestHandler {

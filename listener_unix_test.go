@@ -6,7 +6,6 @@ package atreugo
 import (
 	"errors"
 	"testing"
-	"time"
 )
 
 func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
@@ -27,19 +26,6 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
 			name: "Ok",
 			args: Config{
 				Addr: "127.0.0.1:8000",
-			},
-			want: want{
-				addr:    "127.0.0.1:8000",
-				network: "tcp",
-				err:     false,
-			},
-		},
-		{
-			name: "TCPKeepAlive",
-			args: Config{
-				Addr:               "127.0.0.1:8000",
-				TCPKeepalive:       true,
-				TCPKeepalivePeriod: 10 * time.Second,
 			},
 			want: want{
 				addr:    "127.0.0.1:8000",
@@ -108,8 +94,6 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
 		tt := test
 
 		t.Run(tt.name, func(t *testing.T) {
-			t.Helper()
-
 			defer func() {
 				err := recover()
 
@@ -123,7 +107,7 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
 			s := New(tt.args)
 
 			if tt.name == "UnixChmodError" {
-				s.cfg.chmodUnixSocket = func(addr string) error {
+				s.cfg.chmodUnixSocketFunc = func(addr string) error {
 					return errors.New("chmod error")
 				}
 			}
