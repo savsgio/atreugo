@@ -27,7 +27,7 @@ var notConfigFasthttpFields = []string{
 	"MaxKeepaliveDuration", // Deprecated: Use IdleTimeout instead.
 }
 
-func Test_New(t *testing.T) { //nolint:funlen,gocognit
+func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 	type args struct {
 		network                 string
 		gracefulShutdown        bool
