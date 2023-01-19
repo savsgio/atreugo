@@ -24,7 +24,6 @@ import (
 var notConfigFasthttpFields = []string{
 	"Handler",
 	"ErrorHandler",
-	"MaxKeepaliveDuration", // Deprecated: Use IdleTimeout instead.
 }
 
 func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
@@ -231,6 +230,7 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 		ConnState:                          func(net.Conn, fasthttp.ConnState) {},
 		Logger:                             testLog,
 		TLSConfig:                          &tls.Config{ServerName: "test", MinVersion: tls.VersionTLS13},
+		FormValueFunc:                      func(ctx *fasthttp.RequestCtx, key string) []byte { return nil },
 	}
 
 	srv := newFasthttpServer(cfg)

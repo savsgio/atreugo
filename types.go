@@ -354,6 +354,12 @@ type Config struct { // nolint:maligned
 	// called when a client connection changes state. See the
 	// ConnState type and associated constants for details.
 	ConnState func(net.Conn, fasthttp.ConnState)
+
+	// FormValueFunc, which is used by RequestCtx.FormValue and support for customising
+	// the behaviour of the RequestCtx.FormValue function.
+	//
+	// NetHttpFormValueFunc gives a FormValueFunc func implementation that is consistent with net/http.
+	FormValueFunc fasthttp.FormValueFunc
 }
 
 // StaticFS represents settings for serving static files

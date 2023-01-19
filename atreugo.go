@@ -109,6 +109,7 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 		ConnState:                          cfg.ConnState,
 		Logger:                             cfg.Logger,
 		TLSConfig:                          cfg.TLSConfig,
+		FormValueFunc:                      cfg.FormValueFunc,
 	}
 }
 
