@@ -40,6 +40,17 @@ func TestCustomizeJsonMarshaller(t *testing.T) {
 				statusCode: 200,
 			},
 		},
+		{
+			name: "DefaultJSONMarshaller",
+			args: args{
+				body:       JSON{"test": true},
+				statusCode: 200,
+			},
+			want: want{
+				body:       "{\"test\":true}",
+				statusCode: 200,
+			},
+		},
 	}
 
 	for _, test := range tests {

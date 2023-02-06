@@ -19,6 +19,8 @@ func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) (err er
 	jsonMarshaller := ctx.jsonMarshaller
 	if jm, ok := body.(json.Marshaler); ok {
 		data, err = jm.MarshalJSON()
+	} else if jsonMarshaller == nil {
+		data, err = json.Marshal(body)
 	} else {
 		data, err = jsonMarshaller(body)
 	}
