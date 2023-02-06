@@ -46,7 +46,8 @@ type Config struct { // nolint:maligned
 	TLSEnable bool
 	CertKey   string
 	CertFile  string
-
+	// JSONMarshaller is used to marshal the response body to JSON.
+	JSONMarshaller func(v interface{}) ([]byte, error)
 	// TLSConfig optionally provides a TLS configuration for use
 	// by Serve when TLSEnable is true.
 	//
@@ -482,9 +483,9 @@ type StaticFS struct {
 type RequestCtx struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
-	next     bool
-	skipView bool
-
+	next           bool
+	skipView       bool
+	jsonMarshaller func(v interface{}) ([]byte, error)
 	// Flag to avoid stack overflow when this context has been embedded in the attached context
 	searchingOnAttachedCtx int32
 
@@ -492,10 +493,10 @@ type RequestCtx struct {
 }
 
 type routerConfig struct {
-	errorView ErrorView
-
-	debug  bool
-	logger Logger
+	errorView      ErrorView
+	jsonMarshaller func(v interface{}) ([]byte, error)
+	debug          bool
+	logger         Logger
 }
 
 // Router dispatchs requests to different

@@ -52,9 +52,10 @@ func newRouter(cfg Config) *Router {
 		router:        router,
 		handleOPTIONS: true,
 		cfg: &routerConfig{
-			errorView: cfg.ErrorView,
-			debug:     cfg.Debug,
-			logger:    cfg.Logger,
+			errorView:      cfg.ErrorView,
+			debug:          cfg.Debug,
+			jsonMarshaller: cfg.JSONMarshaller,
+			logger:         cfg.Logger,
 		},
 	}
 }
@@ -122,7 +123,7 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 
 	return func(ctx *fasthttp.RequestCtx) {
 		actx := AcquireRequestCtx(ctx)
-
+		actx.jsonMarshaller = r.cfg.jsonMarshaller
 		for i := 0; i < chainLen; i++ {
 			if err := chain[i](actx); err != nil {
 				statusCode := actx.Response.Header.StatusCode()

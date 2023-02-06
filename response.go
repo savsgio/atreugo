@@ -16,11 +16,11 @@ func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) (err er
 	}
 
 	var data []byte
-
+	jsonMarshaller := ctx.jsonMarshaller
 	if jm, ok := body.(json.Marshaler); ok {
 		data, err = jm.MarshalJSON()
 	} else {
-		data, err = json.Marshal(body)
+		data, err = jsonMarshaller(body)
 	}
 
 	if err != nil {

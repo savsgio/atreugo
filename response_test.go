@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"os"
 	"path"
 	"testing"
@@ -23,8 +24,9 @@ func (cj customJSON) MarshalJSON() ([]byte, error) {
 
 func TestJSONResponse(t *testing.T) { //nolint:funlen
 	type args struct {
-		body       interface{}
-		statusCode int
+		body           interface{}
+		statusCode     int
+		jsonMarshaller func(v interface{}) ([]byte, error)
 	}
 
 	type want struct {
@@ -44,6 +46,20 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 			args: args{
 				body:       JSON{"test": true},
 				statusCode: 200,
+			},
+			want: want{
+				body:        "{\"test\":true}",
+				statusCode:  200,
+				contentType: "application/json",
+				err:         false,
+			},
+		},
+		{
+			name: "CustomizeJSONMarshaller",
+			args: args{
+				body:           JSON{"test": true},
+				statusCode:     200,
+				jsonMarshaller: jsoniter.ConfigCompatibleWithStandardLibrary.Marshal,
 			},
 			want: want{
 				body:        "{\"test\":true}",
@@ -88,7 +104,6 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 
 			ctx := new(fasthttp.RequestCtx)
 			actx := AcquireRequestCtx(ctx)
-
 			err := actx.JSONResponse(tt.args.body, tt.args.statusCode)
 			if tt.want.err && (err == nil) {
 				t.Errorf("JSONResponse() Expected error")
