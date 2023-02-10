@@ -1,8 +1,8 @@
 package atreugo
 
 import (
+	"encoding/json"
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
 	"io"
 	"net/http"
 	"os"
@@ -10,11 +10,17 @@ import (
 	"time"
 )
 
+type CustomJSONMarshaller struct{}
+
+func (m *CustomJSONMarshaller) Marshal(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
+}
+
 func TestCustomizeJsonMarshaller(t *testing.T) {
 	type args struct {
 		body           interface{}
 		statusCode     int
-		jsonMarshaller func(v interface{}) ([]byte, error)
+		jsonMarshaller JSONMarshaller
 	}
 
 	type want struct {
@@ -33,7 +39,7 @@ func TestCustomizeJsonMarshaller(t *testing.T) {
 			args: args{
 				body:           JSON{"test": true},
 				statusCode:     200,
-				jsonMarshaller: jsoniter.ConfigCompatibleWithStandardLibrary.Marshal,
+				jsonMarshaller: &CustomJSONMarshaller{},
 			},
 			want: want{
 				body:       "{\"test\":true}",

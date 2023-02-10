@@ -17,6 +17,10 @@ type Logger interface {
 	Printf(format string, args ...interface{})
 }
 
+type JSONMarshaller interface {
+	Marshal(v interface{}) ([]byte, error)
+}
+
 type preforkServer interface {
 	ListenAndServe(addr string) error
 }
@@ -47,7 +51,7 @@ type Config struct { // nolint:maligned
 	CertKey   string
 	CertFile  string
 	// JSONMarshaller is used to marshal the response body to JSON.
-	JSONMarshaller func(v interface{}) ([]byte, error)
+	JSONMarshaller JSONMarshaller
 	// TLSConfig optionally provides a TLS configuration for use
 	// by Serve when TLSEnable is true.
 	//
@@ -485,7 +489,7 @@ type RequestCtx struct {
 
 	next           bool
 	skipView       bool
-	jsonMarshaller func(v interface{}) ([]byte, error)
+	jsonMarshaller JSONMarshaller
 	// Flag to avoid stack overflow when this context has been embedded in the attached context
 	searchingOnAttachedCtx int32
 
@@ -494,7 +498,7 @@ type RequestCtx struct {
 
 type routerConfig struct {
 	errorView      ErrorView
-	jsonMarshaller func(v interface{}) ([]byte, error)
+	jsonMarshaller JSONMarshaller
 	debug          bool
 	logger         Logger
 }

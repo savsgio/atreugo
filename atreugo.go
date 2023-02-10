@@ -1,6 +1,7 @@
 package atreugo
 
 import (
+	"encoding/json"
 	"log"
 	"net"
 	"os"
@@ -15,8 +16,15 @@ var (
 	tcpNetworks   = []string{"tcp", "tcp4", "tcp6"}
 	validNetworks = append(tcpNetworks, []string{"unix"}...)
 
-	defaultLogger Logger = log.New(os.Stderr, "", log.LstdFlags)
+	defaultLogger         Logger         = log.New(os.Stderr, "", log.LstdFlags)
+	defaultJSONMarshaller JSONMarshaller = &DefaultJSONMarshaller{}
 )
+
+type DefaultJSONMarshaller struct{}
+
+func (m *DefaultJSONMarshaller) Marshal(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
+}
 
 // New create a new instance of Atreugo Server.
 func New(cfg Config) *Atreugo {
@@ -38,6 +46,10 @@ func New(cfg Config) *Atreugo {
 
 	if cfg.Logger == nil {
 		cfg.Logger = defaultLogger
+	}
+
+	if cfg.JSONMarshaller == nil {
+		cfg.JSONMarshaller = defaultJSONMarshaller
 	}
 
 	if cfg.ErrorView == nil {
