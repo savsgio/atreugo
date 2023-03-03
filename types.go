@@ -505,17 +505,17 @@ type routerConfig struct {
 type Router struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
-	parent *Router
-	prefix string
-
+	cfg           *routerConfig
+	parent        *Router
 	router        *fastrouter.Router
 	routerMutable bool
+
+	prefix        string
+	group         *fastrouter.Group
 	handleOPTIONS bool
 	customOPTIONS []string
 
 	middlewares Middlewares
-
-	cfg *routerConfig
 }
 
 // Path configuration of the registered view
@@ -529,6 +529,7 @@ type Path struct { // nolint:maligned
 
 	method      string
 	url         string
+	fullURL     string
 	view        View
 	middlewares Middlewares
 

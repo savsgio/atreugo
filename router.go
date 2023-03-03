@@ -49,13 +49,13 @@ func newRouter(cfg Config) *Router {
 	router.HandleOPTIONS = false
 
 	return &Router{
-		router:        router,
-		handleOPTIONS: true,
 		cfg: &routerConfig{
 			errorView: cfg.ErrorView,
 			debug:     cfg.Debug,
 			logger:    cfg.Logger,
 		},
+		router:        router,
+		handleOPTIONS: true,
 	}
 }
 
@@ -152,7 +152,7 @@ func (r *Router) handlePath(p *Path) {
 	case p.registered:
 		r.mutable(true)
 	case isOPTIONS:
-		mutable := !gstrings.Include(r.customOPTIONS, p.url)
+		mutable := !gstrings.Include(r.customOPTIONS, p.fullURL)
 		r.mutable(mutable)
 	case r.routerMutable:
 		r.mutable(false)
@@ -160,8 +160,8 @@ func (r *Router) handlePath(p *Path) {
 
 	view := p.view
 	if isOPTIONS {
-		view = buildOptionsView(p.url, view, r.ListPaths())
-		r.customOPTIONS = gstrings.UniqueAppend(r.customOPTIONS, p.url)
+		view = buildOptionsView(p.fullURL, view, r.ListPaths())
+		r.customOPTIONS = gstrings.UniqueAppend(r.customOPTIONS, p.fullURL)
 	}
 
 	handler := r.handler(view, p.middlewares)
@@ -169,26 +169,37 @@ func (r *Router) handlePath(p *Path) {
 		handler = fasthttp.TimeoutWithCodeHandler(handler, p.timeout, p.timeoutMsg, p.timeoutCode)
 	}
 
-	r.router.Handle(p.method, p.url, handler)
+	handleFunc := r.router.Handle
+	if r.group != nil {
+		handleFunc = r.group.Handle
+	}
+
+	handleFunc(p.method, p.url, handler)
 
 	if r.handleOPTIONS && !p.registered && !isOPTIONS {
-		view = buildOptionsView(p.url, emptyView, r.ListPaths())
+		view = buildOptionsView(p.fullURL, emptyView, r.ListPaths())
 		handler = r.handler(view, p.middlewares)
 
 		r.mutable(true)
-		r.router.Handle(fasthttp.MethodOptions, p.url, handler)
+		handleFunc(fasthttp.MethodOptions, p.url, handler)
 	}
 }
 
 // NewGroupPath returns a new router to group paths.
 func (r *Router) NewGroupPath(path string) *Router {
+	groupFunc := r.router.Group
+	if r.group != nil {
+		groupFunc = r.group.Group
+	}
+
 	return &Router{
+		cfg:           r.cfg,
 		parent:        r,
-		prefix:        path,
 		router:        r.router,
 		routerMutable: r.routerMutable,
+		prefix:        path,
+		group:         groupFunc(path),
 		handleOPTIONS: r.handleOPTIONS,
-		cfg:           r.cfg,
 	}
 }
 
@@ -394,10 +405,11 @@ func (r *Router) Path(method, url string, viewFn View) *Path {
 	}
 
 	p := &Path{
-		router: r,
-		method: method,
-		url:    r.getGroupFullPath(url),
-		view:   viewFn,
+		router:  r,
+		method:  method,
+		url:     url,
+		fullURL: r.getGroupFullPath(url),
+		view:    viewFn,
 	}
 
 	r.handlePath(p)
