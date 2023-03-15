@@ -204,17 +204,8 @@ func TestRouter_buildMiddlewares(t *testing.T) {
 			t.Errorf("Middlewares.Skip length == %d, want %d", len(result.Skip), wantSkipLen)
 		}
 
-		wantBeforeLen := len(middle.Before) - len(m.Skip)
-		if s.cfg.Debug {
-			wantBeforeLen++
-		}
-
-		if len(result.Before) != wantBeforeLen {
+		if wantBeforeLen := len(middle.Before) - len(m.Skip); len(result.Before) != wantBeforeLen {
 			t.Errorf("Middlewares.Before length == %d, want %d", len(result.Before), wantBeforeLen)
-		}
-
-		if s.cfg.Debug && isEqual(result.Before[0], middle.Before[1]) {
-			t.Error("First before middleware must be the logger middleware")
 		}
 
 		wantAfterLen := len(middle.After)
@@ -702,10 +693,6 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 			if handlerCounter.afterViewMiddlewares != tt.want.counter.afterViewMiddlewares {
 				t.Errorf("After view call counter = %v, want %v", handlerCounter.afterViewMiddlewares,
 					tt.want.counter.afterViewMiddlewares)
-			}
-
-			if logOutput.Len() == 0 {
-				t.Errorf("Debug trace has not been write in log when logger 'debug' is enabled")
 			}
 		})
 	}

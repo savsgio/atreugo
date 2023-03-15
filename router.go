@@ -76,17 +76,8 @@ func (r *Router) buildMiddlewares(m Middlewares) Middlewares {
 	m2.Skip = append(m2.Skip, m.Skip...)
 	m2.Skip = append(m2.Skip, r.middlewares.Skip...)
 
-	switch {
-	case r.parent != nil:
+	if r.parent != nil {
 		return r.parent.buildMiddlewares(m2)
-	case r.cfg.debug:
-		debugMiddleware := func(ctx *RequestCtx) error {
-			r.cfg.logger.Printf("%s %s", ctx.Method(), ctx.URI())
-
-			return ctx.Next()
-		}
-
-		m2.Before = append([]Middleware{debugMiddleware}, m2.Before...)
 	}
 
 	m2.Before = appendMiddlewares(m2.Before[:0], m2.Before, m2.Skip...)
@@ -130,7 +121,6 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 					statusCode = fasthttp.StatusInternalServerError
 				}
 
-				r.cfg.logger.Printf("error view: %s", err)
 				r.cfg.errorView(actx, err, statusCode)
 
 				break
