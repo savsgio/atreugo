@@ -49,12 +49,8 @@ func newRouter(cfg Config) *Router {
 	router.HandleOPTIONS = false
 
 	return &Router{
-		cfg: &routerConfig{
-			errorView: cfg.ErrorView,
-			debug:     cfg.Debug,
-			logger:    cfg.Logger,
-		},
 		router:        router,
+		errorView:     cfg.ErrorView,
 		handleOPTIONS: true,
 	}
 }
@@ -121,7 +117,7 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 					statusCode = fasthttp.StatusInternalServerError
 				}
 
-				r.cfg.errorView(actx, err, statusCode)
+				r.errorView(actx, err, statusCode)
 
 				break
 			} else if !actx.next {
@@ -183,10 +179,10 @@ func (r *Router) NewGroupPath(path string) *Router {
 	}
 
 	return &Router{
-		cfg:           r.cfg,
 		parent:        r,
 		router:        r.router,
 		routerMutable: r.routerMutable,
+		errorView:     r.errorView,
 		prefix:        path,
 		group:         groupFunc(path),
 		handleOPTIONS: r.handleOPTIONS,
@@ -353,7 +349,7 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 	}
 
 	if fs.PathNotFound != nil {
-		ffs.PathNotFound = viewToHandler(fs.PathNotFound, r.cfg.errorView)
+		ffs.PathNotFound = viewToHandler(fs.PathNotFound, r.errorView)
 	}
 
 	stripSlashes := strings.Count(r.getGroupFullPath(url), "/")

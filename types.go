@@ -493,13 +493,6 @@ type RequestCtx struct {
 	*fasthttp.RequestCtx
 }
 
-type routerConfig struct {
-	errorView ErrorView
-
-	debug  bool
-	logger Logger
-}
-
 // Router dispatchs requests to different
 // views via configurable routes (paths)
 //
@@ -507,10 +500,10 @@ type routerConfig struct {
 type Router struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
-	cfg           *routerConfig
 	parent        *Router
 	router        *fastrouter.Router
 	routerMutable bool
+	errorView     ErrorView
 
 	prefix        string
 	group         *fastrouter.Group

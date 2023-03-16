@@ -139,16 +139,12 @@ func TestRouter_newRouter(t *testing.T) {
 		t.Error("Router routerMutable is true")
 	}
 
+	if !isEqual(r.errorView, testConfig.ErrorView) {
+		t.Errorf("Router errorView == %p, want %p", r.errorView, testConfig.ErrorView)
+	}
+
 	if !r.handleOPTIONS {
 		t.Error("Router handleOPTIONS is false")
-	}
-
-	if !isEqual(r.cfg.errorView, testConfig.ErrorView) {
-		t.Errorf("Router log == %p, want %p", r.cfg.errorView, testConfig.ErrorView)
-	}
-
-	if !isEqual(r.cfg.logger, testConfig.Logger) {
-		t.Errorf("Router log == %p, want %p", r.cfg.logger, testConfig.Logger)
 	}
 }
 
@@ -775,12 +771,12 @@ func TestRouter_NewGroupPath(t *testing.T) {
 		t.Errorf("Group router routerMutable == '%v', want '%v'", g.routerMutable, r.routerMutable)
 	}
 
-	if g.handleOPTIONS != r.handleOPTIONS {
-		t.Errorf("Group router handleOPTIONS == '%v', want '%v'", g.handleOPTIONS, r.handleOPTIONS)
+	if !isEqual(g.errorView, r.errorView) {
+		t.Errorf("Group router errorView == '%p', want '%p'", g.errorView, r.errorView)
 	}
 
-	if !isEqual(g.cfg, r.cfg) {
-		t.Errorf("Group router config == %p, want %p", g.cfg, r.cfg)
+	if g.handleOPTIONS != r.handleOPTIONS {
+		t.Errorf("Group router handleOPTIONS == '%v', want '%v'", g.handleOPTIONS, r.handleOPTIONS)
 	}
 }
 

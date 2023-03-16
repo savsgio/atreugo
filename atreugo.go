@@ -50,11 +50,11 @@ func New(cfg Config) *Atreugo {
 	r := newRouter(cfg)
 
 	if cfg.NotFoundView != nil {
-		r.router.NotFound = viewToHandler(cfg.NotFoundView, r.cfg.errorView)
+		r.router.NotFound = viewToHandler(cfg.NotFoundView, r.errorView)
 	}
 
 	if cfg.MethodNotAllowedView != nil {
-		r.router.MethodNotAllowed = viewToHandler(cfg.MethodNotAllowedView, r.cfg.errorView)
+		r.router.MethodNotAllowed = viewToHandler(cfg.MethodNotAllowedView, r.errorView)
 	}
 
 	if cfg.PanicView != nil {
