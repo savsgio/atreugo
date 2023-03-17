@@ -12,8 +12,6 @@ import (
 // ServeGracefully serves incoming connections from the given listener with graceful shutdown
 //
 // It's blocked until the given listener returns permanent error.
-//
-// WARNING: Windows is not supportted.
 func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	s.cfg.GracefulShutdown = true
 

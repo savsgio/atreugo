@@ -13,7 +13,7 @@ import (
 
 var (
 	tcpNetworks   = []string{"tcp", "tcp4", "tcp6"}
-	validNetworks = append(tcpNetworks, []string{"unix"}...)
+	validNetworks = append(tcpNetworks, "unix")
 
 	defaultLogger Logger = log.New(os.Stderr, "", log.LstdFlags)
 )
@@ -21,7 +21,7 @@ var (
 // New create a new instance of Atreugo Server.
 func New(cfg Config) *Atreugo {
 	if cfg.Network != "" && !strings.Include(validNetworks, cfg.Network) {
-		panic("Invalid network: " + cfg.Network)
+		panic("invalid network: " + cfg.Network)
 	}
 
 	if cfg.Network == "" {
@@ -250,7 +250,7 @@ func (s *Atreugo) Serve(ln net.Listener) error {
 // If you pass multiples hostnames, all of them will have the same behaviour.
 func (s *Atreugo) NewVirtualHost(hostnames ...string) *Router {
 	if len(hostnames) == 0 {
-		panic("At least 1 hostname is required")
+		panic("at least 1 hostname is required")
 	}
 
 	if s.virtualHosts == nil {
@@ -264,7 +264,7 @@ func (s *Atreugo) NewVirtualHost(hostnames ...string) *Router {
 
 	for _, name := range hostnames {
 		if s.virtualHosts[name] != nil {
-			panicf("a router is already registered for virtual host '%s'", name)
+			panicf("a router is already registered for virtual host: %s", name)
 		}
 
 		s.virtualHosts[name] = vHost.router.Handler

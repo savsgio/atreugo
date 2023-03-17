@@ -17,7 +17,7 @@ func (s *Atreugo) getListener() (net.Listener, error) {
 
 	if s.cfg.Network == "unix" {
 		if err := os.Remove(s.cfg.Addr); err != nil && !os.IsNotExist(err) {
-			return nil, wrapErrorf(err, "unexpected error when trying to remove unix socket file %q", s.cfg.Addr)
+			return nil, wrapErrorf(err, "unexpected error when trying to remove unix socket file: %q", s.cfg.Addr)
 		}
 	}
 
@@ -28,7 +28,7 @@ func (s *Atreugo) getListener() (net.Listener, error) {
 
 	if s.cfg.Network == "unix" {
 		if err := s.cfg.chmodUnixSocketFunc(s.cfg.Addr); err != nil {
-			return nil, err
+			return nil, wrapError(err, "failed to chmod unix socket file")
 		}
 	}
 

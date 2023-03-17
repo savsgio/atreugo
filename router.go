@@ -387,7 +387,7 @@ func (r *Router) ServeFile(url, filePath string) *Path {
 // communication with a proxy).
 func (r *Router) Path(method, url string, viewFn View) *Path {
 	if method != strings.ToUpper(method) {
-		panic("The http method '" + method + "' must be in uppercase")
+		panicf("http method '%s' must be in uppercase", method)
 	}
 
 	p := &Path{

@@ -562,15 +562,15 @@ func TestAtreugo_NewVirtualHost(t *testing.T) { //nolint:funlen
 	conflictHosts := []conflictArgs{
 		{
 			hostnames:  []string{hostname},
-			wantErrMsg: fmt.Sprintf("a router is already registered for virtual host '%s'", hostname),
+			wantErrMsg: fmt.Sprintf("a router is already registered for virtual host: %s", hostname),
 		},
 		{
 			hostnames:  []string{},
-			wantErrMsg: "At least 1 hostname is required",
+			wantErrMsg: "at least 1 hostname is required",
 		},
 		{
 			hostnames:  []string{"localhost", "localhost"},
-			wantErrMsg: fmt.Sprintf("a router is already registered for virtual host '%s'", hostname),
+			wantErrMsg: fmt.Sprintf("a router is already registered for virtual host: %s", hostname),
 		},
 	}
 

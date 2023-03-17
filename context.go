@@ -12,13 +12,15 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-var attachedCtxKey = fmt.Sprintf("__attachedCtx::%s__", bytes.Rand(make([]byte, 15)))
+var (
+	attachedCtxKey = fmt.Sprintf("__attachedCtx::%s__", bytes.Rand(make([]byte, 15)))
 
-var requestCtxPool = &sync.Pool{
-	New: func() interface{} {
-		return new(RequestCtx)
-	},
-}
+	requestCtxPool = sync.Pool{
+		New: func() interface{} {
+			return new(RequestCtx)
+		},
+	}
+)
 
 // AcquireRequestCtx returns an empty RequestCtx instance from request context pool.
 //
@@ -110,7 +112,7 @@ func (ctx *RequestCtx) MatchedRoutePath() []byte {
 //
 // instead of:
 //
-//	ctx.AttachContext(context.WithValue(context.Background(), "myKey", "myValue"))
+//	ctx.AttachContext(context.WithValue(myCtx, "myKey", "myValue"))
 //	ctx.Value("myKey")
 //
 // to avoid extra allocation.
@@ -118,11 +120,8 @@ func (ctx *RequestCtx) Value(key interface{}) interface{} {
 	if atomic.CompareAndSwapInt32(&ctx.searchingOnAttachedCtx, 0, 1) {
 		defer atomic.StoreInt32(&ctx.searchingOnAttachedCtx, 0)
 
-		extraCtx := ctx.AttachedContext()
-		if extraCtx != nil {
-			val := extraCtx.Value(key)
-
-			return val
+		if extraCtx := ctx.AttachedContext(); extraCtx != nil {
+			return extraCtx.Value(key)
 		}
 	}
 
