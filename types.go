@@ -551,6 +551,7 @@ type Middlewares struct {
 	Before []Middleware
 	After  []Middleware
 	Skip   []Middleware
+	Final  []Middleware
 }
 
 // PathRewriteFunc must return new request path based on arbitrary ctx

@@ -38,6 +38,17 @@ func (p *Path) UseAfter(fns ...Middleware) *Path {
 	return p
 }
 
+// UseFinal registers the given middlewares to be executed in the order in which they are added,
+// after the view or group has been executed. These middlewares will always be executed,
+// even if a previous middleware or the view/group returned a response.
+func (p *Path) UseFinal(fns ...Middleware) *Path {
+	p.middlewares.Final = append(p.middlewares.Final, fns...)
+
+	p.router.handlePath(p)
+
+	return p
+}
+
 // SkipMiddlewares registers the middlewares that you want to skip only when executing the view.
 func (p *Path) SkipMiddlewares(fns ...Middleware) *Path {
 	p.middlewares.Skip = append(p.middlewares.Skip, fns...)
