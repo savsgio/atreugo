@@ -81,7 +81,6 @@ func (r *Router) buildMiddlewares(m Middlewares) Middlewares {
 
 	m2.Before = appendMiddlewares(m2.Before[:0], m2.Before, m2.Skip...)
 	m2.After = appendMiddlewares(m2.After[:0], m2.After, m2.Skip...)
-	m2.Final = appendMiddlewares(m2.Final[:0], m2.Final, m2.Skip...)
 
 	return m2
 }
@@ -126,10 +125,7 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 		}
 
 		for _, final := range middle.Final {
-			if err := final(actx); err != nil {
-				r.handleMiddlewareError(actx, err)
-				break
-			}
+			final(actx)
 		}
 
 		ReleaseRequestCtx(actx)
@@ -237,7 +233,7 @@ func (r *Router) UseAfter(fns ...Middleware) *Router {
 // UseFinal registers the given middlewares to be executed in the order in which they are added,
 // after the view or group has been executed. These middlewares will always be executed,
 // even if a previous middleware or the view/group returned a response.
-func (r *Router) UseFinal(fns ...Middleware) *Router {
+func (r *Router) UseFinal(fns ...FinalMiddleware) *Router {
 	r.middlewares.Final = append(r.middlewares.Final, fns...)
 
 	return r

@@ -178,11 +178,12 @@ func TestRouter_buildMiddlewares(t *testing.T) {
 	middleware1 := func(ctx *RequestCtx) error { return ctx.Next() }
 	middleware2 := func(ctx *RequestCtx) error { return ctx.Next() }
 	middleware3 := func(ctx *RequestCtx) error { return ctx.Next() }
+	middleware4 := func(ctx *RequestCtx) {}
 
 	middle := Middlewares{
 		Before: []Middleware{middleware1, middleware2},
 		After:  []Middleware{middleware3},
-		Final:  []Middleware{middleware3, middleware1},
+		Final:  []FinalMiddleware{middleware4},
 	}
 	m := Middlewares{
 		Skip: []Middleware{middleware1},
@@ -210,7 +211,7 @@ func TestRouter_buildMiddlewares(t *testing.T) {
 			t.Errorf("Middlewares.After length == %d, want %d", len(result.After), wantAfterLen)
 		}
 
-		if wantFinalLen := len(middle.Final) - len(m.Skip); len(result.Before) != wantFinalLen {
+		if wantFinalLen := len(middle.Final); len(result.Final) != wantFinalLen {
 			t.Errorf("Middlewares.Final length == %d, want %d", len(result.Final), wantFinalLen)
 		}
 	}
@@ -275,11 +276,9 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 
 		return ctx.Next()
 	})
-	s.UseFinal(func(ctx *RequestCtx) error {
+	s.UseFinal(func(ctx *RequestCtx) {
 		index++
 		callOrder["globalFinal"] = index
-
-		return ctx.Next()
 	})
 
 	v1 := s.NewGroupPath("/v1")
@@ -295,11 +294,9 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 
 		return ctx.Next()
 	}, skipMiddlewareGroup)
-	v1.UseFinal(func(ctx *RequestCtx) error {
+	v1.UseFinal(func(ctx *RequestCtx) {
 		index++
 		callOrder["groupFinal"] = index
-
-		return ctx.Next()
 	})
 
 	v1.SkipMiddlewares(skipMiddlewareGlobal)
@@ -318,11 +315,9 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 		callOrder["viewAfter"] = index
 
 		return ctx.Next()
-	}).UseFinal(func(ctx *RequestCtx) error {
+	}).UseFinal(func(ctx *RequestCtx) {
 		index++
 		callOrder["viewFinal"] = index
-
-		return ctx.Next()
 	}).SkipMiddlewares(skipMiddlewareGroup)
 
 	ctx := new(fasthttp.RequestCtx)
@@ -398,7 +393,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 		viewFn      View
 		before      []Middleware
 		after       []Middleware
-		final       []Middleware
+		final       []FinalMiddleware
 		middlewares Middlewares
 	}
 
@@ -429,10 +424,8 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 			return ctx.Next()
 		},
 	}
-	final := []Middleware{func(ctx *RequestCtx) error {
+	final := []FinalMiddleware{func(ctx *RequestCtx) {
 		handlerCounter.finalMiddlewares++
-
-		return ctx.Next()
 	},
 	}
 
@@ -451,11 +444,9 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 				return ctx.Next()
 			},
 		},
-		Final: []Middleware{
-			func(ctx *RequestCtx) error {
+		Final: []FinalMiddleware{
+			func(ctx *RequestCtx) {
 				handlerCounter.finalViewMiddlewares++
-
-				return ctx.Next()
 			},
 		},
 	}
@@ -590,11 +581,9 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 							return ctx.Next()
 						},
 					},
-					Final: []Middleware{
-						func(ctx *RequestCtx) error {
+					Final: []FinalMiddleware{
+						func(ctx *RequestCtx) {
 							handlerCounter.finalViewMiddlewares++
-
-							return ctx.Next()
 						},
 					},
 				},
@@ -634,11 +623,9 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 							return ctx.ErrorResponse(err, fasthttp.StatusBadRequest)
 						},
 					},
-					Final: []Middleware{
-						func(ctx *RequestCtx) error {
+					Final: []FinalMiddleware{
+						func(ctx *RequestCtx) {
 							handlerCounter.finalViewMiddlewares++
-
-							return ctx.Next()
 						},
 					},
 				},

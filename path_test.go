@@ -97,8 +97,13 @@ func TestPath_UseAfter(t *testing.T) {
 }
 
 func TestPath_UseFinal(t *testing.T) {
+	var finalMiddlewareFns = []FinalMiddleware{
+		func(ctx *RequestCtx) {},
+		func(ctx *RequestCtx) {},
+	}
+
 	p := newTestPath()
-	p.UseFinal(middlewareFns...)
+	p.UseFinal(finalMiddlewareFns...)
 
 	if len(p.middlewares.Final) != len(middlewareFns) {
 		t.Errorf("Final middlewares are not registered")
