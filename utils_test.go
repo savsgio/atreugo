@@ -34,7 +34,7 @@ func newPreforkServerMock(s *Atreugo, errListenAndServe error) *preforkServerMoc
 	}
 }
 
-func (s *preforkServerMock) ListenAndServe(addr string) error {
+func (s *preforkServerMock) ListenAndServe(_ string) error {
 	if s.errListenAndServe != nil {
 		return s.errListenAndServe
 	}

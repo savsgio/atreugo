@@ -15,7 +15,7 @@ func defaultErrorView(ctx *RequestCtx, err error, statusCode int) {
 	ctx.Error(err.Error(), statusCode)
 }
 
-func emptyView(ctx *RequestCtx) error {
+func emptyView(_ *RequestCtx) error {
 	return nil
 }
 
