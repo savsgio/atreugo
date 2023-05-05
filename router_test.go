@@ -424,9 +424,10 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 			return ctx.Next()
 		},
 	}
-	final := []FinalMiddleware{func(ctx *RequestCtx) {
-		handlerCounter.finalMiddlewares++
-	},
+	final := []FinalMiddleware{
+		func(ctx *RequestCtx) {
+			handlerCounter.finalMiddlewares++
+		},
 	}
 
 	middlewares := Middlewares{

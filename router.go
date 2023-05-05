@@ -116,6 +116,7 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 		for i := 0; i < chainLen; i++ {
 			if err := chain[i](actx); err != nil {
 				r.handleMiddlewareError(actx, err)
+
 				break
 			} else if !actx.next {
 				break
