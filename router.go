@@ -72,6 +72,9 @@ func (r *Router) buildMiddlewares(m Middlewares) Middlewares {
 	m2.Skip = append(m2.Skip, m.Skip...)
 	m2.Skip = append(m2.Skip, r.middlewares.Skip...)
 
+	m2.Final = append(m2.Final, m.Final...)
+	m2.Final = append(m2.Final, r.middlewares.Final...)
+
 	if r.parent != nil {
 		return r.parent.buildMiddlewares(m2)
 	}
@@ -112,12 +115,7 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 
 		for i := 0; i < chainLen; i++ {
 			if err := chain[i](actx); err != nil {
-				statusCode := actx.Response.Header.StatusCode()
-				if statusCode == fasthttp.StatusOK {
-					statusCode = fasthttp.StatusInternalServerError
-				}
-
-				r.errorView(actx, err, statusCode)
+				r.handleMiddlewareError(actx, err)
 
 				break
 			} else if !actx.next {
@@ -127,8 +125,21 @@ func (r *Router) handler(fn View, middle Middlewares) fasthttp.RequestHandler {
 			actx.next = false
 		}
 
+		for _, final := range middle.Final {
+			final(actx)
+		}
+
 		ReleaseRequestCtx(actx)
 	}
+}
+
+func (r *Router) handleMiddlewareError(ctx *RequestCtx, err error) {
+	statusCode := ctx.Response.Header.StatusCode()
+	if statusCode == fasthttp.StatusOK {
+		statusCode = fasthttp.StatusInternalServerError
+	}
+
+	r.errorView(ctx, err, statusCode)
 }
 
 func (r *Router) handlePath(p *Path) {
@@ -216,6 +227,15 @@ func (r *Router) UseBefore(fns ...Middleware) *Router {
 // after the execution of the view or group.
 func (r *Router) UseAfter(fns ...Middleware) *Router {
 	r.middlewares.After = append(r.middlewares.After, fns...)
+
+	return r
+}
+
+// UseFinal registers the given middlewares to be executed in the order in which they are added,
+// after the view or group has been executed. These middlewares will always be executed,
+// even if a previous middleware or the view/group returned a response.
+func (r *Router) UseFinal(fns ...FinalMiddleware) *Router {
+	r.middlewares.Final = append(r.middlewares.Final, fns...)
 
 	return r
 }

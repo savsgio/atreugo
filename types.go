@@ -546,11 +546,15 @@ type PanicView func(*RequestCtx, interface{})
 // Middleware must process all incoming requests before/after defined views.
 type Middleware View
 
+// FinalMiddleware must process all incoming requests after the other middlewares/view.
+type FinalMiddleware func(*RequestCtx)
+
 // Middlewares is a collection of middlewares with the order of execution and which to skip.
 type Middlewares struct {
 	Before []Middleware
 	After  []Middleware
 	Skip   []Middleware
+	Final  []FinalMiddleware
 }
 
 // PathRewriteFunc must return new request path based on arbitrary ctx
