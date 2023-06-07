@@ -15,21 +15,9 @@ func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) (err er
 		ctx.Response.Header.SetStatusCode(statusCode[0])
 	}
 
-	var data []byte
+	w := ctx.Response.BodyWriter()
 
-	if jm, ok := body.(json.Marshaler); ok {
-		data, err = jm.MarshalJSON()
-	} else {
-		data, err = json.Marshal(body)
-	}
-
-	if err != nil {
-		return wrapError(err, "failed to marshal response body")
-	}
-
-	ctx.Response.SetBody(data)
-
-	return nil
+	return json.NewEncoder(w).Encode(body) // nolint:wrapcheck
 }
 
 // HTTPResponse return response with body in html format.
