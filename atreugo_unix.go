@@ -22,6 +22,9 @@ func (s *Atreugo) ServeGracefully(ln net.Listener) error {
 	}()
 
 	osSignals := make(chan os.Signal, 1)
+	if s.cfg.GracefulShutdown && len(s.cfg.GracefulShutdownSignals) == 0 {
+		s.cfg.GracefulShutdownSignals = append(s.cfg.GracefulShutdownSignals, defaultGracefulShutdownSignals...)
+	}
 	signal.Notify(osSignals, s.cfg.GracefulShutdownSignals...)
 
 	select {
