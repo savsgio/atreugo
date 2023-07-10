@@ -101,6 +101,10 @@ func TestAtreugo_ServeGracefully(t *testing.T) { // nolint:funlen
 				t.Errorf("Config.GracefulShutdown = %v, want %v", cfg.GracefulShutdown, true)
 			}
 
+			if len(s.cfg.GracefulShutdownSignals) == 0 {
+				t.Errorf("Config.GracefulShutdownSignals is empty, want %v", defaultGracefulShutdownSignals)
+			}
+
 			lnAddr := ln.Addr().String()
 			if s.cfg.Addr != lnAddr {
 				t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
