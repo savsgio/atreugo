@@ -287,6 +287,7 @@ func (s *Atreugo) Shutdown() (err error) {
 	if s.engine != nil {
 		err = s.engine.ShutdownWithContext(context.Background())
 	}
+
 	return
 }
 
@@ -304,5 +305,6 @@ func (s *Atreugo) ShutdownWithContext(ctx context.Context) (err error) {
 	if s.engine != nil {
 		err = s.engine.ShutdownWithContext(ctx)
 	}
+
 	return
 }
