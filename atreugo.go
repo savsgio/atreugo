@@ -275,23 +275,28 @@ func (s *Atreugo) NewVirtualHost(hostnames ...string) *Router {
 }
 
 // Shutdown gracefully shuts down the server without interrupting any active connections.
-// Shutdown works by first closing all open listeners and then waiting indefinitely for all connections to return to idle and then shut down.
+// Shutdown works by first closing all open listeners and then waiting indefinitely for 
+// all connections to return to idle and then shut down.
 //
-// When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return nil.
-// Make sure the program doesn't exit and waits instead for Shutdown to return.
+// When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return 
+// nil. Make sure the program doesn't exit and waits instead for Shutdown to return.
 //
-// Shutdown does not close keepalive connections so it's recommended to set ReadTimeout and IdleTimeout to something else than 0.
+// Shutdown does not close keepalive connections so it's recommended to set ReadTimeout 
+// and IdleTimeout to something else than 0.
 func (s *Atreugo) Shutdown() error {
 	return s.engine.Shutdown()
 }
 
-// ShutdownWithContext gracefully shuts down the server without interrupting any active connections.
-// ShutdownWithContext works by first closing all open listeners and then waiting for all connections to return to idle or context timeout and then shut down.
+// ShutdownWithContext gracefully shuts down the server without interrupting any active 
+// connections. ShutdownWithContext works by first closing all open listeners and then 
+// waiting for all connections to return to idle or context timeout and then shut down.
 //
-// When ShutdownWithContext is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return nil.
-// Make sure the program doesn't exit and waits instead for Shutdown to return.
+// When ShutdownWithContext is called, Serve, ListenAndServe, and ListenAndServeTLS 
+// immediately return nil. Make sure the program doesn't exit and waits instead for 
+// Shutdown to return.
 //
-// ShutdownWithContext does not close keepalive connections so it's recommended to set ReadTimeout and IdleTimeout to something else than 0.
+// ShutdownWithContext does not close keepalive connections so it's recommended to set 
+// ReadTimeout and IdleTimeout to something else than 0.
 func (s *Atreugo) ShutdownWithContext(ctx context.Context) error {
 	return s.engine.ShutdownWithContext(ctx)
 }
