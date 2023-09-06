@@ -1,6 +1,7 @@
 package atreugo
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -588,6 +589,77 @@ func TestAtreugo_NewVirtualHost(t *testing.T) { //nolint:funlen
 		if err != tt.wantErrMsg {
 			t.Errorf("Error string == %s, want %s", err, tt.wantErrMsg)
 		}
+	}
+}
+
+func TestAtreugo_Shutdown(t *testing.T) {
+	s := New(testConfig)
+
+	ln := fasthttputil.NewInmemoryListener()
+	errCh := make(chan error, 1)
+
+	go func() {
+		errCh <- s.Serve(ln)
+	}()
+
+	time.Sleep(500 * time.Millisecond)
+
+	if err := s.Shutdown(); err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if err := <-errCh; err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if lnAddr := ln.Addr().String(); s.cfg.Addr != lnAddr {
+		t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
+	}
+
+	lnNetwork := ln.Addr().Network()
+	if s.cfg.Network != lnNetwork {
+		t.Errorf("Atreugo.Config.Network = %s, want %s", s.cfg.Network, lnNetwork)
+	}
+
+	if s.engine.Handler == nil {
+		t.Error("Atreugo.engine.Handler is nil")
+	}
+}
+
+func TestAtreugo_ShutdownWithContext(t *testing.T) {
+	s := New(testConfig)
+
+	ln := fasthttputil.NewInmemoryListener()
+	errCh := make(chan error, 1)
+
+	go func() {
+		errCh <- s.Serve(ln)
+	}()
+
+	time.Sleep(500 * time.Millisecond)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	if err := s.ShutdownWithContext(ctx); err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if err := <-errCh; err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if lnAddr := ln.Addr().String(); s.cfg.Addr != lnAddr {
+		t.Errorf("Atreugo.Config.Addr = %s, want %s", s.cfg.Addr, lnAddr)
+	}
+
+	lnNetwork := ln.Addr().Network()
+	if s.cfg.Network != lnNetwork {
+		t.Errorf("Atreugo.Config.Network = %s, want %s", s.cfg.Network, lnNetwork)
+	}
+
+	if s.engine.Handler == nil {
+		t.Error("Atreugo.engine.Handler is nil")
 	}
 }
 
