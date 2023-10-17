@@ -41,6 +41,10 @@ func New(cfg Config) *Atreugo {
 		cfg.Logger = defaultLogger
 	}
 
+	if cfg.JSONMarshalFunc == nil {
+		cfg.JSONMarshalFunc = defaultJSONMarshalFunc
+	}
+
 	if cfg.ErrorView == nil {
 		cfg.ErrorView = defaultErrorView
 	}

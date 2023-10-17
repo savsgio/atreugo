@@ -2,13 +2,18 @@ package atreugo
 
 import (
 	"encoding/json"
+	"io"
 
 	"github.com/valyala/bytebufferpool"
 	"github.com/valyala/fasthttp"
 )
 
+func defaultJSONMarshalFunc(w io.Writer, body interface{}) error {
+	return json.NewEncoder(w).Encode(body) // nolint:wrapcheck
+}
+
 // JSONResponse return response with body in json format.
-func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) (err error) {
+func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
 	ctx.Response.Header.SetContentType("application/json")
 
 	if len(statusCode) > 0 {
@@ -17,7 +22,7 @@ func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) (err er
 
 	w := ctx.Response.BodyWriter()
 
-	return json.NewEncoder(w).Encode(body) // nolint:wrapcheck
+	return ctx.jsonMarshalFunc(w, body) // nolint:wrapcheck
 }
 
 // HTTPResponse return response with body in html format.

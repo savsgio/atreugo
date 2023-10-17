@@ -13,8 +13,12 @@ func Test_AcquireRequestCtx(t *testing.T) {
 	ctx := new(fasthttp.RequestCtx)
 	actx := AcquireRequestCtx(ctx) // nolint:ifshort
 
+	if !isEqual(actx.jsonMarshalFunc, defaultJSONMarshalFunc) {
+		t.Errorf("jsonMarshalFunc = %p, want %p", actx.jsonMarshalFunc, defaultJSONMarshalFunc)
+	}
+
 	if actx.RequestCtx != ctx {
-		t.Errorf("AcquireRequestCtx() = %p, want %p", actx.RequestCtx, ctx)
+		t.Errorf("RequestCtx = %p, want %p", actx.RequestCtx, ctx)
 	}
 }
 
@@ -31,19 +35,19 @@ func Test_ReleaseRequestCtx(t *testing.T) {
 	ReleaseRequestCtx(actx)
 
 	if actx.next {
-		t.Errorf("reset() next is not 'false'")
+		t.Errorf("next is not 'false'")
 	}
 
 	if actx.skipView {
-		t.Errorf("reset() skipView is not 'false'")
+		t.Errorf("skipView is not 'false'")
+	}
+
+	if actx.jsonMarshalFunc == nil {
+		t.Errorf("jsonMarshalFunc is nil")
 	}
 
 	if actx.RequestCtx != nil {
-		t.Errorf("reset() *fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)
-	}
-
-	if actx.RequestCtx != nil {
-		t.Errorf("ReleaseRequestCtx() *fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)
+		t.Errorf("*fasthttp.RequestCtx = %p, want %v", actx.RequestCtx, nil)
 	}
 }
 
