@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"testing"
@@ -23,8 +24,9 @@ func (cj customJSON) MarshalJSON() ([]byte, error) {
 
 func TestJSONResponse(t *testing.T) { //nolint:funlen
 	type args struct {
-		body       interface{}
-		statusCode int
+		body            interface{}
+		statusCode      int
+		jsonMarshalFunc JSONMarshalFunc
 	}
 
 	type want struct {
@@ -42,8 +44,9 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 		{
 			name: "ValidBody",
 			args: args{
-				body:       JSON{"test": true},
-				statusCode: 200,
+				body:            JSON{"test": true},
+				statusCode:      200,
+				jsonMarshalFunc: defaultJSONMarshalFunc,
 			},
 			want: want{
 				body:        "{\"test\":true}",
@@ -55,8 +58,9 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 		{
 			name: "BodyAsJsonMarshaler",
 			args: args{
-				body:       customJSON{Value: "test"},
-				statusCode: 200,
+				body:            customJSON{Value: "test"},
+				statusCode:      200,
+				jsonMarshalFunc: defaultJSONMarshalFunc,
 			},
 			want: want{
 				body:        "{\"Value\":\"test\"}",
@@ -66,10 +70,29 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 			},
 		},
 		{
-			name: "InvalidBody",
+			name: "CustomJSONMarshalFunc",
 			args: args{
 				body:       make(chan int),
 				statusCode: 200,
+				jsonMarshalFunc: func(w io.Writer, value interface{}) error {
+					_, err := w.Write([]byte("my custom response"))
+
+					return err // nolint:wrapcheck
+				},
+			},
+			want: want{
+				body:        "my custom response",
+				statusCode:  200,
+				contentType: "application/json",
+				err:         false,
+			},
+		},
+		{
+			name: "InvalidBody",
+			args: args{
+				body:            make(chan int),
+				statusCode:      200,
+				jsonMarshalFunc: defaultJSONMarshalFunc,
 			},
 			want: want{
 				body:        "",
@@ -88,6 +111,7 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 
 			ctx := new(fasthttp.RequestCtx)
 			actx := AcquireRequestCtx(ctx)
+			actx.jsonMarshalFunc = tt.args.jsonMarshalFunc
 
 			err := actx.JSONResponse(tt.args.body, tt.args.statusCode)
 			if tt.want.err && (err == nil) {

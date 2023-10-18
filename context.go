@@ -17,7 +17,10 @@ var (
 
 	requestCtxPool = sync.Pool{
 		New: func() interface{} {
-			return new(RequestCtx)
+			ctx := new(RequestCtx)
+			ctx.jsonMarshalFunc = defaultJSONMarshalFunc
+
+			return ctx
 		},
 	}
 )

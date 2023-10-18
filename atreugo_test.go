@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
 	"math/rand"
 	"net"
 	"os"
@@ -32,6 +33,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 		network                 string
 		gracefulShutdown        bool
 		gracefulShutdownSignals []os.Signal
+		jsonMarshalFunc         JSONMarshalFunc
 		notFoundView            View
 		methodNotAllowedView    View
 		panicView               PanicView
@@ -39,12 +41,16 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 
 	type want struct {
 		gracefulShutdownSignals []os.Signal
+		jsonMarshalFunc         JSONMarshalFunc
 		notFoundView            bool
 		methodNotAllowedView    bool
 		panicView               bool
 		err                     bool
 	}
 
+	jsonMarshalFunc := func(w io.Writer, body interface{}) error {
+		return nil
+	}
 	notFoundView := func(ctx *RequestCtx) error {
 		return nil
 	}
@@ -67,8 +73,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 			args: args{},
 			want: want{
 				gracefulShutdownSignals: nil,
-				notFoundView:            false,
-				methodNotAllowedView:    false,
+				jsonMarshalFunc:         defaultJSONMarshalFunc,
 				panicView:               false,
 			},
 		},
@@ -79,6 +84,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 			},
 			want: want{
 				gracefulShutdownSignals: defaultGracefulShutdownSignals,
+				jsonMarshalFunc:         defaultJSONMarshalFunc,
 				notFoundView:            false,
 				methodNotAllowedView:    false,
 				panicView:               false,
@@ -90,12 +96,14 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 				network:                 "unix",
 				gracefulShutdown:        true,
 				gracefulShutdownSignals: []os.Signal{syscall.SIGKILL},
+				jsonMarshalFunc:         jsonMarshalFunc,
 				notFoundView:            notFoundView,
 				methodNotAllowedView:    methodNotAllowedView,
 				panicView:               panicView,
 			},
 			want: want{
 				gracefulShutdownSignals: []os.Signal{syscall.SIGKILL},
+				jsonMarshalFunc:         jsonMarshalFunc,
 				notFoundView:            true,
 				methodNotAllowedView:    true,
 				panicView:               true,
@@ -133,6 +141,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 				Network:                 tt.args.network,
 				GracefulShutdown:        tt.args.gracefulShutdown,
 				GracefulShutdownSignals: tt.args.gracefulShutdownSignals,
+				JSONMarshalFunc:         tt.args.jsonMarshalFunc,
 				NotFoundView:            tt.args.notFoundView,
 				MethodNotAllowedView:    tt.args.methodNotAllowedView,
 				PanicView:               tt.args.panicView,
@@ -151,23 +160,15 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 				t.Errorf("Logger == %p, want %p", s.cfg.Logger, defaultLogger)
 			}
 
-			if !isEqual(s.cfg.ErrorView, defaultErrorView) {
-				t.Errorf("Error view == %p, want %p", s.cfg.ErrorView, defaultErrorView)
-			}
-
-			if s.router == nil {
-				t.Fatal("Atreugo router instance is nil")
-			}
-
-			if s.router.GlobalOPTIONS != nil {
-				t.Error("GlobalOPTIONS handler is not nil")
-			}
-
 			if !reflect.DeepEqual(tt.want.gracefulShutdownSignals, s.cfg.GracefulShutdownSignals) {
 				t.Errorf(
 					"GracefulShutdownSignals = %v, want %v",
 					s.cfg.GracefulShutdownSignals, tt.want.gracefulShutdownSignals,
 				)
+			}
+
+			if !isEqual(s.cfg.JSONMarshalFunc, tt.want.jsonMarshalFunc) {
+				t.Errorf("JSONMarshalFunc == %p, want %p", s.cfg.JSONMarshalFunc, tt.want.jsonMarshalFunc)
 			}
 
 			if tt.want.notFoundView != (s.router.NotFound != nil) {
@@ -176,6 +177,10 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 
 			if tt.want.methodNotAllowedView != (s.router.MethodNotAllowed != nil) {
 				t.Error("MethodNotAllowed handler is not setted")
+			}
+
+			if !isEqual(s.cfg.ErrorView, defaultErrorView) {
+				t.Errorf("Error view == %p, want %p", s.cfg.ErrorView, defaultErrorView)
 			}
 
 			if tt.want.panicView != (s.router.PanicHandler != nil) {
@@ -189,6 +194,14 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 				if string(ctx.Response.Body()) != panicErr.Error() {
 					t.Errorf("Panic handler response == %s, want %s", ctx.Response.Body(), panicErr.Error())
 				}
+			}
+
+			if s.router == nil {
+				t.Fatal("Atreugo router instance is nil")
+			}
+
+			if s.router.GlobalOPTIONS != nil {
+				t.Error("GlobalOPTIONS handler is not nil")
 			}
 		})
 	}
