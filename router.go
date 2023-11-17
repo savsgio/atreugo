@@ -344,6 +344,7 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 	url = strings.TrimSuffix(url, "/")
 
 	ffs := &fasthttp.FS{
+		FS:                     fs.FS,
 		Root:                   fs.Root,
 		AllowEmptyRoot:         fs.AllowEmptyRoot,
 		IndexNames:             fs.IndexNames,
@@ -352,6 +353,7 @@ func (r *Router) StaticCustom(url string, fs *StaticFS) *Path {
 		CompressBrotli:         fs.CompressBrotli,
 		CompressRoot:           fs.CompressRoot,
 		AcceptByteRange:        fs.AcceptByteRange,
+		SkipCache:              fs.SkipCache,
 		CacheDuration:          fs.CacheDuration,
 		CompressedFileSuffix:   fs.CompressedFileSuffix,
 		CompressedFileSuffixes: fs.CompressedFileSuffixes,

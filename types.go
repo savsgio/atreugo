@@ -3,6 +3,7 @@ package atreugo
 import (
 	"crypto/tls"
 	"io"
+	"io/fs"
 	"net"
 	"os"
 	"time"
@@ -377,6 +378,9 @@ type Config struct { // nolint:maligned
 type StaticFS struct {
 	noCopy nocopy.NoCopy // nolint:structcheck,unused
 
+	// FS is filesystem to serve files from. eg: embed.FS os.DirFS
+	FS fs.FS
+
 	// Path to the root directory to serve files from.
 	Root string
 
@@ -447,6 +451,11 @@ type StaticFS struct {
 	// By default PathNotFound returns
 	// "Cannot open requested path"
 	PathNotFound View
+
+	// SkipCache if true, will cache no file handler.
+	//
+	// By default is false.
+	SkipCache bool
 
 	// Expiration duration for inactive file handlers.
 	//
