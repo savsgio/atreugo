@@ -21,7 +21,6 @@ go get github.com/savsgio/atreugo/v11
 - 1.21.x
 - 1.20.x
 - 1.19.x
-- 1.18.x
 
 ## Documentation
 

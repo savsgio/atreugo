@@ -1,6 +1,6 @@
 module github.com/savsgio/atreugo/v11
 
-go 1.18
+go 1.19
 
 require (
 	github.com/atreugo/mock v0.0.0-20200601091009-13c275b330b0
