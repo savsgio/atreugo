@@ -18,6 +18,7 @@ go get github.com/savsgio/atreugo/v11
 
 ## Supported Go versions:
 
+- 1.22.x
 - 1.21.x
 - 1.20.x
 - 1.19.x
