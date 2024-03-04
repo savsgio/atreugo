@@ -3,6 +3,7 @@ package atreugo
 import (
 	"bytes"
 	"crypto/rand"
+	"embed"
 	"errors"
 	"fmt"
 	"log"
@@ -29,6 +30,9 @@ var httpMethods = []string{
 	fasthttp.MethodTrace,
 	fastrouter.MethodWild,
 }
+
+//go:embed LICENSE
+var fsTestFilesystem embed.FS
 
 func testRouter() *Router {
 	return newRouter(testConfig)
@@ -1044,6 +1048,56 @@ func TestRouter_Static(t *testing.T) {
 			handler, _ := r.router.Lookup("GET", tt.want.routerPath, &fasthttp.RequestCtx{})
 			if handler == nil {
 				t.Error("Static files is not configured")
+			}
+		})
+	}
+}
+
+func TestRouter_StaticFS(t *testing.T) {
+	type args struct {
+		url string
+	}
+
+	type want struct {
+		routerPath string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want
+	}{
+		{
+			name: "WithoutTrailingSlash",
+			args: args{
+				url: "/static",
+			},
+			want: want{
+				routerPath: "/static/{filepath:*}",
+			},
+		},
+		{
+			name: "WithTrailingSlash",
+			args: args{
+				url: "/static/",
+			},
+			want: want{
+				routerPath: "/static/{filepath:*}",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		tt := test
+		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
+			r := testRouter()
+			r.StaticFS(tt.args.url, fsTestFilesystem)
+
+			handler, _ := r.router.Lookup("GET", tt.want.routerPath, &fasthttp.RequestCtx{})
+			if handler == nil {
+				t.Error("Static FS is not configured")
 			}
 		})
 	}

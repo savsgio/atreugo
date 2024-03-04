@@ -1,6 +1,7 @@
 package atreugo
 
 import (
+	"io/fs"
 	"net/http"
 	"sort"
 	"strings"
@@ -323,7 +324,7 @@ func (r *Router) NetHTTPPath(method, url string, handler http.Handler) *Path {
 	return r.RequestHandlerPath(method, url, h)
 }
 
-// Static serves static files from the given file system root
+// Static serves static files from the given file system root path.
 //
 // Make sure your program has enough 'max open files' limit aka
 // 'ulimit -n' if root folder contains many files.
@@ -332,6 +333,22 @@ func (r *Router) Static(url, rootPath string) *Path {
 		Root:               rootPath,
 		IndexNames:         []string{"index.html"},
 		GenerateIndexPages: true,
+		AcceptByteRange:    true,
+	})
+}
+
+// StaticFS serves static files from the given file system.
+//
+// Make sure your program has enough 'max open files' limit aka
+// 'ulimit -n' if filesystem contains many files.
+func (r *Router) StaticFS(url string, filesystem fs.FS) *Path {
+	return r.StaticCustom(url, &StaticFS{
+		FS:                 filesystem,
+		Root:               "",
+		AllowEmptyRoot:     true,
+		GenerateIndexPages: true,
+		Compress:           true,
+		CompressBrotli:     true,
 		AcceptByteRange:    true,
 	})
 }
