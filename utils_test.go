@@ -46,7 +46,7 @@ func Test_viewToHandler(t *testing.T) {
 	called := false
 	err := errors.New("error")
 
-	view := func(ctx *RequestCtx) error {
+	view := func(_ *RequestCtx) error {
 		called = true
 
 		return err
@@ -84,8 +84,8 @@ func Test_isEqual(t *testing.T) {
 }
 
 func Test_middlewaresInclude(t *testing.T) {
-	fnIncluded := func(ctx *RequestCtx) error { return nil }
-	fnNotIncluded := func(ctx *RequestCtx) error { return nil }
+	fnIncluded := func(_ *RequestCtx) error { return nil }
+	fnNotIncluded := func(_ *RequestCtx) error { return nil }
 	ms := []Middleware{fnIncluded}
 
 	if !middlewaresInclude(ms, fnIncluded) {
@@ -98,8 +98,8 @@ func Test_middlewaresInclude(t *testing.T) {
 }
 
 func Test_appendMiddlewares(t *testing.T) {
-	fn := func(ctx *RequestCtx) error { return nil }
-	fnSkip := func(ctx *RequestCtx) error { return nil }
+	fn := func(_ *RequestCtx) error { return nil }
+	fnSkip := func(_ *RequestCtx) error { return nil }
 
 	dst := []Middleware{}
 	src := []Middleware{fn, fnSkip}

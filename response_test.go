@@ -72,10 +72,10 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 		{
 			name: "CustomJSONMarshalFunc",
 			args: args{
-				body:       make(chan int),
+				body:       "my custom response",
 				statusCode: 200,
 				jsonMarshalFunc: func(w io.Writer, value interface{}) error {
-					_, err := w.Write([]byte("my custom response"))
+					_, err := w.Write([]byte(fmt.Sprint(value)))
 
 					return err // nolint:wrapcheck
 				},

@@ -107,7 +107,7 @@ func TestAtreugo_getListener(t *testing.T) { // nolint:funlen,gocognit
 			s := New(tt.args)
 
 			if tt.name == "UnixChmodError" {
-				s.cfg.chmodUnixSocketFunc = func(addr string) error {
+				s.cfg.chmodUnixSocketFunc = func(_ string) error {
 					return errors.New("chmod error")
 				}
 			}

@@ -51,7 +51,7 @@ func newTestPath() *Path {
 		router: testRouter(),
 		method: fasthttp.MethodGet,
 		url:    "/test",
-		view:   func(ctx *RequestCtx) error { return nil },
+		view:   func(_ *RequestCtx) error { return nil },
 	}
 }
 
@@ -98,10 +98,8 @@ func TestPath_UseAfter(t *testing.T) {
 
 func TestPath_UseFinal(t *testing.T) {
 	finalMiddlewareFns := []FinalMiddleware{
-		func(ctx *RequestCtx) {
-		},
-		func(ctx *RequestCtx) {
-		},
+		func(_ *RequestCtx) {},
+		func(_ *RequestCtx) {},
 	}
 
 	p := newTestPath()

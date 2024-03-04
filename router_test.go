@@ -149,7 +149,7 @@ func TestRouter_newRouter(t *testing.T) {
 }
 
 func TestRouter_mutable(t *testing.T) {
-	handler := func(ctx *fasthttp.RequestCtx) {}
+	handler := func(_ *fasthttp.RequestCtx) {}
 
 	r := testRouter()
 	r.router.GET("/", handler)
@@ -178,7 +178,7 @@ func TestRouter_buildMiddlewares(t *testing.T) {
 	middleware1 := func(ctx *RequestCtx) error { return ctx.Next() }
 	middleware2 := func(ctx *RequestCtx) error { return ctx.Next() }
 	middleware3 := func(ctx *RequestCtx) error { return ctx.Next() }
-	middleware4 := func(ctx *RequestCtx) {}
+	middleware4 := func(_ *RequestCtx) {}
 
 	middle := Middlewares{
 		Before: []Middleware{middleware1, middleware2},
@@ -276,7 +276,7 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 
 		return ctx.Next()
 	})
-	s.UseFinal(func(ctx *RequestCtx) {
+	s.UseFinal(func(_ *RequestCtx) {
 		index++
 		callOrder["globalFinal"] = index
 	})
@@ -294,14 +294,14 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 
 		return ctx.Next()
 	}, skipMiddlewareGroup)
-	v1.UseFinal(func(ctx *RequestCtx) {
+	v1.UseFinal(func(_ *RequestCtx) {
 		index++
 		callOrder["groupFinal"] = index
 	})
 
 	v1.SkipMiddlewares(skipMiddlewareGlobal)
 
-	v1.Path(method, url, func(ctx *RequestCtx) error {
+	v1.Path(method, url, func(_ *RequestCtx) error {
 		viewCalled = true
 
 		return nil
@@ -315,7 +315,7 @@ func TestRouter_handlerExecutionChain(t *testing.T) { //nolint:funlen
 		callOrder["viewAfter"] = index
 
 		return ctx.Next()
-	}).UseFinal(func(ctx *RequestCtx) {
+	}).UseFinal(func(_ *RequestCtx) {
 		index++
 		callOrder["viewFinal"] = index
 	}).SkipMiddlewares(skipMiddlewareGroup)
@@ -425,7 +425,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 		},
 	}
 	final := []FinalMiddleware{
-		func(ctx *RequestCtx) {
+		func(_ *RequestCtx) {
 			handlerCounter.finalMiddlewares++
 		},
 	}
@@ -446,7 +446,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 			},
 		},
 		Final: []FinalMiddleware{
-			func(ctx *RequestCtx) {
+			func(_ *RequestCtx) {
 				handlerCounter.finalViewMiddlewares++
 			},
 		},
@@ -511,7 +511,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 		{
 			name: "ViewError",
 			args: args{
-				viewFn: func(ctx *RequestCtx) error {
+				viewFn: func(_ *RequestCtx) error {
 					return err
 				},
 				before:      before,
@@ -583,7 +583,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 						},
 					},
 					Final: []FinalMiddleware{
-						func(ctx *RequestCtx) {
+						func(_ *RequestCtx) {
 							handlerCounter.finalViewMiddlewares++
 						},
 					},
@@ -625,7 +625,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 						},
 					},
 					Final: []FinalMiddleware{
-						func(ctx *RequestCtx) {
+						func(_ *RequestCtx) {
 							handlerCounter.finalViewMiddlewares++
 						},
 					},
@@ -677,7 +677,7 @@ func TestRouter_handler(t *testing.T) { //nolint:funlen,maintidx
 			args: args{
 				viewFn: viewFn,
 				before: []Middleware{
-					func(ctx *RequestCtx) error {
+					func(_ *RequestCtx) error {
 						handlerCounter.beforeMiddlewares++
 
 						return nil
@@ -785,7 +785,7 @@ func TestRouter_handlePath(t *testing.T) {
 		router:      r,
 		method:      fasthttp.MethodGet,
 		url:         "/test",
-		view:        func(ctx *RequestCtx) error { return nil },
+		view:        func(_ *RequestCtx) error { return nil },
 		middlewares: Middlewares{},
 		withTimeout: true,
 		timeout:     1 * time.Millisecond,
@@ -867,8 +867,8 @@ func TestRouter_NewGroupPath(t *testing.T) {
 func TestRouter_ListPaths(t *testing.T) {
 	server := New(testConfig)
 
-	server.Path("GET", "/foo", func(ctx *RequestCtx) error { return nil })
-	server.Path("GET", "/bar", func(ctx *RequestCtx) error { return nil })
+	server.Path("GET", "/foo", func(_ *RequestCtx) error { return nil })
+	server.Path("GET", "/bar", func(_ *RequestCtx) error { return nil })
 
 	static := server.NewGroupPath("/static")
 	static.Static("/buzz", "./docs")
@@ -924,7 +924,7 @@ func TestRouter_SkipMiddlewares(t *testing.T) {
 
 func TestRouter_Path_Shortcuts(t *testing.T) { //nolint:funlen
 	path := "/"
-	viewFn := func(ctx *RequestCtx) error { return nil }
+	viewFn := func(_ *RequestCtx) error { return nil }
 
 	r := testRouter()
 
@@ -1111,6 +1111,7 @@ func TestRouter_StaticCustom(t *testing.T) { //nolint:funlen
 			})
 
 			ctx := new(fasthttp.RequestCtx)
+
 			handler, _ := r.router.Lookup("GET", tt.want.routerPath, ctx)
 			if handler == nil {
 				t.Fatal("Static files is not configured")
@@ -1187,7 +1188,7 @@ func TestRouter_Path(t *testing.T) { //nolint:funlen
 		return nil
 	}
 
-	testNetHTTPHandler := func(w http.ResponseWriter, r *http.Request) {
+	testNetHTTPHandler := func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintf(w, "Test")
 	}
 	testMuxHandler := http.NewServeMux()
@@ -1337,7 +1338,7 @@ func TestRouter_Path(t *testing.T) { //nolint:funlen
 func Benchmark_handler(b *testing.B) {
 	r := testRouter()
 
-	h := r.handler(func(ctx *RequestCtx) error { return nil }, Middlewares{})
+	h := r.handler(func(_ *RequestCtx) error { return nil }, Middlewares{})
 
 	ctx := new(fasthttp.RequestCtx)
 
@@ -1350,7 +1351,7 @@ func Benchmark_handler(b *testing.B) {
 
 func Benchmark_RouterHandler(b *testing.B) {
 	r := testRouter()
-	r.GET("/", func(ctx *RequestCtx) error { return nil })
+	r.GET("/", func(_ *RequestCtx) error { return nil })
 
 	ctx := new(fasthttp.RequestCtx)
 	ctx.Request.Header.SetMethod("GET")

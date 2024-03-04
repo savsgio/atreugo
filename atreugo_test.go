@@ -48,19 +48,19 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 		err                     bool
 	}
 
-	jsonMarshalFunc := func(w io.Writer, body interface{}) error {
+	jsonMarshalFunc := func(_ io.Writer, _ interface{}) error {
 		return nil
 	}
-	notFoundView := func(ctx *RequestCtx) error {
+	notFoundView := func(_ *RequestCtx) error {
 		return nil
 	}
-	methodNotAllowedView := func(ctx *RequestCtx) error {
+	methodNotAllowedView := func(_ *RequestCtx) error {
 		return nil
 	}
 
 	panicErr := errors.New("error")
 	panicView := func(ctx *RequestCtx, err interface{}) {
-		ctx.Error(panicErr.Error(), fasthttp.StatusInternalServerError)
+		ctx.Error(fmt.Sprint(err), fasthttp.StatusInternalServerError)
 	}
 
 	tests := []struct {
@@ -210,10 +210,10 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 	cfg := Config{
 		Name: "test",
-		HeaderReceived: func(header *fasthttp.RequestHeader) fasthttp.RequestConfig {
+		HeaderReceived: func(_ *fasthttp.RequestHeader) fasthttp.RequestConfig {
 			return fasthttp.RequestConfig{}
 		},
-		ContinueHandler:                    func(header *fasthttp.RequestHeader) bool { return true },
+		ContinueHandler:                    func(_ *fasthttp.RequestHeader) bool { return true },
 		Concurrency:                        rand.Int(),                              // nolint:gosec
 		ReadBufferSize:                     rand.Int(),                              // nolint:gosec
 		WriteBufferSize:                    rand.Int(),                              // nolint:gosec
@@ -244,7 +244,7 @@ func Test_newFasthttpServer(t *testing.T) { //nolint:funlen
 		ConnState:                          func(net.Conn, fasthttp.ConnState) {},
 		Logger:                             testLog,
 		TLSConfig:                          &tls.Config{ServerName: "test", MinVersion: tls.VersionTLS13},
-		FormValueFunc:                      func(ctx *fasthttp.RequestCtx, key string) []byte { return nil },
+		FormValueFunc:                      func(_ *fasthttp.RequestCtx, _ string) []byte { return nil },
 	}
 
 	srv := newFasthttpServer(cfg)
@@ -576,7 +576,7 @@ func TestAtreugo_NewVirtualHost(t *testing.T) { //nolint:funlen
 	conflictHosts := []conflictArgs{
 		{
 			hostnames:  []string{hostname},
-			wantErrMsg: fmt.Sprintf("a router is already registered for virtual host: %s", hostname),
+			wantErrMsg: "a router is already registered for virtual host: " + hostname,
 		},
 		{
 			hostnames:  []string{},
@@ -584,7 +584,7 @@ func TestAtreugo_NewVirtualHost(t *testing.T) { //nolint:funlen
 		},
 		{
 			hostnames:  []string{"localhost", "localhost"},
-			wantErrMsg: fmt.Sprintf("a router is already registered for virtual host: %s", hostname),
+			wantErrMsg: "a router is already registered for virtual host: " + hostname,
 		},
 	}
 
@@ -679,13 +679,13 @@ func TestAtreugo_ShutdownWithContext(t *testing.T) {
 // Benchmarks.
 func Benchmark_Handler(b *testing.B) {
 	s := New(testConfig)
-	s.GET("/plaintext", func(ctx *RequestCtx) error { return nil })
-	s.GET("/json", func(ctx *RequestCtx) error { return nil })
-	s.GET("/db", func(ctx *RequestCtx) error { return nil })
-	s.GET("/queries", func(ctx *RequestCtx) error { return nil })
-	s.GET("/cached-worlds", func(ctx *RequestCtx) error { return nil })
-	s.GET("/fortunes", func(ctx *RequestCtx) error { return nil })
-	s.GET("/updates", func(ctx *RequestCtx) error { return nil })
+	s.GET("/plaintext", func(_ *RequestCtx) error { return nil })
+	s.GET("/json", func(_ *RequestCtx) error { return nil })
+	s.GET("/db", func(_ *RequestCtx) error { return nil })
+	s.GET("/queries", func(_ *RequestCtx) error { return nil })
+	s.GET("/cached-worlds", func(_ *RequestCtx) error { return nil })
+	s.GET("/fortunes", func(_ *RequestCtx) error { return nil })
+	s.GET("/updates", func(_ *RequestCtx) error { return nil })
 
 	ctx := new(fasthttp.RequestCtx)
 	ctx.Request.Header.SetMethod("GET")
