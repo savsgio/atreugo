@@ -5,7 +5,7 @@ linters:
     - gomnd
     - gochecknoglobals
     - testpackage
-    - goerr113
+    - err113
     - exhaustivestruct
     - paralleltest
     - nolintlint
@@ -15,6 +15,7 @@ linters:
     - nonamedreturns
     - exhaustruct
     - depguard
+    - mnd
 
     # Deprecated
     - maligned
@@ -26,3 +27,4 @@ linters:
     - nosnakecase
     - ifshort
     - deadcode
+    - execinquery
