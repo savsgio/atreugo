@@ -15,15 +15,15 @@ import (
 
 // Logger is used for logging messages.
 type Logger interface {
-	Print(v ...interface{})
-	Printf(format string, args ...interface{})
+	Print(v ...any)
+	Printf(format string, args ...any)
 }
 
 type preforkServer interface {
 	ListenAndServe(addr string) error
 }
 
-type JSONMarshalFunc func(w io.Writer, value interface{}) error
+type JSONMarshalFunc func(w io.Writer, value any) error
 
 // Atreugo implements high performance HTTP server
 //
@@ -557,7 +557,7 @@ type View func(*RequestCtx) error
 type ErrorView func(*RequestCtx, error, int)
 
 // PanicView must process panics recovered from views, if it's defined in configuration.
-type PanicView func(*RequestCtx, interface{})
+type PanicView func(*RequestCtx, any)
 
 // Middleware must process all incoming requests before/after defined views.
 type Middleware View
@@ -586,4 +586,4 @@ type Middlewares struct {
 type PathRewriteFunc func(ctx *RequestCtx) []byte
 
 // JSON is a map whose key is a string and whose value an interface.
-type JSON map[string]interface{}
+type JSON map[string]any

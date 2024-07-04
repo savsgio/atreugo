@@ -24,7 +24,7 @@ func (cj customJSON) MarshalJSON() ([]byte, error) {
 
 func TestJSONResponse(t *testing.T) { //nolint:funlen
 	type args struct {
-		body            interface{}
+		body            any
 		statusCode      int
 		jsonMarshalFunc JSONMarshalFunc
 	}
@@ -74,7 +74,7 @@ func TestJSONResponse(t *testing.T) { //nolint:funlen
 			args: args{
 				body:       "my custom response",
 				statusCode: 200,
-				jsonMarshalFunc: func(w io.Writer, value interface{}) error {
+				jsonMarshalFunc: func(w io.Writer, value any) error {
 					_, err := w.Write([]byte(fmt.Sprint(value)))
 
 					return err // nolint:wrapcheck

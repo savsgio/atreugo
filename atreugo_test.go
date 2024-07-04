@@ -48,7 +48,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 		err                     bool
 	}
 
-	jsonMarshalFunc := func(_ io.Writer, _ interface{}) error {
+	jsonMarshalFunc := func(_ io.Writer, _ any) error {
 		return nil
 	}
 	notFoundView := func(_ *RequestCtx) error {
@@ -59,7 +59,7 @@ func Test_New(t *testing.T) { //nolint:funlen,gocognit,gocyclo
 	}
 
 	panicErr := errors.New("error")
-	panicView := func(ctx *RequestCtx, err interface{}) {
+	panicView := func(ctx *RequestCtx, err any) {
 		ctx.Error(fmt.Sprint(err), fasthttp.StatusInternalServerError)
 	}
 

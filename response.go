@@ -8,12 +8,12 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func defaultJSONMarshalFunc(w io.Writer, body interface{}) error {
+func defaultJSONMarshalFunc(w io.Writer, body any) error {
 	return json.NewEncoder(w).Encode(body) // nolint:wrapcheck
 }
 
 // JSONResponse return response with body in json format.
-func (ctx *RequestCtx) JSONResponse(body interface{}, statusCode ...int) error {
+func (ctx *RequestCtx) JSONResponse(body any, statusCode ...int) error {
 	ctx.Response.Header.SetContentType("application/json")
 
 	if len(statusCode) > 0 {

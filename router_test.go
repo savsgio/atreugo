@@ -47,7 +47,7 @@ func randomHTTPMethod() string {
 	return httpMethods[n.Int64()]
 }
 
-func catchPanic(testFunc func()) (recv interface{}) {
+func catchPanic(testFunc func()) (recv any) {
 	defer func() {
 		recv = recover()
 	}()

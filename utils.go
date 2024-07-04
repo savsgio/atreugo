@@ -9,7 +9,7 @@ import (
 	"github.com/valyala/fasthttp/prefork"
 )
 
-func panicf(s string, args ...interface{}) {
+func panicf(s string, args ...any) {
 	panic(fmt.Sprintf(s, args...))
 }
 
@@ -25,11 +25,11 @@ func viewToHandler(view View, errorView ErrorView) fasthttp.RequestHandler {
 	}
 }
 
-func isEqual(v1, v2 interface{}) bool {
+func isEqual(v1, v2 any) bool {
 	return reflect.ValueOf(v1).Pointer() == reflect.ValueOf(v2).Pointer()
 }
 
-func isNil(v interface{}) bool {
+func isNil(v any) bool {
 	return reflect.ValueOf(v).IsNil()
 }
 

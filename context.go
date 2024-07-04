@@ -16,7 +16,7 @@ var (
 	attachedCtxKey = fmt.Sprintf("__attachedCtx::%s__", bytes.Rand(make([]byte, 15)))
 
 	requestCtxPool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			ctx := new(RequestCtx)
 			ctx.jsonMarshalFunc = defaultJSONMarshalFunc
 
@@ -104,7 +104,7 @@ func (ctx *RequestCtx) MatchedRoutePath() []byte {
 // the same key returns the same result.
 //
 // WARNING: The provided key should not be of type string or any other built-in
-// to avoid extra allocating when assigning to an interface{}, context keys often
+// to avoid extra allocating when assigning to an any, context keys often
 // have concrete type struct{}. Alternatively, exported context key variables' static
 // type should be a pointer or interface.
 //
@@ -119,7 +119,7 @@ func (ctx *RequestCtx) MatchedRoutePath() []byte {
 //	ctx.Value("myKey")
 //
 // to avoid extra allocation.
-func (ctx *RequestCtx) Value(key interface{}) interface{} {
+func (ctx *RequestCtx) Value(key any) any {
 	if atomic.CompareAndSwapInt32(&ctx.searchingOnAttachedCtx, 0, 1) {
 		defer atomic.StoreInt32(&ctx.searchingOnAttachedCtx, 0)
 

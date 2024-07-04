@@ -63,7 +63,7 @@ func New(cfg Config) *Atreugo {
 	}
 
 	if cfg.PanicView != nil {
-		r.router.PanicHandler = func(ctx *fasthttp.RequestCtx, err interface{}) {
+		r.router.PanicHandler = func(ctx *fasthttp.RequestCtx, err any) {
 			actx := AcquireRequestCtx(ctx)
 			cfg.PanicView(actx, err)
 			ReleaseRequestCtx(actx)
