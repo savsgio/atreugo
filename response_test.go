@@ -432,6 +432,218 @@ func Test_ErrorResponse(t *testing.T) {
 	}
 }
 
+func TestCSSResponseBytes(t *testing.T) { //nolint:funlen
+	type args struct {
+		body       []byte
+		statusCode int
+	}
+
+	type want struct {
+		body        string
+		statusCode  int
+		contentType string
+		err         bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "ValidCSSBody",
+			args: args{
+				body:       []byte("body { background-color: #fff; }"),
+				statusCode: 200,
+			},
+			want: want{
+				body:        "body { background-color: #fff; }",
+				statusCode:  200,
+				contentType: "text/css; charset=utf-8",
+				err:         false,
+			},
+		},
+		{
+			name: "EmptyCSSBody",
+			args: args{
+				body:       []byte(""),
+				statusCode: 204,
+			},
+			want: want{
+				body:        "",
+				statusCode:  204,
+				contentType: "text/css; charset=utf-8",
+				err:         false,
+			},
+		},
+		{
+			name: "CustomCSSContent",
+			args: args{
+				body:       []byte(".container { display: flex; }"),
+				statusCode: 200,
+			},
+			want: want{
+				body:        ".container { display: flex; }",
+				statusCode:  200,
+				contentType: "text/css; charset=utf-8",
+				err:         false,
+			},
+		},
+		{
+			name: "InvalidCSSContent",
+			args: args{
+				body:       []byte("Invalid CSS content"),
+				statusCode: 200,
+			},
+			want: want{
+				body:        "Invalid CSS content",
+				statusCode:  200,
+				contentType: "text/css; charset=utf-8",
+				err:         false, // Assuming no error on invalid CSS content
+			},
+		},
+	}
+
+	for _, test := range tests {
+		tt := test
+
+		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
+			ctx := new(fasthttp.RequestCtx)
+			actx := AcquireRequestCtx(ctx)
+
+			err := actx.CSSResponseBytes(tt.args.body, tt.args.statusCode)
+			if tt.want.err && (err == nil) {
+				t.Errorf("CSSResponseBytes() Expected error")
+			} else if !tt.want.err && err != nil {
+				t.Errorf("CSSResponseBytes() Unexpected error: %v", err)
+			}
+
+			responseBody := string(bytes.TrimSpace(actx.Response.Body()))
+			if responseBody != tt.want.body {
+				t.Errorf("body: '%v', want: '%v'", responseBody, tt.want.body)
+			}
+
+			responseStatusCode := actx.Response.StatusCode()
+			if responseStatusCode != tt.want.statusCode {
+				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
+			}
+
+			responseContentType := string(actx.Response.Header.ContentType())
+			if responseContentType != tt.want.contentType {
+				t.Errorf("content-type: '%v', want: '%v'", responseContentType, tt.want.contentType)
+			}
+		})
+	}
+}
+
+func TestJSResponseBytes(t *testing.T) { //nolint:funlen
+	type args struct {
+		body       []byte
+		statusCode int
+	}
+
+	type want struct {
+		body        string
+		statusCode  int
+		contentType string
+		err         bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "ValidBody",
+			args: args{
+				body:       []byte("var test = true;"),
+				statusCode: 200,
+			},
+			want: want{
+				body:        "var test = true;",
+				statusCode:  200,
+				contentType: "application/javascript",
+				err:         false,
+			},
+		},
+		{
+			name: "EmptyBody",
+			args: args{
+				body:       []byte(""),
+				statusCode: 204,
+			},
+			want: want{
+				body:        "",
+				statusCode:  204,
+				contentType: "application/javascript",
+				err:         false,
+			},
+		},
+		{
+			name: "CustomJavaScriptContent",
+			args: args{
+				body:       []byte("function test() { return true; }"),
+				statusCode: 200,
+			},
+			want: want{
+				body:        "function test() { return true; }",
+				statusCode:  200,
+				contentType: "application/javascript",
+				err:         false,
+			},
+		},
+		{
+			name: "InvalidBody",
+			args: args{
+				body:       []byte("Invalid JS content"),
+				statusCode: 200,
+			},
+			want: want{
+				body:        "Invalid JS content",
+				statusCode:  200,
+				contentType: "application/javascript",
+				err:         false, // Assuming no error on invalid JS content
+			},
+		},
+	}
+
+	for _, test := range tests {
+		tt := test
+
+		t.Run(tt.name, func(t *testing.T) {
+			t.Helper()
+
+			ctx := new(fasthttp.RequestCtx)
+			actx := AcquireRequestCtx(ctx)
+
+			err := actx.JSResponseBytes(tt.args.body, tt.args.statusCode)
+			if tt.want.err && (err == nil) {
+				t.Errorf("JSResponseBytes() Expected error")
+			} else if !tt.want.err && err != nil {
+				t.Errorf("JSResponseBytes() Unexpected error: %v", err)
+			}
+
+			responseBody := string(bytes.TrimSpace(actx.Response.Body()))
+			if responseBody != tt.want.body {
+				t.Errorf("body: '%v', want: '%v'", responseBody, tt.want.body)
+			}
+
+			responseStatusCode := actx.Response.StatusCode()
+			if responseStatusCode != tt.want.statusCode {
+				t.Errorf("status_code: '%v', want: '%v'", responseStatusCode, tt.want.statusCode)
+			}
+
+			responseContentType := string(actx.Response.Header.ContentType())
+			if responseContentType != tt.want.contentType {
+				t.Errorf("content-type: '%v', want: '%v'", responseContentType, tt.want.contentType)
+			}
+		})
+	}
+}
+
 // Benchmarks.
 func Benchmark_FileResponse(b *testing.B) {
 	cwd, _ := os.Getwd()
