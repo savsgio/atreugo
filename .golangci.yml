@@ -2,7 +2,6 @@ linters:
   fast: false
   enable-all: true
   disable:
-    - gomnd
     - gochecknoglobals
     - testpackage
     - err113
@@ -19,4 +18,4 @@ linters:
     - intrange
 
     # deprecated
-    - execinquery
+    - exportloopref
