@@ -51,6 +51,32 @@ func (ctx *RequestCtx) HTTPResponseBytes(body []byte, statusCode ...int) error {
 	return nil
 }
 
+// CSSResponseBytes returns response with body in css format.
+func (ctx *RequestCtx) CSSResponseBytes(body []byte, statusCode ...int) error {
+	ctx.Response.Header.SetContentType("text/css; charset=utf-8")
+
+	if len(statusCode) > 0 {
+		ctx.Response.Header.SetStatusCode(statusCode[0])
+	}
+
+	ctx.Response.SetBody(body)
+
+	return nil
+}
+
+// JSResponseBytes returns response with body in javascript format.
+func (ctx *RequestCtx) JSResponseBytes(body []byte, statusCode ...int) error {
+	ctx.Response.Header.SetContentType("application/javascript")
+
+	if len(statusCode) > 0 {
+		ctx.Response.Header.SetStatusCode(statusCode[0])
+	}
+
+	ctx.Response.SetBody(body)
+
+	return nil
+}
+
 // TextResponse return response with body in text format.
 func (ctx *RequestCtx) TextResponse(body string, statusCode ...int) error {
 	ctx.Response.Header.SetContentType("text/plain; charset=utf-8")
