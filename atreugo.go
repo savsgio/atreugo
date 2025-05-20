@@ -29,7 +29,7 @@ func New(cfg Config) *Atreugo {
 		cfg.Network = defaultNetwork
 	}
 
-	if cfg.Name == "" {
+	if cfg.Name == "" && !cfg.NoDefaultServerHeader {
 		cfg.Name = defaultServerName
 	}
 
