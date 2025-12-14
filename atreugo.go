@@ -112,6 +112,7 @@ func newFasthttpServer(cfg Config) *fasthttp.Server {
 		CloseOnShutdown:                    cfg.CloseOnShutdown,
 		StreamRequestBody:                  cfg.StreamRequestBody,
 		ConnState:                          cfg.ConnState,
+		ErrorHandler:                       cfg.ErrorHandler,
 		Logger:                             cfg.Logger,
 		TLSConfig:                          cfg.TLSConfig,
 		FormValueFunc:                      cfg.FormValueFunc,

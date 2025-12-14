@@ -118,6 +118,17 @@ type Config struct { // nolint:maligned
 	// JSONMarshalFunc is used to marshal the response body to writer as JSON.
 	JSONMarshalFunc JSONMarshalFunc
 
+	// ErrorHandler for returning a response in case of an error while receiving or parsing the request.
+	//
+	// The following is a non-exhaustive list of errors that can be expected as argument:
+	//   * io.EOF
+	//   * io.ErrUnexpectedEOF
+	//   * ErrGetOnly
+	//   * ErrSmallBuffer
+	//   * ErrBodyTooLarge
+	//   * ErrBrokenChunks
+	ErrorHandler func(ctx *fasthttp.RequestCtx, err error)
+
 	// Configurable view which is called when no matching route is
 	// found. If it is not set, http.NotFound is used.
 	NotFoundView View
