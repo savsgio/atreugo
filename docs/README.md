@@ -46,7 +46,7 @@ If you need define an optional parameters, add `?` at the end of param name. `{n
 
 #### Regex validation
 
-If you need define a validation, you could use a custom regex for the paramater value, add `:<regex>` after the name. For example: `{name:[a-zA-Z]{5}}`.
+If you need define a validation, you could use a custom regex for the parameter value, add `:<regex>` after the name. For example: `{name:[a-zA-Z]{5}}`.
 
 **_Optional paramters and regex validation are compatibles, only add `?` between the name and the regex. For example: `{name?:[a-zA-Z]{5}}`._**
 
